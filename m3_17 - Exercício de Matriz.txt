@@ -1,0 +1,60 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+   dim matriz(3)	'matriz declarada com 4 posições
+matriz(0) = "zero"
+matriz(1) = "um"
+matriz(2) = "dois"
+matriz(3) = "três"
+
+wscript.Echo matriz(2)
+'============================================================================
+
+dim semana
+'matrizes começam em ZERO
+semana = array("","Dom","Seg","Ter","Qua","Qui","Sex","Sab")
+'wscript.Echo "Hoje é: " & semana(weekday(now()))
+
+'============================================================================
+
+'-------------------------------------------------------------------------
+' OBS: matriz fixa não pode ser redimencionada, somente matriz dinâmica
+' veja o exemplo abaixo:
+' 		teste = array(5)
+'		teste(1) = "Maria"
+'		redim teste(3)
+'-------------------------------------------------------------------------
+
+dim mes()
+'redim mes(3)
+mes(0)= "jan"
+mes(1)= "fev"
+mes(2)= "mar"
+mes(3)= "abr"
+
+for x=0 to ubound(mes) 'para descobrir quantos itens tem na matriz use ubound(matriz)
+wscript.Echo "A posição " & x & " na matriz mes é: " & mes(x)
+next
+
+
+'-------------------------------------------------------------------------
+'ao redimensionar matrizes vc perderá todos os valores armazenados
+'para evitar isto use a palavra chave preserve (redim preserve mes(3))
+'-------------------------------------------------------------------------
+
+'redim mes(3)
+'mes(3)="abr"
+'for x=0 to ubound(mes)
+'wscript.Echo "A posição " & x & " na matriz mes é: " & mes(x)
+'next
+
+
+
+

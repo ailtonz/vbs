@@ -1,0 +1,46 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'==========================================================================
+'
+'para descobrir qual é o id da placa execute o código abaixo
+'
+'for each nic in getobject("Winmgmts:").instancesof("win32_networkadapterconfiguration")
+'wscript.Echo nic.description , "-", nic.index
+'next
+
+
+'==========================================================================
+'					ASSOCIATORS OF (esta classe depende de...)
+'==========================================================================
+
+set objsvc = getobject("winmgmts:")
+'para filtrar o resultado acrescente a cláusula where abaixo
+'where resultclass=win32_logicalsharesecuritysetting")' networkadapter.deviceid=1}")
+set objassoc = objsvc.execquery("Associators of {Win32_share='temp'}") 
+for each objshare in objassoc
+txt = txt & objshare.path_.relpath & vbnewline
+next
+
+
+'==========================================================================
+'					REFERENCES OF (classes que denpendem desta...)
+'==========================================================================
+
+set objsvc = getobject("winmgmts:")
+set objref = objsvc.execquery("References of {Win32_share='temp'}")
+
+for each objshare in objref
+txt2 = txt2 & objshare.path_.relpath & vbnewline & vbnewline
+next
+
+msgbox "Associators:" & vbnewline & txt & vbnewline _
+	& vbnewline & "References:" & vbnewline & txt2 ,vbinformation, "Associators e Referências."
+

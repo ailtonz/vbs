@@ -1,0 +1,61 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'-------------------------------------------------------------------------------------
+'OBS: Para efetivar as alterações é necessário executar o método setinfo dop objeto
+'pq as alterações só ficam no cache local.
+'
+'			!!!!!! Altere o usuário de admin25 para o seu admin (adminX) !!!!!!
+'--------------------------------------------------------------------------------------
+Const ADS_PROPERTY_CLEAR = 1 
+
+dim adminx
+adminx = "admin25"
+
+'conectar com obj usuário
+Set objUser = GetObject("LDAP://cn="& adminx &",OU=wst,dc=nwtraders,dc=msft")
+
+	'------------------------- FASE 1 ------------------------------------------------
+	'atualizar as info do cache com as info do ad e armazená-las em variáveis
+	wscript.Echo "FASE 1:" & vbnewline & "email em cache : " & objuser.get("mail") & vbcrlf _
+				 & "description em cache : " & objuser.get("description")
+		
+	
+	'------------------------- FASE 2 ------------------------------------------------
+	'alterar os valores das propriedades no cache, mas não no AD
+	objuser.put "mail","fulano@ig.com.br"
+	
+	'================================================================
+	'= 		podemos usar objuser.put "description", "texto" ou		=
+	'= 		objuser.description = "texto"					 		=
+	'================================================================
+	objuser.put "description","Aluno do curso 2433A"
+	objUser.PutEx ADS_PROPERTY_CLEAR, "initials", 0
+	objUser.AccountDisabled = True
+
+	wscript.Echo "FASE 2: O cache já foi alterado, mas dê uma olhada no AD!" & vbcrlf & vbnewline & "email no AD : " & objuser.get ("mail") & vbcrlf & "description no ad : " & objuser.get("description")
+	
+	
+	'------------------------- FASE 3 ------------------------------------------------
+	'alterar os valores das propriedades no ad e renová-las no cache
+	objuser.setinfo
+	objuser.getinfo
+	wscript.Echo "FASE 3: Agora o AD realmente foi alterado!" & vbnewline & vbnewline & "email no AD : " & objuser.get ("mail") & vbcrlf & "description no ad : " & objuser.get("description")
+	
+	
+	
+	'arrumar a bagunça que foi feita....
+	objuser.put "mail",adminx &"@nwtraders.msft"
+	objuser.put "description","An Admin Account from the Script Course"
+	objUser.AccountDisabled = FALSE
+	objuser.setinfo
+
+	
+

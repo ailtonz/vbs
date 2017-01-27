@@ -1,0 +1,158 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' lonusers.vbs
+'
+' This script creates the domain accounts on the London computer
+
+Option Explicit
+
+Dim WSHShell, IPConfigSet, pos, strDomainNum, strDomain, strBase, strFullDomain, i, j, ipAddr
+Dim odomDomain
+Dim oouFinance, oouAccountants, oouFIT
+Dim ogrpMktg, ogrpFinanceIT, ogrpDBU, OgrpDBO, ogrpHR
+Dim ousrCurrent
+Dim ocontUsers
+Dim ocompCurrent
+Dim strPassword
+Dim username
+Dim loginname
+Dim organization
+Dim strStreet
+
+Const ADS_UF_SCRIPT                           = &H1
+Const ADS_UF_ACCOUNTDISABLE                   = &H2
+Const ADS_UF_HOMEDIR_REQUIRED                 = &H3
+Const ADS_UF_LOCKOUT                          = &H10
+Const ADS_UF_PASSWD_NOTREQD                   = &H20
+Const ADS_UF_PASSWD_CANT_CHANGE               = &H40
+Const ADS_UF_ENCRYPTED_TEXT_PASSWORD_ALLOWED  = &H80
+Const ADS_UF_TEMP_DUPLICATE_ACCOUNT           = &H100
+Const ADS_UF_NORMAL_ACCOUNT                   = &H200
+Const ADS_UF_INTERDOMAIN_TRUST_ACCOUNT        = &H800
+Const ADS_UF_WORKSTATION_TRUST_ACCOUNT        = &H1000
+Const ADS_UF_SERVER_TRUST_ACCOUNT             = &H2000
+Const ADS_UF_DONT_EXPIRE_PASSWD               = &H10000
+Const ADS_UF_MNS_LOGON_ACCOUNT                = &H20000
+Const ADS_UF_SMARTCARD_REQUIRED               = &H40000
+Const ADS_UF_TRUSTED_FOR_DELEGATION           = &H80000
+Const ADS_UF_NOT_DELEGATED                    = &H100000
+
+' These consts are needed for setting the "User cannot change password" flag.  
+' See the last 2 users at the very bottom for the correct usage.
+Const CHANGE_PASSWORD_GUID = "{ab721a53-1e2f-11d0-9819-00aa0040529b}"
+Const ADS_ACETYPE_ACCESS_DENIED_OBJECT = &H6
+Const ADS_FLAG_OBJECT_TYPE_PRESENT = &H1
+Const ADS_RIGHT_DS_CONTROL_ACCESS = &H100
+
+Const ADSI_TYPE_CONT  = "container"
+Const ADSI_TYPE_GROUP = "group"
+Const ADSI_TYPE_OU    = "organizationalUnit"
+Const ADSI_TYPE_USER  = "user"
+Const ADSI_TYPE_COMP  = "computer"
+
+Const PASSWORD = "P@ssw0rd"
+Const BADPASSWORD = "BadP@ssw0rd"
+
+Set WSHShell = WScript.CreateObject("wscript.shell")
+
+strFullDomain = "nwtraders.msft"
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Finance organizational unit 
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set odomDomain = GetObject("LDAP://" & strFullDomain)
+Set oouFinance = odomDomain.Create(ADSI_TYPE_OU, "OU=Finance")
+oouFinance.SetInfo
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Accountants organizational unit 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set oouAccountants = oouFinance.Create(ADSI_TYPE_OU, "OU=Accountants")
+oouAccountants.SetInfo
+
+'''''''''''''''''''''''''''''
+'' Create the Finance IT group 
+'''''''''''''''''''''''''''''
+Call CreateGroup(oouFinance, "Finance IT", ogrpFinanceIT)
+
+'''''''''''''''''''''''''''''
+'' Create the Lori Kane user account
+'''''''''''''''''''''''''''''
+Call CreateUser(oouFinance, "Lori", "Kane", ousrCurrent, PASSWORD)
+
+'''''''''''''''''''''''''''''
+'' Create the Sunil Koduri user account
+'''''''''''''''''''''''''''''
+Call CreateUser(oouAccountants, "Sunil", "Koduri", ousrCurrent, PASSWORD)
+
+'''''''''''''''''''''''''''''
+'' Add Sunil Koduri to the Finance IT group
+'''''''''''''''''''''''''''''
+Call AddMember("Sunil", "Koduri", "OU=Accountants,OU=Finance", "CN=Finance IT,OU=Finance")
+
+Wscript.Quit 0
+
+
+'''''''''''''''''''''''''''''''''''
+' Create a user account
+' Sets: ousrOut to user object
+'''''''''''''''''''''''''''''''''''
+Sub CreateUser(oouThis, strFirst, strLast, ousrOut, strPwd)
+   Set ousrOut = oouThis.Create(ADSI_TYPE_USER, "CN=" & strFirst & " " & strLast) 
+   ousrOut.Put "name",              strFirst & " " & strLast
+   ousrOut.Put "sAMAccountName",    strLast & Left(strFirst, 1)
+   ousrOut.Put "sn",                strLast
+   ousrOut.Put "givenName",         strFirst
+   ousrOut.Put "userPrincipalName", strLast & Left(strFirst, 1) & "@" & strFullDomain 
+   ousrOut.Put "displayName",       strFirst & " " & strLast
+   ousrOut.SetInfo
+   ousrOut.SetPassword strPwd
+   ousrOut.Put "UserAccountControl", ousrOut.Get("UserAccountControl") Xor ADS_UF_PASSWD_NOTREQD
+   ousrOut.AccountDisabled = False
+   ousrOut.SetInfo
+End Sub
+
+
+'''''''''''''''''''''''''''''''''''''''''''''
+' Add street address
+' '''''''''''''''''''''''''''''''''''''''''''
+Sub AddStrAddr(ousrThis)
+   ousrThis.Put "streetAddress", "40 North 1st Street"
+   ousrThis.SetInfo
+End Sub
+
+
+'''''''''''''''''''''''''''''''''''''''''''''
+' Add user as member of a group
+' '''''''''''''''''''''''''''''''''''''''''''
+Sub AddMember(strFirst, strLast, strOU, strGroup)
+   Dim strDN
+   Dim ogrpThis
+
+   ' Retrieve group object from Active Directory
+   Set ogrpThis = GetObject("LDAP://" & strGroup & ",DC=nwtraders,DC=msft")
+
+   ' Add user to member list
+   ogrpThis.Add "LDAP://CN=" & strFirst & " " & strLast & "," & strOU & ",DC=nwtraders,DC=msft"
+   Set ogrpThis = Nothing
+End Sub
+
+
+'''''''''''''''''''''''''''''''''''
+' Create a group
+' Sets: ogrpOut to group object
+'''''''''''''''''''''''''''''''''''
+Sub CreateGroup(oIn, strGroupName, ogrpOut)
+   Set ogrpOut = oIn.Create(ADSI_TYPE_GROUP, "CN=" & strGroupName)
+   ogrpOut.Put "sAMAccountName", strGroupName
+   ogrpOut.SetInfo
+End Sub
+

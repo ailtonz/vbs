@@ -1,0 +1,32 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+@echo off
+IF EXIST %windir%\system32\wshom.ocx goto :ok
+IF EXIST %windir%\system\wshom.ocx goto :ok
+IF EXIST %windir%\wshom.ocx goto :ok
+
+echo.
+echo. Arquivo Wshom.ocx NAO encontrado!
+echo.
+echo.
+echo. Instalando Ste51en.exe
+REM 		DICA: colocar nesta linha o caminho para chamar aqui o arquivo Ste51en /q
+echo.
+pause
+goto :fim
+:ok
+echo. Arquivo Wshom.ocx encontrado!
+echo.
+:fim
+pause
+REM		DICA: chamar script para verificar versão do wsh e do engine
+wshversao.vbs
+

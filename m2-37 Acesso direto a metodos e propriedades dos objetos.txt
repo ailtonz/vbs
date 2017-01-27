@@ -1,0 +1,71 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'============================================================
+'
+'Windows NT/2000: Requer Windows NT 4.0 com SP4 ou superior.
+'Windows 95/98: Requer Windows 95 OSR2 ou superior.
+'
+'============================================================
+
+
+'	Exemplo de execução do método que necessita de parâmetros de entrada.
+
+
+set objShare = getobject("Winmgmts:win32_Share")
+'==========================================================================
+'Use o metodo SpawnInstance_ do objeto SWbemObject para criar 
+'uma nova instância de uma classe. O objeto a ser criado precisa pertencer
+'a uma classe obtida por WMI via o método Get, Getobject ou Execquery.
+Set objInParam = objShare.Methods_("Create").InParameters.SpawnInstance_()
+'==========================================================================
+
+'Parâmetros de entrada (para configuração) do método CREATE da classe Win32_Share
+objInParam.Properties_.Item("Access") = objSecDescriptor
+objInParam.Properties_.Item("Description") = "Novo share criado por WMI"
+objInParam.Properties_.Item("Name") = "Teste"
+
+'=================================================
+'A pasta c:\teste já deve existir
+objInParam.Properties_.Item("Path") = "C:\teste"
+'=================================================
+'Os tipos são:
+'0 = Disk Drive
+'1 = Print Queue
+'2 = Device
+'3 = IPC
+'2147483648 = Disk Drive Admin
+'2147483649 = Print Queue Admin
+'2147483650 = Device Admin
+'2147483651 = IPC Admin
+objInParam.Properties_.Item("Type") = 0
+'=================================================
+
+Set objOutParams = objShare.ExecMethod_("Create", objInParam)
+wscript.Echo "Share: " & objInParam.Properties_.Item("Name") & " criado."
+
+
+'===============================================================================================
+
+
+'	Exemplo de execução do método que NÃO necessita de parâmetros de entrada.
+
+
+Set objMessengerSvc = GetObject("WinMgmts:Win32_Service.name='Messenger'")
+Set objOutParm = objMessengerSvc.ExecMethod_("stopService")
+If objOutParm.returnValue = 0 Then
+WScript.Echo "O serviço messenger foi parado."
+Else
+wscript.Echo "Erro: " & objOutParm.returnValue
+End If
+
+
+
+

@@ -1,0 +1,25 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'To check which network adapter has an IP address.
+Set objSvc = GetObject("winmgmts:")
+Set objSet = objSvc.instancesOf("Win32_NetworkAdapterConfiguration")
+For Each obj in objSet
+	strResult = strResult & "Index # " & obj.index  
+	If isArray(obj.IPAddress) Then
+		For i = 0 to Ubound(obj.IPAddress,1)
+			strResult = strResult & " IP: " & obj.Ipaddress(i) & vbcrlf
+		Next
+	Else
+		strResult = strResult & obj.IPAddress & vbcrlf
+	End If
+Next
+wscript.echo strResult
+

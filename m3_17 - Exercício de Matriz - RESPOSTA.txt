@@ -1,0 +1,62 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+'OracleOraHome92Agent
+Set colServices = objWMIService.ExecQuery _
+    ("Select * from win32_Service where name='OracleOraHome92Agent'")
+For each objService in colServices 
+        errReturnCode = objService.stopService()
+	errReturnCode2 = objService.Change( , , , , "Manual")
+Next
+
+'OracleOraHome92TNSListener
+Set colServices = objWMIService.ExecQuery _
+    ("Select * from win32_Service where name='OracleOraHome92TNSListener'")
+For each objService in colServices 
+	errReturnCode = objService.stopService()
+	errReturnCode2 = objService.Change( , , , , "Manual")
+Next
+
+'OracleOraHome92HTTPServer
+Set colServices = objWMIService.ExecQuery _
+    ("Select * from win32_Service where name='OracleOraHome92HTTPServer'")
+For each objService in colServices 
+        errReturnCode = objService.StopService()
+	errReturnCode2 = objService.Change( , , , , "Manual")
+Next
+
+'OracleOraHome92ManagementServer
+Set colServices = objWMIService.ExecQuery _
+    ("Select * from win32_Service where name='OracleOraHome92ManagementServer'")
+For each objService in colServices 
+        errReturnCode = objService.StopService()
+	errReturnCode2 = objService.Change( , , , , "Manual")
+Next
+
+set WshShell = CreateObject("WScript.Shell")
+wscript.sleep 6000
+WshShell.SendKeys "sysman"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "oem_temp"
+wscript.sleep 1000
+WshShell.SendKeys "{ENTER}"
+
+
+
+if err.number = 0 then
+	wscript.echo "Serviços OK"
+else
+wscript.echo err.description
+end if
+

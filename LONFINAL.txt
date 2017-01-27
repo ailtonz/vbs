@@ -1,0 +1,101 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim IE, fso, MyFile
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+set wshshell = wscript.CreateObject("wscript.shell")
+ie.left=0
+ie.top=0
+ie.height=700
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\setup\html\loncust1.htm"
+ie.visible=1
+
+wscript.Sleep 5000
+
+'Setting Auto Logon
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+wshshell.Regwrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultUserName", "administrator", "REG_SZ"
+wshshell.Regwrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultPassword", "P@ssw0rd", "REG_SZ"
+wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "NWTRADERS", "REG_SZ"
+
+'set lontwo.vbs to run after reboot
+if fso.FileExists ("c:\setup\LONTWO.vbs") then
+	set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+	fn = "runnext.vbs"
+	set nxt = fso.getfile("c:\setup\LONTWO.vbs")
+	set fl = fso.createtextfile(strt & "\" & fn, true)
+	fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+	fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+	fl.Close
+end if
+
+'Delete the startup file
+if fso.FileExists ("C:\Documents and Settings\All Users\Start Menu\Programs\Startup\mocsetup.cmd") then
+	Set MyFile = fso.GetFile("C:\Documents and Settings\All Users\Start Menu\Programs\Startup\mocsetup.cmd")
+	MyFile.Delete
+end if
+
+
+'Set the windows source path
+wshshell.run "c:\tools\source.vbs", 6, true
+
+'view hidden files
+wshshell.Run "c:\setup\explrcfg.vbs", 6, true
+
+'Bring copy dialogs to the front
+wshshell.Run "c:\tools\front.vbs", 1, false
+
+'Copy Office XP Professional with FrontPage source files to D:\OFFICEXP
+ie.Navigate "file:///c:\setup\html\loncust1.htm"
+wshshell.run "c:\tools\copyoxp1.vbs", 1, true
+wshshell.Run "c:\tools\oxpfront.vbs", 1, false 'ensures that the Product Key Prompt box is brought to the front
+wshshell.Run "c:\tools\offxppid.vbs", 1, true
+
+'Copy Adobe Acrobat Reader source files to C:\SETUP
+ie.Navigate "file:///c:\setup\html\loncust2.htm"
+wshshell.run "c:\tools\copyacro.vbs", 1, true
+
+'Copy GPMC source files to C:\SETUP
+ie.Navigate "file:///c:\setup\html\loncust3.htm"
+wshshell.run "c:\tools\copygpmc.vbs", 1, true
+
+'Enable Windows Audio
+ie.Navigate "file:///c:\setup\html\loncust4.htm"
+wshshell.Run "c:\tools\audio.vbs", 6, true
+
+'Format the D drive
+ie.Navigate "file:///c:\setup\html\loncust5.htm"
+wshshell.Run "c:\setup\convert.vbs", 6, true
+
+'Install Classroom Setup Files
+ie.Navigate "file:///c:\setup\html\loncust6.htm"
+WshShell.Run "c:\setup\AllFiles.exe /auto" , 6, true
+
+'Install Courseware Fonts
+ie.Navigate "file:///c:\setup\html\loncust7.htm"
+WshShell.run "c:\tools\runfonts.vbs", 6, true
+
+'Install the Macromedia Flash 6.0 Plug-in
+ie.Navigate "file:///c:\setup\html\loncust8.htm"
+WshShell.run "C:\Setup\Flash6A.exe /Q", 6, true
+
+'Install Microsoft PowerPoint
+ie.Navigate "file:///c:\setup\html\loncust9.htm"
+wshshell.Run "c:\tools\instppt.vbs", 1, true
+
+'Reboot the machine
+WshShell.run "c:\tools\reboot.cmd", 6, true
+

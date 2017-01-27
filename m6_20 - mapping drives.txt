@@ -1,0 +1,40 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'-----------------------------------------------------------------------------------
+'
+' Faça uma pesquisa no help do Windows Script Host Documentation po specialfolders
+'
+'-----------------------------------------------------------------------------------
+
+
+'encontrar o caminho das pastas desktop e menu star do perfil do usuário
+set oshell = createobject("wscript.shell")
+pathdesktop = oshell.SpecialFolders("Desktop")
+pathstart = oshell.SpecialFolders("AllUsersStartup")
+
+'criar link para o site da intranet e colocá-lo no desktop
+set site = oshell.CreateShortcut(pathdesktop & "\Intranet.url")
+site.TargetPath = "http://london"
+site.Save
+
+'descobrir onde está instalado o windows e localizar o arquivo q. será o
+'target do link
+Set env = oshell.Environment("process")
+wdir = env("windir")
+patharquivo = wdir & "\system32\eula.txt"
+
+'criar link para o arquivo alvo e colocá-lo no menu startup no perfil de todos os usuários
+set arq_txt = oshell.CreateShortcut(pathstart & "\Contrato.url")
+arq_txt.TargetPath = patharquivo
+arq_txt.Save
+
+wscript.Echo "Foram criados 2 links em : " & vbnewline & site.FullName & vbnewline & arq_txt.FullName
+

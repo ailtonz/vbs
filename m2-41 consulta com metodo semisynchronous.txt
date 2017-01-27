@@ -1,0 +1,58 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'==================================================================
+'	Exemplo de acesso direto ao metodo startservice e stopservice
+'==================================================================
+
+set objsvc = getobject("winmgmts:win32_service.name='messenger'")
+
+if objsvc.state = "Stopped" then
+	objsvc.execmethod_("startservice")
+else
+	objsvc.execmethod_("stopservice")
+end if
+'==================================================================
+'	Exemplo de acesso direto a propriedade state
+'==================================================================
+
+wscript.Echo objsvc.state
+
+'após aparecer a mensagem aguarde 3 segundos para clicar em OK
+set objsvc = getobject("winmgmts:win32_service.name='messenger'")
+wscript.Echo objsvc.state
+
+'após aparecer a mensagem aguarde 8 segundos para clicar em OK
+set objsvc = getobject("winmgmts:win32_service.name='messenger'")
+wscript.Echo objsvc.state
+
+
+'==================================================================
+'	Exemplo de acesso direto a propriedade description usando as 
+'	credenciais do usuário logado
+'==================================================================
+wscript.Echo getobject("Winmgmts:{impersonationlevel=impersonate}" _
+	& "!\\san98/root/cimv2:win32_networkadapterconfiguration.index=0").description
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

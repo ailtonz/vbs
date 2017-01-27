@@ -1,0 +1,64 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+set wshshell = wscript.CreateObject("wscript.shell")
+set objnet = wscript.CreateObject("wscript.network")
+compname = objnet.ComputerName
+
+if compname = "VANCOUVER" then
+	wshshell.Run "c:\moc\setup\lrights.cmd", 6, true
+end if
+
+if compname = "PERTH" then
+	wshshell.Run "c:\moc\setup\lrights.cmd", 6, true
+end if
+
+if compname = "LISBON" then
+	wshshell.Run "c:\moc\setup\lrights.cmd", 6, true
+end if
+
+if compname = "LIMA" then
+	wshshell.Run "c:\moc\setup\lrights.cmd", 6, true
+end if
+
+if compname = "BANGALORE" then
+	wshshell.Run "c:\moc\setup\lrights.cmd", 6, true
+end if
+
+if compname = "CASABLANCA" then
+	wshshell.Run "c:\moc\setup\lrights.cmd", 6, true
+end if
+
+if compname = "ACAPULCO" then
+	wshshell.Run "c:\moc\setup\lrights.cmd", 6, true
+end if
+
+if compname = "AUCKLAND" then
+	wshshell.Run "c:\moc\setup\lrights.cmd", 6, true
+end if
+
+if compname = "STOCKHOLM" then
+	wshshell.Run "c:\moc\setup\lrights.cmd", 6, true
+end if
+
+if compname = "CARACAS" then
+	wshshell.Run "c:\moc\setup\lrights.cmd", 6, true
+end if
+
+if compname = "MANILA" then
+	wshshell.Run "c:\moc\setup\lrights.cmd", 6, true
+end if
+
+if compname = "KHARTOUM" then
+	wshshell.Run "c:\moc\setup\lrights.cmd", 6, true
+end if
+
+

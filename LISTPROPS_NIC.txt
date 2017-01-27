@@ -1,0 +1,21 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Get the first network adapter
+Set objNic = GetObject("WinMgmts:Win32_NetworkAdapter.deviceID='0'")
+Set objNicPropSet = objNic.properties_
+For Each objNicProp in objNicPropSet
+	strNicProp = strNicProp & objNicProp.name & " is : " & objNicProp.value & vbcrlf
+Next
+wscript.Echo "Network Adapter" & vbcrlf & _
+			 "---------------------" & vbcrlf & _
+			 strNicProp
+
+

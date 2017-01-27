@@ -1,0 +1,53 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Exemplo de objeto filesystemobject
+dim fs, drvPath
+drvPath= inputbox ("Digite o drive que deseja obter informações","Aviso","c:")
+set fs = createobject("scripting.filesystemobject")
+set d = fs.GetDrive(drvPath)
+   s = "Drive " & drvPath & " - " & vbcrlf
+   s =s & "Volume: " & d.VolumeName & vbcrlf
+   s =s & "Espaço Livre: " & d.FreeSpace/1048576 & " Mbytes" & vbcrlf
+   s = s & "Sistema de arquivos: " & d.FileSystem & vbcrlf
+   wscript.Echo s 
+   
+   '======================================================================
+
+'Exemplo de objeto Network   
+'   dim nic
+'   set nic = wscript.CreateObject("wscript.network")
+'   set p =  nic.EnumPrinterConnections
+'   for x=0 to p.Count/2 step 2
+'   wscript.Echo "Impressora: " & p.Item(x+1) & " - Porta: " & p.Item(x)
+'   next  
+   
+   '======================================================================
+
+	'Exemplo de objeto shell
+'    Set WshShell = WScript.CreateObject("WScript.Shell")
+'	Set WshSysEnv = WshShell.Environment("SYSTEM")
+'	WScript.Echo "Numero de processadores: "&WshSysEnv("NUMBER_OF_PROCESSORS") & vbnewline _
+'				 & "Arquitetura: "&WshSysEnv("PROCESSOR_ARCHITECTURE") & vbnewline _
+'				 & "Identificador: "&WshSysEnv("PROCESSOR_IDENTIFIER")
+				
+
+   '======================================================================
+   '								EXERCÍCIOS
+   '
+   ' Crie um objeto network que exiba o nome do usuário e computador utilizados.
+   ' Crie um objeto shell e exiba algumas variáveis de ambiente
+  
+   
+  
+  
+  
+  
+

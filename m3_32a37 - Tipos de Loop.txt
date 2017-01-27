@@ -1,0 +1,53 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'==========================================================================================
+'					INSTRUÇÕES DO LAB
+'
+' 1º Crie logo abaixo a VARIÁVEL letra
+' 2º Defina o valor da variável com o drive a ser analisado Ex: letra="C:"
+' 3º Crie um teste com IF para identificar o tipo de drive, como segue na tabela:
+'
+'	CONDIÇÃO DO IF: hd.drivetype
+'	Valores de Retorno:	0 = "Unknown"
+'						1 = "Removable"
+'						2 = "Fixed"
+'						3 = "Network"
+'						4 = "CD-ROM"
+'						5 = "RAM Disk"
+'
+'==========================================================================================
+'[defina a variável letra aqui]
+dim letra 
+letra = "e"         
+
+set objdrive = createobject("scripting.filesystemobject")
+set hd = objdrive.GetDrive(letra)
+
+'[Faça os testes do IF aqui]
+if     hd.drivetype = 0 then
+          	strtipo = "desconhecido" 
+elseif hd.drivetype = 1 then
+			strtipo = "removivel"
+elseif hd.DriveType = 2 then
+			strtipo = "fixo"
+elseif hd.DriveType = 3 then
+			strtipo = "rede"						
+elseif hd.DriveType = 4 then
+			strtipo = "cd-rom"
+elseif hd.DriveType = 5 then	
+			strtipo = "Ram Disk"
+end if				
+						
+wscript.Echo "Drive " & letra & " é :", vbnewline, _
+	"Sistema de Arquivos: ", hd.filesystem , vbnewline, _
+	"Tipo: ", strTipo, vbnewline , _
+	"Nome: " , hd.VolumeName
+

@@ -1,0 +1,27 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+'o objeto lanmanserver deve ser usado logo após o nome do servidor
+'se a pasta já estiver compartilhada será feito um 2º compartilhamento para a pasta
+
+set oserver = getobject("WinNT://london/LANMANSERVER")
+SET OSHARE = oserver.create("fileshare", "home_folder")
+oshare.path= "c:\user"
+oshare.description = "Share de teste"
+oshare.maxusercount = 5
+oshare.setinfo
+
+set oshell = createobject("wscript.shell")
+oshell.Run ("\\london\home_folder")
+wscript.Sleep 3000
+
+wscript.Echo "Usuários conectados: " & oshare.currentusercount
+

@@ -1,0 +1,16 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim fso, fle
+
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set fle= fso.GetFile("c:\fonts\course~1.exe")
+fle.name = "courseware.exe"
+

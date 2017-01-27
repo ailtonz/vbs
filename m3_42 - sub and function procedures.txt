@@ -1,0 +1,51 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'=========================== mapear drives ================================
+'Set WshNetwork = WScript.CreateObject("WScript.Network")
+'WshNetwork.MapNetworkDrive "O:", "\\london\office"
+'WshNetwork.MapNetworkDrive "R:", "\\london\reskit"
+'WshNetwork.MapNetworkDrive "S:", "\\london\setup"
+
+'===================== exemplo de for  ==================================
+'Set oDrives = WshNetwork.EnumNetworkDrives
+'For i = 0 to oDrives.Count -1 Step 2
+'	msg =  msg & vbcrlf & "Drive " & oDrives.Item(i) & " = " & oDrives.Item(i+1)
+'Next
+'WScript.Echo "Network drive mappings:" & msg
+
+'=========================== desconectar drives mapeados ===================
+'WshNetwork.RemoveNetworkDrive "O:"
+'WshNetwork.RemoveNetworkDrive "R:"
+'WshNetwork.RemoveNetworkDrive "S:"
+
+
+
+
+'===================== exemplo de for each ==================================
+'Dim fso, f, f1, fc, s
+'   Set fso = CreateObject("Scripting.FileSystemObject")
+'   Set f = fso.GetFolder("c:\winnt")
+'   Set fc = f.SubFolders
+'   For Each pasta in fc
+'     s = s & pasta.name & " " & pasta.size & " kb" & vbnewline
+'   Next
+'   wscript.Echo "As pastas no drive C: são: " & vbcrlf & s
+  
+  
+'===================== exemplo de for do ==================================
+	'forçar o usuário a digitar o nome
+	
+Dim nome
+do while nome = ""
+nome = inputbox("Digite o seu nome.")
+loop
+wscript.Echo "Obrigado " & nome
+

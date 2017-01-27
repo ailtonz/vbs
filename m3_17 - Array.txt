@@ -1,0 +1,54 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+
+'================== número ========================
+dim x, y
+x=1
+y=2
+'wscript.Echo x+y
+'================== string ========================
+x="1"
+y="2"
+'wscript.Echo x+y
+'================== data ========================
+x=#20-01-2003#
+y=1
+'wscript.Echo x+y
+'================== option explicit torna a declaraçã de uma variável obrigatória =====
+nome="Sandro"
+'wscript.Echo nome
+
+
+'================== constantes ========================
+'Para definir um novo grupo como global usar a constante
+'ADS_GROUP_TYPE_GLOBAL_GROUP = &H2      (ver m5_36a40 - criar objetos ADSI.vbs)
+
+
+const A=1
+dim b
+b=2
+'a=3
+'wscript.Echo a+b
+
+
+'================== constantes intrínsicas (interno) ========================
+
+'MSGBOX "Hoje é: " & VBCRLF & date() 'msgbox e vbcrlf são constantes já existentes no WSH
+
+'================== funções de conversão ========================
+dim c,d
+c=cint("10")
+d=cint("15")
+wscript.Echo c+d
+
+
+

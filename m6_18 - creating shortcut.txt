@@ -1,0 +1,36 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set servico = GetObject("WinNT://london")
+nome = inputbox("Qual o seu nome?")
+
+for each s in servico 
+   if s.name = "Alerter" then
+          if s.status <>1 then
+             s.stop
+
+             resp=msgbox(nome & ", o serviço " & s.name &" está Parado, deseja ativá-lo?",vbquestion+vbyesno,"Aviso")
+	if resp = vbyes then
+	  s.start
+	  msgbox "O serviço " & s.name &" foi Iniciado.",vbexclamation
+	else
+	  msgbox "O serviço " & s.name &" continuará parado o que impossibilitará "& vbcrlf _
+	       & " sua máquina de receber alertas e avisos do sistema e da rede (net send)",vbexclamation
+	end if
+         end if
+  end if
+next
+
+wscript.sleep 5000
+
+set oshell = createobject("wscript.shell")
+oshell.popup  "Vírus Found!!!!",5,"Warning.",vbcritical
+x=oshell.popup  ("Brincadeirinha " & nome,3,";-)",vbsystemmodal+vbinformation)
+

@@ -1,0 +1,28 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'============================================================
+dim servidores
+dim txt
+servidores = array("london","vancouver")
+
+for x = lbound(servidores) to ubound(servidores)
+	Set objcol = GetObject("WinMgmts:\\" & servidores(x))
+	set coldisk = objcol.InstancesOf("Win32_LogicalDisk")
+	txt = txt & vbnewline & "Servidor: " & servidores(x) & vbnewline
+	For Each Drive In coldisk
+		if not isnull (drive.size) then
+			txt = txt & " Drive " & Drive.deviceid & " contém " _
+			& formatnumber(Drive.Size / 1073741824,2) & " Gb" & vbnewline
+		end if
+	Next
+next
+wscript.Echo txt
+

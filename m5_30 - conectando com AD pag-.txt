@@ -1,0 +1,58 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+'-------------------------- listando propriedades simples -------------------------
+dim msf,omyobj
+set omyobj = getobject("LDAP://cn=admin25,ou=wst,dc=nwtraders,dc=msft")
+omyobj.getinfo
+msg = "6 Propriedades Padrão:"& vbnewline 
+msg = msg & "Nome: " & omyobj.get ("name") & vbnewline
+msg = msg & "Classe: " & omyobj.class  & vbnewline
+msg = msg & "GUID: " & omyobj.guid  & vbnewline
+msg = msg & "AdsPath: " & omyobj.adspath  & vbnewline
+msg = msg & "Parent: " & omyobj.parent  & vbnewline
+msg = msg & "Schema: " & omyobj.schema  & vbnewline
+
+msg = msg & vbnewline & "Propriedades Específicas de uma Classe:"& vbnewline 
+msg = msg & "Nome de logon: " & omyobj.get ("sAMAccountName") & vbnewline
+msg = msg & "Categoria: " & omyobj.get ("objectCategory")  & vbnewline
+msg = msg & "Description: " & omyobj.get("description") & vbnewline
+msg = msg & "Distinguished Name: " & omyobj.get("distinguishedName") & vbnewline
+msg = msg & "Criada em: " & omyobj.get("whenCreated") & vbnewline
+msg = msg & "Alterada em: " & omyobj.get("whenChanged") & vbnewline
+
+wscript.Echo msg
+
+
+'-------------------------- listando todas as propriedades -------------------------
+
+dim objgrupo, i, mprop, count
+set objgrupo = getobject("LDAP://cn=admin25,ou=wst,dc=nwtraders,dc=msft")
+objgrupo.getinfo
+i = objgrupo.propertycount
+mprop = "Existem " & i & " valores de propriedade em cache do objeto admin25." & vbnewline & vbnewline
+for count=0 to (i-1)
+mprop = mprop & objgrupo.item(cint(count)).name & vbnewline 
+next
+
+wscript.Echo mprop
+
+'-------------------------- listando valores múltiplos de uma propriedade  -------------------------
+
+set grupo = getobject("LDAP://cn=domain admins,cn=users,dc=nwtraders,dc=msft")
+
+lista=grupo.getex("member")
+for each usuario in lista
+n=n+1
+txt = txt & usuario & vbnewline
+next
+wscript.Echo "Existem "& n & " usuários no grupo Sales."& vbnewline & vbnewline & txt
+

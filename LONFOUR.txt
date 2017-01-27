@@ -1,0 +1,71 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'on error resume next
+Dim IE, fso, MyFile
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+set wshshell = wscript.CreateObject("wscript.shell")
+ie.left=0
+ie.top=0
+ie.height=700
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\setup\html\loncustp.htm"
+ie.visible=1
+
+wscript.Sleep 5000
+
+'set lonfinal.vbs to run after reboot
+if fso.FileExists ("c:\setup\lonfinal.vbs") then
+	set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+	fn = "runnext.vbs"
+	set nxt = fso.getfile("c:\setup\lonfinal.vbs")
+	set fl = fso.createtextfile(strt & "\" & fn, true)
+	fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+	fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+	fl.Close
+else
+	set MyFile = fso.GetFile("C:\Documents and Settings\All Users\Start Menu\Programs\Startup\runnext.vbs")
+	MyFile.Delete
+end if
+
+'Clean up after SQL Server CE Components install
+WshShell.run "C:\Setup\cleanup.vbs", 6, true
+
+'Install the Macromedia Flash 6.0 Plug-in
+ie.Navigate "file:///c:\setup\html\loncustp.htm"
+WshShell.run "C:\Setup\Flash6A.exe /Q", 6, true
+
+'Installing the PowerPoint Slides
+ie.Navigate "file:///c:\setup\html\loncustq.htm"
+WshShell.run "c:\tools\2556_ppt.msi /q", 1, true
+
+'Install Microsoft PowerPoint 2002
+ie.Navigate "file:///c:\setup\html\loncustr.htm"
+wshshell.Run "c:\tools\instppt.vbs", 1, true
+
+'configure sdk command line path
+WshShell.run "c:\tools\sdkpath.cmd", 6, true
+
+'Install Microsoft SQL Server 2000 SP3
+ie.Navigate "file:///c:\setup\html\loncusts.htm"
+WshShell.run "D:\SQL2KDE\SP3\x86\setup\setupsql.exe -s -SMS -f1 C:\SETUP\SQL2KSP3.ISS", 6, true
+' Copy the logfile to the root of C: and rename it.  It could be helpful in debugging any problems.
+if fso.FileExists("C:\windows\setup.log") then
+   fso.MoveFile "C:\windows\setup.log", "C:\sqlsp3_install.log"
+end if
+
+'Reboot the Computer
+WshShell.run "c:\tools\reboot.cmd", 6, true
+

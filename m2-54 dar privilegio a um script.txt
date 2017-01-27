@@ -1,0 +1,40 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'============================================================
+On Error Resume Next
+Dim strName
+Set objRemoteSvc = GetObject("WinMgmts:")
+Set sink = CreateObject("WbemScripting.SWbemSink","SINK_")
+
+'O script aciona o método InstancesOfAsync para coletar
+'todas as instâncias da classe Win32_Share
+retVal = objRemoteSvc.InstancesOfAsync(sink,"Win32_Share")
+'o script continuará sendo executado e coletará os dados,
+'normalmente ele só iria continuar após pressionado o OK.
+Wscript.Echo "Espere aqui até as tarefas terminarem."
+'depois de ter fechado as 2 janelas de aviso o script continua e 
+'exibe os dados coletados.
+Wscript.Echo StrName
+Wscript.Quit
+
+'-------- only subroutines below this line --------------
+Sub SINK_OnCompleted(iHResult, objErrorObject,objAsyncContext)
+'este aviso só é exibido a chamada assincrona ter sido concluida
+Wscript.echo "OK as tarefas Asincronas foram concluidas."
+End Sub
+
+Sub SINK_OnObjectReady(objObject, objAsyncContext)
+'esta rotina será executada assim que for instanciado a consulta 
+'assincrona (linha 9 do código)
+strName = strName & " Pasta " & objObject.Path & " está compartilhada como " & _
+objObject.name & vbcrlf
+End Sub
+

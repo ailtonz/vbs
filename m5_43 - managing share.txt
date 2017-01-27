@@ -1,0 +1,106 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'criando uma OU
+on error resume next
+set oroot = getobject("LDAP://rootDSE")
+set odom = getobject("LDAP://" & oroot.get("defaultnamingcontext"))
+
+set oou = odom.create("OrganizationalUnit", "ou=teste")
+oou.description = "Ou de teste criada por script"
+oou.setinfo
+
+
+'-----------------------------------------------------------------------
+	'criando um usuário
+	'estas 2 propriedades são obrigatórias (cn e samaccountname)
+set objuser = oou.create("user","cn=Sandro Lopes")  'canonical name para consulta por LDAP
+with objuser
+	.put "samaccountname", "slopes"					  'nome netbios do usuário
+	.setinfo
+
+	'estas propriedades já são opcionais
+	.put "displayname", "Sandro Lopes"
+	.put "userprincipalname", "slopes@nwtraders.msft" 'nome UPN para logon no windows2k
+	.put "userWorkstations", "London"
+	.put "profilePath", "\\london\Profiles\slopes"
+	.put "homeDirectory", "\\london\home\slopes"
+	.put "homeDrive", "U:"
+	.AccountExpirationDate = "25/09/2003"
+	
+	'--------------------------------------------------------------------------------
+	'as propriedades abaixo só podem ser definidas se o objeto user já existir no AD
+	'por isso o setinfo na linha 20, caso contrário o comando não funcionaria
+	'
+	'
+	' 		!!!!Toda conta criada por script fica DESABILITADA POR PADRÃO!!!!
+	'
+	'--------------------------------------------------------------------------------
+	.SetPassword "password"
+	.AccountDisabled = False
+	.setinfo
+end with
+
+'-----------------------------------------------------------------------
+	'criando um GRUPO GLOBAL
+	'definir os valores para as constantes de ADSI
+	
+	ADS_GROUP_TYPE_DOMAIN_LOCAL_GROUP = &H4
+	ADS_GROUP_TYPE_GLOBAL_GROUP = &H2
+	ADS_GROUP_TYPE_SECURITY_ENABLED = &H80000000
+	Set objOU = GetObject("LDAP://OU=teste,dc=nwtraders,dc=msft")
+	Set objGroup = objOU.Create("Group", "cn=curso2433a")
+	with objGroup
+		' se for omitodo a propriedade grouptype será usado o default (Grupo Global / Security)
+		.put "grouptype", ADS_GROUP_TYPE_GLOBAL_GROUP OR ADS_GROUP_TYPE_SECURITY_ENABLED
+		.Put "sAMAccountName", "curso2433a"
+		.put "description", "Grupo Global serve para agrupar usuários."
+		.setInfo
+		
+	'--------------------------------------------------------------------------------
+	'a propriedade abaixo só pode ser definida se o objeto grupo já existir no AD
+	'por isso o setinfo na linha 48, caso contrário não funcionará
+	'
+	'   !!!!! deve-se usar no cn do usuário o nome de exibição (displayname) !!!!!
+	'--------------------------------------------------------------------------------
+
+		.add ("LDAP://CN=sandro lopes,ou=teste,dc=nwtraders,dc=msft")
+		.SetInfo
+	end with
+	
+	'criando um GRUPO Local
+	Set objOU = GetObject("LDAP://OU=teste,dc=nwtraders,dc=msft")
+	Set objGroup = objOU.Create("Group", "cn=HP-550c")
+	with objGroup
+		' se for omitodo a propriedade grouptype será usado o default (Grupo Global / Security)
+		.put "grouptype", ADS_GROUP_TYPE_DOMAIN_LOCAL_GROUP OR ADS_GROUP_TYPE_SECURITY_ENABLED
+		.Put "sAMAccountName", "HP-550c"
+		.put "description", "Grupo Domain Local serve para atribuir permissões."
+		.setInfo
+		.add ("LDAP://CN=curso2433a,ou=teste,dc=nwtraders,dc=msft")
+		'------------------------------------------------------------------
+		'para remover usuário do grupo é só trocar o método add por remove
+		'------------------------------------------------------------------
+		.SetInfo
+	end with
+
+if err.Number = 0 then
+wscript.Echo "OU teste" & vbnewline _
+		& "Usuário Sandro" & vbnewline _
+		& "Grupo Global curso2433a" & vbnewline _
+		& "Grupo Domain Local HP-550c" & vbnewline  & vbnewline _
+		& "Foram criados com sucesso!"
+else
+wscript.Echo "Um dos items já estava criado."
+end if
+
+set oshell = createobject("wscript.shell")
+oshell.Run "dsa.msc"
+

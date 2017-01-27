@@ -1,0 +1,123 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+Dim IE
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+ie.left=0
+ie.top=0
+ie.height=570
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\setup\html\loncusth.htm"
+ie.visible=1
+
+for x = 1 to 1500000
+x = x+1
+next
+
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\setup\outstall.vbs", 6, true
+
+'set lontwoa.vbs to run after reboot
+set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+fn = "runnext.vbs"
+set nxt = fso.getfile("c:\setup\lontwob.vbs")
+set fl = fso.createtextfile(strt & "\" & fn, true)
+fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+
+x=0
+
+do while x=0
+Set fso = CreateObject("Scripting.FileSystemObject")
+lookfor = "C:\Documents and Settings\All Users\Start Menu\Programs\Microsoft Outlook.lnk"
+If (fso.FileExists(lookfor)) Then
+x=1
+else
+wscript.sleep 60000
+end if
+
+loop
+
+wscript.sleep 60000
+
+
+ie.navigate "file:///c:\setup\html\loncusti.htm"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\exstall.cmd", 1, true
+
+
+ie.navigate "file:///c:\setup\html\loncustj.htm"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\users.cmd", 6, true
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\setpass.vbs", 6, true
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\adsetup.vbs", 6, true
+
+
+ie.navigate "file:///c:\setup\html\loncustj.htm"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\initial.exe /auto", 1, true
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\initial\initial.msi", 1, true
+
+
+ie.navigate "file:///c:\setup\html\loncustk.htm"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\admin.reg", 6, true
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\exsrv.reg", 6, true
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\profset.cmd", 6, true
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\profset.vbs", 6, true
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "nwtraders" ,"REG_SZ"
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultUserName", "sqlservice" ,"REG_SZ"
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultPassword", "sqlservice" ,"REG_SZ"
+wshshell.Run "net localgroup administrators /ADD SQLservice", 1, True
+
+ie.navigate "file:///c:\setup\html\loncustl.htm"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\setup_d.cmd", 6, true
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\movei386.vbs", 1, true
+
+
+
+
+
+
+
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\reboot.cmd", 6, true
+
+
+

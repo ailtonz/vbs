@@ -1,0 +1,76 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim IE, fso, MyFile
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+set wshshell = wscript.CreateObject("wscript.shell")
+ie.left=0
+ie.top=0
+ie.height=600
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\setup\html\lon\loncust8.htm"
+ie.visible=1
+
+wscript.Sleep 5000
+
+'Setting Auto Logon
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+wshshell.Regwrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultUserName", "administrator", "REG_SZ"
+wshshell.Regwrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultPassword", "P@ssw0rd", "REG_SZ"
+'wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "NWTRADERS", "REG_SZ"
+
+'set script to run after reboot
+strNext = "c:\setup\loncust3.vbs"
+if fso.FileExists (strNext) then
+	set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+	fn = "runnext.vbs"
+	set nxt = fso.getfile(strNext)
+	set fl = fso.createtextfile(strt & "\" & fn, true)
+	fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+	fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+	fl.Close
+else
+	set MyFile = fso.GetFile("C:\Documents and Settings\All Users\Start Menu\Programs\Startup\runnext.vbs")
+	MyFile.Delete
+end if
+
+
+'Create required user accounts
+ie.navigate "file:///c:\setup\html\lon\loncust8.htm"
+wshshell.run "c:\setup\crtusers.vbs", 6, true
+
+'Create required user groups
+ie.navigate "file:///c:\setup\html\lon\loncust9.htm"
+wshshell.run "c:\setup\crtgrps.vbs", 6, true
+
+'Create required POP3 accounts
+ie.navigate "file:///c:\setup\html\lon\loncusta.htm"
+wshshell.run "c:\setup\crtpop3.vbs", 1, true
+
+'Enabling FrontPage Server Extensions 2002
+ie.navigate "file:///c:\setup\html\lon\loncustb.htm"
+wshshell.run "c:\setup\cfgfpse.cmd", 6, true
+
+'Install Microsoft SQL Server 2000 Developer Edition
+ie.navigate "file:///c:\setup\html\lon\loncustc.htm"
+wshshell.run "c:\setup\instsql.vbs", 1, true
+
+'Install Microsoft SQL Server 2000 Service Pack 3
+ie.navigate "file:///c:\setup\html\lon\loncustd.htm"
+wshshell.run "c:\setup\insqlsp3.vbs", 1, true
+
+'Reboot the Computer
+WshShell.run "c:\tools\reboot.cmd", 6, true
+

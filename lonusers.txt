@@ -1,0 +1,41 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+Dim IE
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+ie.left=0
+ie.top=0
+ie.height=570
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\setup\html\loncustm.htm"
+ie.visible=1
+
+wscript.Sleep 5000
+
+'set lontwoa.vbs to run after reboot
+set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+fn = "runnext.vbs"
+set nxt = fso.getfile("c:\setup\lon_two.vbs")
+set fl = fso.createtextfile(strt & "\" & fn, true)
+fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\sql_ent.cmd", 1, true
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\reboot.cmd", 6, true
+

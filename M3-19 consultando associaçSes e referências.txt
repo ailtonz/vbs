@@ -1,0 +1,71 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'==========================================================================
+'		Alteres os códigos abaixo
+'==========================================================================
+
+
+
+
+
+'==========================================================================
+'modelo para consultar todas as propriedades de uma determinada classe
+'usando filtro
+'==========================================================================
+set objsvc = getobject("Winmgmts:")
+set objset = objsvc.execquery("select * from classe where propriedade = valor")
+for each obj in objset
+	wscript.Echo obj.propriedade
+next
+
+
+'==========================================================================
+' Modelo Genérico para backup de qualquer log de qualquer máquina da rede
+'==========================================================================
+'
+'utilize variáveis para armazenar dados exclusivos como nome de computador,
+' objetos e filtros
+
+servidor = "servidorX"
+nomedolog = "System, Application, Security, DNS, etc"
+localdebackup = "C:\backupLog\" 'a pasta já deverá existir
+
+set objsvc = getobject("Winmgmts:{(backup)}\\" & servidor) _
+	.execquery("select * from win32_nteventlogfile where logfilename = '"& nomedolog & "'")
+for each obj in objsvc
+	retval1 = obj.backupeventlog(localdebackup & nomedolog &".evt")
+	if retval = 0 then
+		msg1 =  "Backup efetuado com sucesso."
+		retval2 = obj.cleareventlog	
+	else
+		msg1 =  "Falha ao fazer Backup."
+	end if
+	if retval2 = 0 then 
+		msg2 =  "Log " & nomedolog & " limpo."
+	end if
+next
+wscript.Echo msg1 & vbnewline & msg2
+
+
+'==========================================================================
+' Modelo Genérico para dar shutdown remoto
+'==========================================================================
+'
+'Veja no WMI SDK Documentation sobre as propriedades da classe
+'Win32_Operatingsystem, para poder criar inventário da máquina.
+
+set objset = getobject("winmgmts:{(shutdown)}\\vancouver") _
+	.execquery("select * from win32_operatingsystem where primary = true")
+for each obj in objset
+	obj.reboot() ' ou obj.shutdown
+next
+
+

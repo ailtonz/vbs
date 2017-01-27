@@ -1,0 +1,50 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set oshell = createobject("wscript.shell")
+
+oshell.Run "calc"
+   oshell.AppActivate "Calculator"
+   'calcular 1+2*3
+   WScript.Sleep 1000
+   oshell.SendKeys "1"
+   wscript.Sleep 2000
+   oshell.SendKeys "{+}" 'para enviar a tecla + é necessário colocá-la entre parênteses
+   wscript.Sleep 2000
+   oshell.SendKeys "2"
+   wscript.Sleep 2000
+   oshell.SendKeys "~"
+   wscript.Sleep 2000
+   oshell.SendKeys "*3" 'enviando 2 teclas simultaneamente
+   wscript.Sleep 2000
+   oshell.SendKeys "~"
+
+oshell.Run "notepad"
+oshell.AppActivate "Notepad"
+   'escrever 1+2*3 e imprimir
+   WScript.Sleep 1000
+   oshell.SendKeys "1{+}2*3"
+   oshell.SendKeys "~"
+   oshell.SendKeys "{= 30}" 'sinal de = 30 vezes
+   wscript.Sleep 2000
+   oshell.SendKeys "^P"	'ctrl + P
+   WScript.Sleep 2000
+   oshell.SendKeys "%P"	'alt + P
+   
+   
+'Mudar papel de parede   
+set oshell = createobject("wscript.shell")
+oshell.run "control desk.cpl"
+wscript.Sleep 1000
+oshell.SendKeys "{c 2}"
+oshell.SendKeys "{tab 2}"
+oshell.SendKeys "t"
+oshell.SendKeys "%a"
+

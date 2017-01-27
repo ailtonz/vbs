@@ -1,0 +1,50 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Exemplo de sub 
+'Todo o processamento é feito em blocos separados que podem
+'ser acionados repetidas vezes.
+
+dim msg
+call welcome
+msg="Iniciando...."
+call status
+msg="Concluído!"
+call status
+
+'=====================================================
+sub welcome()
+t= hour(now())
+if t > 0 and t < 12 then 
+	wscript.Echo "Bom dia."
+	else if t >= 12 and t < 18 then 
+		wscript.Echo "Boa tarde."
+	else
+		wscript.Echo "Boa noite."
+	end if
+end if
+end sub
+'=====================================================
+sub status()
+wscript.Echo msg
+end sub
+'==========================================================================================
+'Exemplo de funtion
+'No exemplo abaixo a função amanha é chamada e é repassado para ela um
+'argumento que será guardado na variável X
+
+'dim data
+'data = amanha(date())
+'wscript.Echo "Amanhã será " & data
+
+'function amanha(x)
+'amanha = x+1
+'end function
+

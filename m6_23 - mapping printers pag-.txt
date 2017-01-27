@@ -1,0 +1,87 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'-----------------------------------------------------------------------------------------
+'criando mapeamento de drives
+'-----------------------------------------------------------------------------------------
+
+set onet = createobject("wscript.network")
+'mapear drive usando credenciais do usuário e salvando em seu perfil (reconnect at logon)
+onet.MapNetworkDrive "g:", "\\london\netlogon",true
+
+'mapear drive usando credenciais de outro usuário e não salvando no perfil dele
+onet.MapNetworkDrive "h:", "\\london\c$",false,"administrator","password"
+
+wscript.Echo "Mapeado drive g: em \\london\netlogon (com reconnect at logon)" & vbnewline _
+	 		 & "Mapeado drive h: em \\london\c$ como administrator"
+
+
+'-----------------------------------------------------------------------------------------
+'detectando qual é a próxima letra de drive disponível para mapeamento
+'-----------------------------------------------------------------------------------------
+
+'definir constantes de systema que especificam o tipo de drive
+Const DriveTypeRemovable = 1
+Const DriveTypeFixed = 2
+Const DriveTypeNetwork = 3
+Const DriveTypeCDROM = 4
+Const DriveTypeRAMDisk = 5
+
+set ofs = createobject("scripting.filesystemobject")
+drive_existente = "Drives existentes em sua máquina: " & vbnewline
+for each d in ofs.Drives
+
+Select Case d.DriveType
+   Case DriveTypeRemovable
+      t = "Removable"
+   Case DriveTypeFixed
+      t = "Fixed"
+   Case DriveTypeNetwork
+      t = "Network"
+   Case DriveTypeCDROM
+      t = "CD-ROM"
+   Case DriveTypeRAMDisk
+      t = "RAM Disk"
+   Case Else
+      t = "Unknown"
+   End Select
+drive_existente = drive_existente & d & t & vbnewline
+
+
+'=====================================================================================
+' a próxima letra a ser mapeada será a próxima após a última letra já mapeada
+' mesmo que hajam letras disponíveis antes da última letra utilizada.
+'ex:já mapeado letras F:, G: e K: ; a próxima letra mapeada será M: 
+' mesmo tendo disponível as letras H:, I: e J:.
+'=====================================================================================
+
+'capturar o última drive encntrada, no caso será H:
+' e guardar somente a letra em uma variável
+dfinal = left(d,1)
+
+'chr => retornar uma string
+'asc => tratar variável como string e incrementá-la em 1 e acrescentar dois pontos (:)
+nextdrive = chr(asc(dfinal) + 1) & ":"
+next
+
+wscript.Echo drive_existente & vbnewline & vbnewline & "Próxima letra a ser mapeada será: " & nextdrive
+
+
+'-----------------------------------------------------------------------------------------
+'    desconectando drive mapeado
+'-----------------------------------------------------------------------------------------
+
+resposta = msgbox("Deseja desconectar os drives G: e H:?",vbquestion + vbyesno)
+if resposta = vbyes then
+	onet.RemoveNetworkDrive	"g:"
+	onet.RemoveNetworkDrive	"h:"
+wscript.Echo "Veja o que aconteceu com os drives G: e H:"
+end if
+

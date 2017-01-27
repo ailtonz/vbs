@@ -1,0 +1,24 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set e = createobject("cdo.message")
+'qual é o servidor que enviará o e-mail
+e.Sender = "london"
+
+e.From = "sandro@nwtraders.msf"
+e.To = "administrator@nwtraders.msft"
+e.Subject = "teste de cdo"
+
+'para enviar e-mail no formato html
+e.HTMLBody = "<marquee><font color=red size=4>teste de email por cdo.</font></marquee>"
+e.MimeFormatted = true
+
+e.Send
+

@@ -1,0 +1,64 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Usar uma simples conexใo para M๚ltiplas consultas
+
+set conn = createobject("ADODB.Connection")
+set comando = createobject("ADODB.Command")
+
+conn.provider = "ADsDSOObject"
+conn.open
+comando.activeconnection = conn
+
+
+'A consulta no AD deve ser feita com a seguinte sintaxe: <FQADsPath>;(filtro);Atributos;Escopo
+'
+'								  <FQADsPath>		 ;	  (filtro)	   ; 	  Atributos	 	 ;Escopo
+'                      /จจจจจจจจจจจจจจจจจจจจจจจจจจจจ\/จจจจจจจจจจจจจจจจ\/จจจจจจจจจจจจจจจจจจจจ\/จจจจจ\     
+comando.CommandText = "<LDAP://dc=nwtraders,dc=msft>;(objectClass=user);name,telephonenumber;subtree"
+set rs = comando.Execute
+
+do until rs.eof
+query = query & rs.Fields("name") & ", " & rs.Fields("telephonenumber") & "   /   " 'vbnewline
+rs.Movenext
+loop
+wscript.Echo query
+
+
+'-----------------------------------------------------------------------------------------
+'Usar uma simples conexใo para consultas simples
+' observe que a propriedade Provider ้ informada no m้todo open do recordset
+'
+'-----------------------------------------------------------------------------------------
+
+
+set rs2 = createobject("ADODB.Recordset")
+rs2.Open "<LDAP://ou=wst,dc=nwtraders,dc=msft>;(objectClass=user);name,mail;subtree" , "provider = ADsDSOObject"
+
+do until rs2.eof
+query2 = query2 & rs2.Fields("name") & "," & rs2.Fields("mail") & vbnewline
+rs2.Movenext
+loop
+wscript.Echo query2
+
+Dim fso, MyFile, oshell
+   Set fso = CreateObject("Scripting.FileSystemObject")
+   Set MyFile = fso.CreateTextFile("c:\listagem email.txt", True)
+   MyFile.WriteLine(query2)
+   MyFile.Close
+
+set oshell = createobject("wscript.shell")
+oshell.Run "notepad.exe c:\listagem email.txt"
+
+
+
+
+
+

@@ -1,0 +1,12 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Wscript.echo "The Free Space on C: is " & GetObject("WinMgmts:Win32_LogicalDisk.DeviceID='C:'").freeSpace	
+

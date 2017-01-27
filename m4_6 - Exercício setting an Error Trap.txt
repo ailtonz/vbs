@@ -1,0 +1,29 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+
+dim usuario
+usuario = "admin25"
+
+'conectar com obj usuário
+Set objUser = GetObject("LDAP://cn="& usuario &",OU=wst,dc=nwtraders,dc=msft")
+
+	wscript.Echo "Email do usuário " & usuario & " - " & objuser.get("mail") 
+	
+	if err.Number = 0 then 
+		wscript.Echo "Não foram encontrados erros."
+	else
+		wscript.Echo "Ocorreu o seguinte erro:" & vbnewline _
+					  & "Erro number: " & err.Number & vbnewline _
+					  & "Erro Description: " & err.Description & vbnewline _
+					  & "Erro Source: " & err.Source
+ 	end if
+

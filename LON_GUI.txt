@@ -1,0 +1,50 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+Dim IE
+Set IE = CreateObject("InternetExplorer.Application")
+set wshshell = wscript.CreateObject("wscript.shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
+ie.left=0
+ie.top=0
+ie.height=570
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\setup\html\loncustg.htm"
+ie.visible=1
+
+wscript.Sleep 5000
+
+'remove startup file
+set dest = fso.getfolder("c:\documents and settings\all users\Start Menu\Programs\startup")
+set fl = fso.getfile(dest & "\" & "runnext.vbs")
+fl.delete
+
+'set lonfinal.vbs to run after reboot
+set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+fn = "runnext.vbs"
+set nxt = fso.getfile("c:\setup\lonfinal.vbs")
+set fl = fso.createtextfile(strt & "\" & fn, true)
+fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+
+
+'Install Visual Basic 6.0
+ie.navigate "file:///c:\setup\html\loncustg.htm"
+WshShell.run "c:\setup\vbinst.vbs", 6, true
+
+
+'reboot machine
+wshShell.Run "c:\tools\reboot.cmd", 6, true
+

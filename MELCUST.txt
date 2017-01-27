@@ -1,0 +1,61 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+Set IE = CreateObject("InternetExplorer.Application")
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set WshShell = WScript.CreateObject("WScript.Shell")
+
+ie.left=0
+ie.top=0
+ie.height=570
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\moc\setup\mochtml\melcust6.htm"
+ie.visible=1
+
+wscript.Sleep 5000
+
+' remove mocsetup.cmd from startup
+Dim fso, MyFile
+Set MyFile = fso.GetFile("C:\Documents and Settings\All Users\Start Menu\Programs\Startup\mocsetup.cmd")
+MyFile.Delete
+
+'set melfinal.vbs to run after reboot
+'* Include as necessary *
+set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+fn = "runnext.vbs"
+set nxt = fso.getfile("c:\moc\setup\melfinal.vbs")
+set fl = fso.createtextfile(strt & "\" & fn, true)
+fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+
+' enable auto logon
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1,"REG_SZ"
+
+' share TSclient folder
+wshshell.Run "c:\tools\tsclient.cmd", 6, true
+
+'Wait for student computers to setup before changing IP
+ie.navigate "file:///c:\moc\setup\mochtml\melcust6.htm"
+MsgBox "Before completing the automated setup of Melbourne, you must complete the automated setup of the student computers. " & _
+	   "Failing to do so will result in errors in the setup of the student computers. " & vbCrLf & vbCrLF & _
+	   "When the automated setup of the student computers is complete, click OK to finish the automated setup of Melbourne.", vbCritical, "Important!"                                                             
+
+'Configure IP
+ie.navigate "file:///c:\moc\setup\mochtml\melcust7.htm"
+WshShell.run "c:\moc\setup\setip.vbs", 6, true
+
+'reboot machine
+wshShell.Run "c:\tools\reboot.cmd", 6, true
+

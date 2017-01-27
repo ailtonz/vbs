@@ -1,0 +1,33 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Option Explicit
+On Error Resume Next
+Dim oNetwork, oDrives, oFSO, Drive
+Dim sFinalDrive, iChar, sNewDrive
+Set oNetwork = CreateObject("WScript.Network")
+oNetwork.MapNetworkDrive "H:", "\\London\LabShare"
+Set oFSO = CreateObject("Scripting.FileSystemObject")
+For Each Drive in oFSO.Drives
+	sFinalDrive = left(Drive, 1)
+Next 
+iChar = Asc(sFinalDrive)
+sNewDrive = Chr(iChar + 1)
+oNetwork.MapNetworkDrive sNewDrive & ":", "\\London\LabShare"
+oNetwork.AddWindowsPrinterConnection "\\London\ClassPrn"
+oNetwork.SetDefaultPrinter "\\London\ClassPrn"
+Dim oShell, oShortCut, sDesktop, sLnkPath
+Set oShell = CreateObject("WScript.shell")
+sDesktop = oShell.SpecialFolders("Desktop")
+Set oShortCut = oShell.CreateShortcut(sDesktop & "\readme.lnk")
+oShortCut.TargetPath = "C:\Readme.txt"
+oShortCut.Save
+WScript.Echo "Logon Script Complete"
+

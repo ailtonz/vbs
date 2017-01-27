@@ -1,0 +1,17 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'==========================================
+' Executar Programas
+'==========================================
+set objshell = createobject("wscript.shell")
+objshell.LogEvent 0, "Apagando o disco....." 
+wscript.Echo "OK"
+

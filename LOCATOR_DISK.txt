@@ -1,0 +1,24 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set objSvc = GetObject("WinMgmts:")
+Set objConfig = objSvc.GET("Win32_NetworkAdapterConfiguration")
+Set objNic = objSvc.GET("Win32_NetworkAdapter")
+Set objNicPropSet = objNic.properties_
+Set objConfigPropSet = objConfig.properties_
+For Each objNicProp in objNicPropSet
+	strNicProp = strNicProp & objNicProp.name & vbcrlf
+Next
+For Each objConfigProp in objConfigPropSet
+	strConfigProp = strConfigProp & objConfigProp.name & vbcrlf
+Next
+wscript.Echo "Win32_NetworkAdapter" & vbcrlf & "---------------------" & vbcrlf & strNicProp
+wscript.Echo "Win32_NetworkAdapterConfiguration" & vbcrlf & "---------------------" & vbcrlf & strConfigProp
+

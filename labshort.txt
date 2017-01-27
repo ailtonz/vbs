@@ -1,0 +1,211 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'    Written by Ross Bentley-Davies
+'  ross.bentley-davies@knowledgepool.com
+
+
+'Change the constants to change the organization and file names
+
+Const SOURCE_ORGANIZATION = "A1"
+Const DESTINATION_ORGANIZATION = "A2"
+Const DESTINATION_FILE_NAME = "c:\file.txt"
+Const ENVELOPE_NAME = "Three Column Flat File (Envelope)"
+Const DOCUMENT_DEFINITION_NAME = "Three Column Flatfile"
+Const DOCUMENT_DEFINITION_FILE_NAME = "threecolumnflatfile.xml"
+Const DOCUMENT_MAP_FILE_NAME = "swapcolumns.xml"
+
+SERVER_NAME = SetGetEnvVar("PROCESS", "COMPUTERNAME", "localhost", False)
+
+Set objConfig = CreateObject("BizTalk.BizTalkConfig")
+
+'*******************************************************
+'*                                                     *
+'* Create the XML Files for the Document Specs and Maps*
+'*                                                     *
+'*******************************************************
+'Delete the existing files
+Set objxmlhttp = CreateObject("Microsoft.XMLHTTP")
+objxmlhttp.open "DELETE", "http://" & SERVER_NAME & "/biztalkserverrepository/docspecs/" & DOCUMENT_DEFINITION_FILE_NAME
+objxmlhttp.send
+Do While objxmlhttp.readyState <> 4
+'sleep
+Loop
+objxmlhttp.open "DELETE", "http://" & SERVER_NAME & "/biztalkserverrepository/maps/" & DOCUMENT_MAP_FILE_NAME
+objxmlhttp.send
+Do While objxmlhttp.readyState <> 4
+'sleep
+Loop
+'Create the document spec
+
+strXMLDoc = "<?xml version=""1.0""?><Schema name=""ThreeColumnFlatfile"" b:BizTalkServerEditorTool_Version=""1.0"" b:root_reference=""ThreeColumnFlatfile"" b:def_record_delim=""0xd"" b:def_field_delim=""0x2c"" b:standard=""CUSTOM"" xmlns=""urn:schemas-microsoft-com:xml-data"" xmlns:b=""urn:schemas-microsoft-com:BizTalkServer"" xmlns:d=""urn:schemas-microsoft-com:datatypes""><b:SelectionFields/><ElementType name=""ThreeColumnFlatfile"" content=""eltOnly"" model=""closed""><description>Three Column Comma Separated Data</description><b:RecordInfo delimiter_type=""inherit_record"" field_order=""infix"" append_newline=""yes"" skip_CR=""no"" skip_LF=""yes""/>" & _
+"<element type=""BaseRecord"" maxOccurs=""*"" minOccurs=""0""/></ElementType><ElementType name=""Column3"" content=""textOnly"" model=""closed"" d:type=""string""><b:FieldInfo edi_datatype=""AN""/></ElementType><ElementType name=""Column2"" content=""textOnly"" model=""closed"" d:type=""string""><b:FieldInfo edi_datatype=""AN""/></ElementType><ElementType name=""Column1"" content=""textOnly"" model=""closed"" d:type=""string""><b:FieldInfo edi_datatype=""AN""/></ElementType><ElementType name=""BaseRecord"" content=""eltOnly"" model=""closed""><b:RecordInfo delimiter_type=""inherit_field"" field_order=""infix"" skip_CR=""no"" skip_LF=""yes""/><element type=""Column1"" maxOccurs=""1"" minOccurs=""1""/><element type=""Column2"" maxOccurs=""1"" minOccurs=""1""/><element type=""Column3"" maxOccurs=""1"" minOccurs=""1""/></ElementType></Schema>"
+objxmlhttp.open "PUT", "http://" & SERVER_NAME & "/biztalkserverrepository/docspecs/" & DOCUMENT_DEFINITION_FILE_NAME
+objxmlhttp.setRequestHeader "Content-Type", "text/xml"
+objxmlhttp.send strXMLDoc
+Do While objxmlhttp.readyState <> 4
+'sleep
+Loop
+'Create the document map
+
+strXMLDoc = "<?xml version=""1.0""?><mapsource name=""http://p006465/BizTalkServerRepository/Maps/swapcolumns"" BizTalkServerMapperTool_Version=""1.0"" version=""1"" xrange=""100"" yrange=""420""><Values><TestValues/></Values><srctree><Schema name=""ThreeColumnFlatfile"" b:BizTalkServerEditorTool_Version=""1.0"" b:root_reference=""ThreeColumnFlatfile"" b:def_record_delim=""0xd"" b:def_field_delim=""0x2c"" b:standard=""CUSTOM"" xmlns=""urn:schemas-microsoft-com:xml-data"" xmlns:b=""urn:schemas-microsoft-com:BizTalkServer"" xmlns:d=""urn:schemas-microsoft-com:datatypes""><b:SelectionFields/><ElementType name=""ThreeColumnFlatfile"" content=""eltOnly"" model=""closed""><description>Three Column Comma Separated Data</description><b:RecordInfo delimiter_type=""inherit_record"" field_order=""infix"" append_newline=""yes"" skip_CR=""no"" skip_LF=""yes""/>" & _
+"<element type=""BaseRecord"" maxOccurs=""*"" minOccurs=""0""/></ElementType><ElementType name=""Column3"" content=""textOnly"" model=""closed"" d:type=""string""><b:FieldInfo edi_datatype=""AN""/></ElementType><ElementType name=""Column2"" content=""textOnly"" model=""closed"" d:type=""string""><b:FieldInfo edi_datatype=""AN""/></ElementType><ElementType name=""Column1"" content=""textOnly"" model=""closed"" d:type=""string""><b:FieldInfo edi_datatype=""AN""/></ElementType><ElementType name=""BaseRecord"" content=""eltOnly"" model=""closed""><b:RecordInfo delimiter_type=""inherit_field"" field_order=""infix"" skip_CR=""no"" skip_LF=""yes""/><element type=""Column1"" maxOccurs=""1"" minOccurs=""1""/><element type=""Column2"" maxOccurs=""1"" minOccurs=""1""/><element type=""Column3"" maxOccurs=""1"" minOccurs=""1""/>" & _
+"</ElementType></Schema></srctree><sinktree><Schema name=""ThreeColumnFlatfile"" b:BizTalkServerEditorTool_Version=""1.0"" b:root_reference=""ThreeColumnFlatfile"" b:def_record_delim=""0xd"" b:def_field_delim=""0x2c"" b:standard=""CUSTOM"" xmlns=""urn:schemas-microsoft-com:xml-data"" xmlns:b=""urn:schemas-microsoft-com:BizTalkServer"" xmlns:d=""urn:schemas-microsoft-com:datatypes""><b:SelectionFields/><ElementType name=""ThreeColumnFlatfile"" content=""eltOnly"" model=""closed""><description>Three Column Comma Separated Data</description><b:RecordInfo delimiter_type=""inherit_record"" field_order=""infix"" append_newline=""yes"" skip_CR=""no"" skip_LF=""yes""/><element type=""BaseRecord"" maxOccurs=""*"" minOccurs=""0""/></ElementType><ElementType name=""Column3"" content=""textOnly"" model=""closed"" d:type=""string""><b:FieldInfo edi_datatype=""AN""/></ElementType><ElementType name=""Column2"" content=""textOnly"" model=""closed"" d:type=""string"">" & _
+"<b:FieldInfo edi_datatype=""AN""/></ElementType><ElementType name=""Column1"" content=""textOnly"" model=""closed"" d:type=""string""><b:FieldInfo edi_datatype=""AN""/></ElementType><ElementType name=""BaseRecord"" content=""eltOnly"" model=""closed""><b:RecordInfo delimiter_type=""inherit_field"" field_order=""infix"" skip_CR=""no"" skip_LF=""yes""/><element type=""Column1"" maxOccurs=""1"" minOccurs=""1""/><element type=""Column2"" maxOccurs=""1"" minOccurs=""1""/><element type=""Column3"" maxOccurs=""1"" minOccurs=""1""/></ElementType></Schema></sinktree><links><link linkid=""1"" linkfrom=""/ThreeColumnFlatfile/BaseRecord/Column3"" linkto=""/ThreeColumnFlatfile/BaseRecord/Column1""/><link linkid=""2"" linkfrom=""/ThreeColumnFlatfile/BaseRecord/Column2"" linkto=""/ThreeColumnFlatfile/BaseRecord/Column2""/><link linkid=""3"" linkfrom=""/ThreeColumnFlatfile/BaseRecord/Column1"" linkto=""/ThreeColumnFlatfile/BaseRecord/Column3""/></links><functions/>" & _
+"<CompiledXSL><xsl:stylesheet xmlns:xsl=""http://www.w3.org/1999/XSL/Transform"" xmlns:msxsl=""urn:schemas-microsoft-com:xslt"" xmlns:var=""urn:var"" xmlns:user=""urn:user"" exclude-result-prefixes=""msxsl var user"" version=""1.0""><xsl:output method=""xml"" omit-xml-declaration=""yes""/><xsl:template match=""/""><xsl:apply-templates select=""ThreeColumnFlatfile""/></xsl:template><xsl:template match=""ThreeColumnFlatfile""><ThreeColumnFlatfile><xsl:for-each select=""BaseRecord""><BaseRecord><Column1><xsl:value-of select=""Column3/text()""/></Column1><Column2><xsl:value-of select=""Column2/text()""/></Column2><Column3><xsl:value-of select=""Column1/text()""/></Column3></BaseRecord></xsl:for-each></ThreeColumnFlatfile></xsl:template></xsl:stylesheet></CompiledXSL></mapsource>"
+objxmlhttp.open "PUT", "http://" & SERVER_NAME & "/biztalkserverrepository/maps/" & DOCUMENT_MAP_FILE_NAME
+objxmlhttp.setRequestHeader "Content-Type", "text/xml"
+objxmlhttp.send strXMLDoc
+Do While objxmlhttp.readyState <> 4
+'sleep
+Loop
+
+
+
+
+
+
+
+
+'*******************************************************
+'*                                                     *
+'* Tidy up the Existing messaging management data      *
+'*                                                     *
+'*******************************************************
+
+'Delete the Channels if they already eobjConfigist
+Set ExistingChannels = objConfig.Channels
+Do Until ExistingChannels.EOF
+If ExistingChannels("name") = SOURCE_ORGANIZATION & " to " & DESTINATION_ORGANIZATION Then
+Set ChannelToDelete = objConfig.CreateChannel
+ChannelToDelete.LoadByName ExistingChannels("name")
+ChannelToDelete.Remove
+Set ChannelToDelete = Nothing
+End If
+ExistingChannels.MoveNext
+Loop
+'Delete the ports if they already eobjConfigist
+Set ExistingPorts = objConfig.Ports
+Do Until ExistingPorts.EOF
+If ExistingPorts("name") = "to " & DESTINATION_ORGANIZATION Then
+Set PortToDelete = objConfig.CreatePort
+PortToDelete.LoadByName ExistingPorts("name")
+PortToDelete.Remove
+Set PortToDelete = Nothing
+End If
+ExistingPorts.MoveNext
+Loop
+'Delete the Organizations if they already eobjConfigist
+Set ExistingOrgs = objConfig.Organizations
+Do Until ExistingOrgs.EOF
+If ExistingOrgs("name") = SOURCE_ORGANIZATION Or ExistingOrgs("name") = DESTINATION_ORGANIZATION Then
+Set OrgToDelete = objConfig.CreateOrganization
+OrgToDelete.LoadByName ExistingOrgs("name")
+OrgToDelete.Remove
+Set OrgToDelete = Nothing
+End If
+ExistingOrgs.MoveNext
+Loop
+'Delete the Envelopes if they already eobjConfigist
+Set ExistingEnvelopes = objConfig.Envelopes
+Do Until ExistingEnvelopes.EOF
+If ExistingEnvelopes("name") = ENVELOPE_NAME Then
+Set EnvelopeToDelete = objConfig.CreateEnvelope
+EnvelopeToDelete.LoadByName ExistingEnvelopes("name")
+EnvelopeToDelete.Remove
+Set EnvelopeToDelete = Nothing
+End If
+ExistingEnvelopes.MoveNext
+Loop
+'Delete the Document Definitions if they already eobjConfigist
+Set ExistingDocDefs = objConfig.Documents
+Do Until ExistingDocDefs.EOF
+If ExistingDocDefs("name") = DOCUMENT_DEFINITION_NAME Then
+Set DocDefToDelete = objConfig.CreateDocument
+DocDefToDelete.LoadByName ExistingDocDefs("name")
+DocDefToDelete.Remove
+Set DocDefToDelete = Nothing
+End If
+ExistingDocDefs.MoveNext
+Loop
+
+'*******************************************************
+'*                                                     *
+'* Create the new messaging management objects         *
+'*                                                     *
+'*******************************************************
+'Create the Document Definition
+Set objDocDef = objConfig.CreateDocument
+objDocDef.Name = DOCUMENT_DEFINITION_NAME
+objDocDef.Reference = "http://" & SERVER_NAME & "/biztalkserverrepository/docspecs/" & DOCUMENT_DEFINITION_FILE_NAME
+objDocDef.Create
+
+'Create the Flatfile Envelope
+Set objEnv = objConfig.CreateEnvelope
+objEnv.Name = ENVELOPE_NAME
+objEnv.Format = "FLATFILE"
+objEnv.Reference = "http://" & SERVER_NAME & "/biztalkserverrepository/docspecs/" & DOCUMENT_DEFINITION_FILE_NAME
+objEnv.Create
+
+'Create the Organizations
+Set objSourceOrg = objConfig.CreateOrganization
+Set objDestOrg = objConfig.CreateOrganization
+objSourceOrg.Name = SOURCE_ORGANIZATION
+objSourceOrg.Create
+objDestOrg.Name = DESTINATION_ORGANIZATION
+objDestOrg.Create
+
+'Create the Port
+Set objPort = objConfig.CreatePort
+objPort.Name = "to " & DESTINATION_ORGANIZATION
+objPort.DestinationEndpoint.Organization = objDestOrg.Handle
+objPort.PrimaryTransport.Type = 256
+objPort.PrimaryTransport.Address = "file://" & DESTINATION_FILE_NAME
+objPort.Envelope = objEnv.Handle
+objPort.Create
+
+'Create the Channel
+Set objChannel = objConfig.CreateChannel
+objChannel.Name = SOURCE_ORGANIZATION & " to " & DESTINATION_ORGANIZATION
+objChannel.Port = objPort.Handle
+objChannel.SourceEndpoint.Organization = objSourceOrg.Handle
+objChannel.InputDocument = objDocDef.Handle
+objChannel.OutputDocument = objDocDef.Handle
+objChannel.MapReference = "http://" & SERVER_NAME & "/biztalkserverrepository/maps/" & DOCUMENT_MAP_FILE_NAME
+objChannel.Create
+
+MsgBox "Biztalk Messaging has been setup for the Lab"
+
+
+
+'Code to retrieve Machine Name Variable
+
+Function SetGetEnvVar(strType, strName, strDefaultValue, bSet)
+	On Error Resume Next
+	Dim wshShell, wshSysEnv
+	SetGetEnvVar = strDefaultValue
+	If (TypeName(strName) <> "String") Or IsEmpty(strName) Or Len(strName) = 0 Or (TypeName(strType) <> "String") Or IsEmpty(strType) Or Len(strType) = 0 Then
+		FailOnError "SetGetEnvVar().CheckParameters"
+		Exit Function
+	End If
+	Set wshShell = CreateObject("WScript.Shell")
+	Set wshSysEnv = wshShell.Environment(strType)
+	FailOnError "SetGetEnvVar().SetwshSysEnv"
+	If bSet Then
+		wshSysEnv(strName) = strDefaultValue
+		FailOnError "SetGetEnvVar().Set_wshSysEnv(" & strName & ")"
+	Else
+		SetGetEnvVar = wshSysEnv(strName)
+	End If
+	If SetGetEnvVar = "" Then
+		SetGetEnvVar = strDefaultValue
+	End If
+End Function
+
