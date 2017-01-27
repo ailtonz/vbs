@@ -1,0 +1,64 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' This script will find logs that are more than a day old and ''
+'' compress them.                                              ''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Option Explicit
+ 
+Dim objFSO, objFolder, objFiles, objShell
+Dim file, fileExt, fileName, strCommand, strRun, strFile
+Dim Folder, Extension, DaysOld
+ 
+'''' SET THESE VARIABLES! ''''
+Folder = "C:\logs"      'Folder to look in
+Extension = "log"        'Extension of files you want to zip
+DaysOld = 1        'Zip files older than this many days
+''''''''''''''''''''''''''''''
+ 
+'Create object for playing with files
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+ 
+'Create shell object for running commands
+Set objShell = wscript.createObject("wscript.shell")
+ 
+'Set folder to look in
+Set objFolder = objFSO.GetFolder(Folder)
+ 
+'Get files in folder
+Set objFiles = objFolder.Files
+ 
+'Loop through the files
+For Each file in objFiles
+  fileName = Split(file.Name, ".")
+  fileExt = fileName(UBound(fileName))
+  'See if it is the type of file we are looking for
+  If fileExt = Extension Then
+    'See if the file is older than the days chosen above
+    If DateDiff("d", file.DateLastModified, Now()) >= DaysOld Then
+      strFile = file.Path
+      strCommand = "7z -mx=9 a logbackups.zip " & strFile
+      strRun = objShell.Run(strCommand, 0, True)
+      wscript.echo strCommand
+      file.Delete
+      wscript.echo "Deleted " & strFile
+    End If
+    
+  End If
+Next
+ 
+'Cleanup
+Set objFiles = Nothing
+Set objFolder = Nothing
+Set objFSO = Nothing
+Set objShell = Nothing
+wscript.Quit
+

@@ -1,0 +1,31 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim oShell, sOS, nBuildNo, sOrg, oNetwork
+' TODO Instantiate a Shell Object
+	Set oShell=WScript.CreateObject("Wscript.Shell")
+
+' TODO Use the Shell's RegRead method to read values from the Registry
+	sOS = oShell.RegRead("HKLM\Software\Microsoft\Windows NT\CurrentVersion\ProductName")
+	nBuildNo = oShell.RegRead("HKLM\Software\Microsoft\Windows NT\CurrentVersion\CurrentBuildNumber")
+	sOrg = oShell.RegRead("HKLM\Software\Microsoft\Windows NT\CurrentVersion\RegisteredOrganization")
+
+
+	WScript.Echo "The Current OS is : " & sOS
+	WScript.Echo "The Build Number is : " & nBuildNo
+	WScript.Echo "The Registered Organization is : " & sOrg
+	
+	
+
+' TODO Instantiate a Network Object
+	Set oNetwork=CreateObject("Wscript.Network") 
+' Map z: to the LabShare folder on the instructor machine (London)
+	oNetwork.MapNetworkDrive "z:", "\\London\LabShare" 
+

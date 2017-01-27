@@ -1,0 +1,127 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'***************************************'
+' Declare script-level variables
+'***************************************'
+Dim strImportReport		'String: URL to Import Report
+Dim intShowReports		'Integer: Response to MsgBox
+Dim intErr				'Integer: Indicates whether error has occurred
+Dim intContinue			'Integer: Response to MsgBox
+
+'***************************************'
+' Declare constants
+'***************************************'
+CONST CMS_IMPORT_CREATED_BY_CURRENT_USER = 1
+CONST CMS_IMPORT_CREATED_BY_USE_PACKAGE = 2
+
+CONST CMS_IMPORT_RIGHTS_GROUPS_NONE = 1
+CONST CMS_IMPORT_RIGHTS_GROUP_WITHOUT_MEMBERS = 2
+CONST CMS_IMPORT_RIGHTS_GROUP_USE_PACKAGE_MEMBERS = 3
+
+CONST CMS_IMPORT_RIGHTS_ON_ADD_NO_RIGHTS = 1
+CONST CMS_IMPORT_RIGHTS_ON_ADD_INHERIT_FROM_PARENT = 2
+CONST CMS_IMPORT_RIGHTS_ON_ADD_USE_PACKAGE = 3
+
+CONST CMS_IMPORT_RIGHTS_ON_REPLACE_KEEP_EXISTING = 1
+CONST CMS_IMPORT_RIGHTS_ON_REPLACE_USE_PACKAGE = 2
+
+'***************************************'
+' Initialize variables
+'***************************************'
+intErr = 0
+
+'***************************************'
+' Prompt user
+'***************************************'
+intContinue = Msgbox("Do you want to start the import script?" & vbCrLf & "The script may take a few seconds, so please be patient...", vbYesNo, "Start Import Script?")
+
+If intContinue = vbNo then
+	WScript.Quit
+End If
+
+'*******************************************************************'
+' Main body of import script
+'*******************************************************************'
+' 
+strImportReport = ImportWorldNews()								'Uses the SD API to run the import
+		
+If strImportReport <> "" then
+	strImportReport = "http://localhost" & strImportReport	'Stores the URL to the import report
+
+	intShowReports = Msgbox("Import completed! Do you want to view the import report?", vbYesNo, "Import Report")
+
+	If intShowReports = vbYes Then
+		RunReport(strImportReport)	'Show Import Report
+	End If
+Else
+	Msgbox "Error importing package"
+	intErr = 1 
+End If
+
+'***********************************************************'
+' Uses Site Deployment API to import the WorldNews site
+'
+' Returns URL of Report for success and "" for failure
+'
+Function ImportWorldNews()
+	Dim cmsDeployImport
+	Dim cmsImportOptions
+	Dim strPackageFileName 
+	Dim strReportUrl 
+	
+'	On Error Resume Next
+
+	Set cmsDeployImport = CreateObject("CmsDeployServer.CmsDeployImport.1")
+
+	If Err.Number = 0 Then
+	    cmsDeployImport.AuthenticateAsCurrentUser()
+
+		If Err.Number = 0 then 
+			strPackageFileName = "worldnews.sdo"
+
+			Set cmsImportOptions = cmsDeployImport.Options
+
+			cmsImportOptions.IncludeCreatedBy = CMS_IMPORT_CREATED_BY_USE_PACKAGE
+			cmsImportOptions.IncludeRightsGroups = CMS_IMPORT_RIGHTS_GROUP_USE_PACKAGE_MEMBERS
+			cmsImportOptions.RightsOnAdd = CMS_IMPORT_RIGHTS_ON_ADD_USE_PACKAGE
+			cmsImportOptions.RightsOnReplace = CMS_IMPORT_RIGHTS_ON_REPLACE_USE_PACKAGE
+
+			strReportUrl = cmsDeployImport.Import(strPackageFileName)
+
+			If Err.Number = 0 then
+				ImportWorldNews = strReportUrl
+				Exit Function
+			Else
+				ImportWorldNews = ""
+				Exit Function
+			End If
+		Else
+			ImportWorldNews = ""
+			Exit Function
+		End If
+	Else
+		ImportWorldNews = ""
+	End If
+End Function
+
+'*************************************************************'
+' Automates Internet Explorer to allow user to view deployment
+' reports. Accepts the URL of the report as am input parameter
+'
+Sub RunReport(strURL)
+	Dim ie
+	
+	Set ie = CreateObject("InternetExplorer.Application")
+	
+	ie.Visible = True
+	ie.Navigate strUrl 
+End Sub
+

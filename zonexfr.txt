@@ -1,0 +1,34 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim vbYes: vbYes=6
+Dim vbNo: vbNo=7
+
+Do Until retry = vbYes
+Input = InputBox("Please enter a valid Microsoft Windows XP Product ID, including dashes, in the field below.", "Automated Setup")
+retry = MsgBox ("You have entered " & input, vbyesno, "Automated Setup")
+
+If retry = vbNo Then
+	MsgBox "Please try again.",,"Automated Setup"
+Else
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	wshshell.run "d:\tools\winxpun.cmd", 6, True
+
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	set strt = fso.getfolder("c:\setup\")
+	fn = "winxppid.txt"
+	set fl = fso.createtextfile(strt & "\" & fn, true)
+	fl.writeline "ProductID=" & input
+
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	wshshell.run "d:\tools\buildun.cmd", 6, True
+End If
+Loop
+
