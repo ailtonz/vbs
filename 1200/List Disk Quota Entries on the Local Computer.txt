@@ -1,0 +1,19 @@
+###
+###
+###
+### Category1 : Storage
+### Category2 : Disk Quotas
+### Category3 : 
+### Description : Enumerates disk quota information (including user name, warning and quota limits, and disk space used) for each disk quota entry on the local computer.
+###
+###
+###
+Set colDiskQuotas = CreateObject("Microsoft.DiskQuota.1")
+colDiskQuotas.Initialize "C:\", True
+ 
+For Each objUser in colDiskQuotas
+    Wscript.Echo "Logon name: " & objUser.LogonName
+    Wscript.Echo "Quota limit: " & objUser.QuotaLimit
+    Wscript.Echo "Quota threshold: " & objUser.QuotaThreshold
+    Wscript.Echo "Quota used: " & objUser.QuotaUsed
+Next

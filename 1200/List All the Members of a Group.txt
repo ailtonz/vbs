@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : Active Directory
+### Category2 : Groups
+### Category3 : 
+### Description : Returns the members of an Active Directory group named Scientists.
+###
+###
+###
+On Error Resume Next
+ 
+Set objGroup = GetObject _
+  ("LDAP://cn=Scientists,ou=R&D,dc=NA,dc=fabrikam,dc=com")
+objGroup.GetInfo
+ 
+arrMemberOf = objGroup.GetEx("member")
+ 
+WScript.Echo "Members:"
+For Each strMember in arrMemberOf
+    WScript.echo strMember
+Next

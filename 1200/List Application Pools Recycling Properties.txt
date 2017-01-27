@@ -1,0 +1,31 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 6.0
+### Category3 : Applications and Application Pools
+### Description : Lists recycling properties for IIS application pools.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject _
+    ("winmgmts:{authenticationLevel=pktPrivacy}\\" _
+        & strComputer & "\root\microsoftiisv2")
+
+Set colItems = objWMIService.ExecQuery _
+    ("Select * from IIsApplicationPoolsSetting")
+
+For Each objItem in colItems
+    Wscript.Echo "Periodic Restart Memory: " & _
+        objItem.PeriodicRestartMemory
+    Wscript.Echo "Periodic Restart PrivateMemory: " & _
+        objItem.PeriodicRestartPrivateMemory
+    Wscript.Echo "Periodic Restart Requests: " & _
+        objItem.PeriodicRestartRequests
+    For Each strSchedule in objItem.PeriodicRestartSchedule
+        Wscript.Echo "Periodic Restart Schedule: " & strSchedule
+    Next
+    Wscript.Echo "Periodic Restart Time: " & _
+        objItem.PeriodicRestartTime
+Next

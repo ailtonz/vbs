@@ -1,0 +1,44 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 6.0
+### Category3 : Applications and Application Pools
+### Description : Lists all the applications in the MSSharePointAppPool application pool.
+###
+###
+###
+strComputer = "."
+
+Set objWMIService = GetObject _
+    ("winmgmts:{authenticationLevel=pktPrivacy}\\" _
+        & strComputer & "\root\microsoftiisv2")
+
+Set colItems = objWMIService.ExecQuery _
+    ("Select * From IIsApplicationPool Where Name = " & _
+        "'W3SVC/AppPools/MSSharePointAppPool'")
+
+For Each objItem in colItems
+    objItem.EnumAppsInPool arrApplications
+    For i = 0 to Ubound(arrApplications)
+        Wscript.Echo arrApplications(i)
+    Next
+Next
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 5.x
+### Category3 : Applications and Application Pools
+### Description : Returns a list of all the applications in the MSSharePointAppPool application pool.
+###
+###
+###
+strComputer = "LocalHost"
+Set objIIS = GetObject _
+    ("IIS://" & strComputer & "/W3SVC/AppPools/MSSharePointAppPool")
+arrApps = objIIS.EnumAppsInPool
+ 
+For i = 0 to Ubound(arrApps)
+    Wscript.Echo arrApps(i)
+Next

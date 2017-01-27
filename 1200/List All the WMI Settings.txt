@@ -1,0 +1,50 @@
+###
+###
+###
+### Category1 : Scripting Techniques
+### Category2 : WMI
+### Category3 : 
+### Description : Returns a list of WMI settings  configured on a computer.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+Set colWMISettings = objWMIService.ExecQuery _
+    ("Select * from Win32_WMISetting")
+
+For Each objWMISetting in colWMISettings
+    Wscript.Echo "Default namespace: " & _
+        objWMISetting.ASPScriptDefaultNamespace
+    Wscript.Echo "Backup interval: " & objWMISetting.BackupInterval
+    Wscript.Echo "Last backup: " & objWMISetting.BackupLastTime
+    Wscript.Echo "Build version: " & objWMISetting.BuildVersion
+    Wscript.Echo "Repository directory: " & _
+        objWMISetting.DatabaseDirectory
+    Wscript.Echo "Enable events: " & objWMISetting.EnableEvents
+    Wscript.Echo "High threshold on client objects: " & _
+        objWMISetting.HighThresholdOnClientObjects
+    Wscript.Echo "High threshold on events: " & _
+        objWMISetting.HighThresholdOnEvents
+    Wscript.Echo "Installation folder: " & _
+        objWMISetting.InstallationDirectory
+    Wscript.Echo "Logging folder: " & objWMISetting.LoggingDirectory
+    Wscript.Echo "Logging level: " & objWMISetting.LoggingLevel
+    Wscript.Echo "Low threshold on client objects: " & _
+        objWMISetting.LowThresholdOnClientObjects
+    Wscript.Echo "Low threshold on events: " & _
+        objWMISetting.LowThresholdOnEvents
+    Wscript.Echo "Maximum log file size: " & objWMISetting.MaxLogFileSize
+    Wscript.Echo "Maximum wait time on client objects: " & _
+        objWMISetting.MaxWaitOnClientObjects
+    Wscript.Echo "Maximum wait time on events: " & _
+        objWMISetting.MaxWaitOnEvents
+    Wscript.Echo "MOF Self-install folder: " & _
+        objWMISetting.MofSelfInstallDirectory
+    For i = 0 to Ubound(objWMISetting.AutorecoverMofs)
+        Wscript.Echo "Autorecover MOF: " & _
+            objWMISetting.AutorecoverMofs(i)
+    Next
+Next

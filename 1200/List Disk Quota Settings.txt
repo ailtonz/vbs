@@ -1,0 +1,28 @@
+###
+###
+###
+### Category1 : Storage
+### Category2 : Disk Quotas
+### Category3 : 
+### Description : Enumerates the disk quota settings for each drive on a computer.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+Set colQuotaSettings = objWMIService.ExecQuery _
+    ("Select * from Win32_QuotaSetting")
+
+For Each objQuotaSetting in colQuotaSettings
+    Wscript.Echo "Default Limit: " & objQuotaSetting.DefaultLimit
+    Wscript.Echo "Default Warning Limit: " &  _
+        objQuotaSetting.DefaultWarningLimit    
+    Wscript.Echo "Exceeded Notification: " &  _
+        objQuotaSetting.ExceededNotification   
+    Wscript.Echo "State: " & objQuotaSetting.State    
+    Wscript.Echo "Volume Path: " & objQuotaSetting.VolumePath
+    Wscript.Echo "Warning Exceeded Notification: " & _
+        objQuotaSetting.WarningExceededNotification    
+Next

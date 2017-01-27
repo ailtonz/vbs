@@ -1,0 +1,17 @@
+###
+###
+###
+### Category1 : Active Directory
+### Category2 : User Accounts
+### Category3 : Retrieving User Account Properties
+### Description : Returns COM+ information for the MyerKen Active Directory user account.
+###
+###
+###
+On Error Resume Next
+
+Set objUser = GetObject _
+    ("LDAP://cn=MyerKen,ou=Management,dc=NA,dc=fabrikam,dc=com")
+
+WScript.Echo "COM User Partition Set Link: " & _
+    objUser.msCOM-UserPartitionSetLink

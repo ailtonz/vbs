@@ -1,0 +1,23 @@
+###
+###
+###
+### Category1 : Operating System
+### Category2 : COM and DCOM
+### Category3 : 
+### Description : Returns information about all the DCOM (distributed COM) applications installed on a computer.
+###
+###
+###
+On Error Resume Next
+
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+Set colItems = objWMIService.ExecQuery("Select * from Win32_DCOMApplication")
+
+For Each objItem in colItems
+    Wscript.Echo "Application ID: " & objItem.AppID
+    Wscript.Echo "Name: " & objItem.Name
+    Wscript.Echo
+Next

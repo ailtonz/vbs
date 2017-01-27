@@ -1,0 +1,16 @@
+###
+###
+###
+### Category1 : Other Directory Services
+### Category2 : Local Computer and NT 4 Accounts
+### Category3 : User Accounts
+### Description : Returns a list of all the user accounts in a Windows NT 4.0 domain named Fabrikam.
+###
+###
+###
+Set objDomain = GetObject("WinNT://fabrikam,domain")
+objDomain.Filter = Array("User")
+
+For Each objUser In objDomain
+    Wscript.Echo objUser.Name 
+Next

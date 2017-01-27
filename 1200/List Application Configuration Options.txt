@@ -1,0 +1,30 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 6.0
+### Category3 : Applications and Application Pools
+### Description : Lists IIS application configuration options.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject _
+    ("winmgmts:{authenticationLevel=pktPrivacy}\\" _
+        & strComputer & "\root\microsoftiisv2")
+
+Set colItems = objWMIService.ExecQuery _
+    ("Select * from IIsWebServiceSetting")
+
+For Each objItem in colItems
+    Wscript.Echo "ASP Allow Session State: " & _
+        objItem.AspAllowSessionState
+    Wscript.Echo "ASP Buffering On: " & objItem.AspBufferingOn
+    Wscript.Echo "ASP Enable Parent Paths: " & _
+        objItem.AspEnableParentPaths
+    Wscript.Echo "ASP Enable Sxs: " & objItem.AspEnableSxs
+    Wscript.Echo "ASP Script Language: " & objItem.AspScriptLanguage
+    Wscript.Echo "ASP Script Timeout: " & objItem.AspScriptTimeout
+    Wscript.Echo "ASP Session Timeout: " & objItem.AspSessionTimeout
+    Wscript.Echo "ASP Sxs Name: " & objItem.AspSxsName
+Next

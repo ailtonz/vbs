@@ -1,0 +1,30 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 6.0
+### Category3 : Basic Administration
+### Description : Lists IIS computer setting information.
+###
+###
+###
+strComputer = "."
+ 
+Set objWMIService = GetObject _
+    ("winmgmts:{authenticationLevel=pktPrivacy}\\" _
+        & strComputer & "\root\microsoftiisv2")
+
+Set colItems = objWMIService.ExecQuery("Select * from IIsComputerSetting")
+ 
+For Each objItem in colItems
+    Wscript.Echo "Enable Edit While Running: " & _
+        objItem.EnableEditWhileRunning
+    Wscript.Echo "Enable History: " & objItem.EnableHistory
+    Wscript.Echo "Maximum Bandwidth: " & objItem.MaxBandwidth
+    Wscript.Echo "Maximum Bandwidth Blocked: " & _
+        objItem.MaxBandwidthBlocked
+    Wscript.Echo "Maximum Error Files: " & objItem.MaxErrorFiles
+    Wscript.Echo "Maximum History Files: " & objItem.MaxHistoryFiles
+    Wscript.Echo "Name: " & objItem.Name
+    Wscript.Echo "Setting ID: " & objItem.SettingID
+Next

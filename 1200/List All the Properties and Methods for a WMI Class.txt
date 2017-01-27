@@ -1,0 +1,84 @@
+###
+###
+###
+### Category1 : Scripting Techniques
+### Category2 : WMI
+### Category3 : 
+### Description : Lists the class qualifiers, properties, property qualifiers, methods, and method qualifiers for a specified WMI class.
+###
+###
+###
+strComputer = "."
+strNameSpace = "root\cimv2"
+strClass = "Win32_Service"
+ 
+Set objClass = GetObject("winmgmts:{impersonationLevel=impersonate}!\\" & _ 
+    strComputer & "\" & strNameSpace & ":" & strClass)
+ 
+WScript.Echo strClass & " Class Qualifiers"
+WScript.Echo "------------------------------"
+i = 1
+ 
+For Each objClassQualifier In objClass.Qualifiers_
+    If VarType(objClassQualifier.Value) = (vbVariant + vbArray) Then
+        strQualifier = i & ". " & objClassQualifier.Name & " = " & _
+            Join(objClassQualifier.Value, ",")
+    Else
+        strQualifier = i & ". " & objClassQualifier.Name & " = " & _
+        objClassQualifier.Value
+    End If
+    WScript.Echo strQualifier
+    strQualifier = ""
+    i = i + 1
+Next
+ 
+WScript.Echo
+WScript.Echo strClass & " Class Properties and Property Qualifiers"
+WScript.Echo "------------------------------------------------------"
+i = 1 : j = 1
+ 
+For Each objClassProperty In objClass.Properties_
+    WScript.Echo i & ". " & objClassProperty.Name
+    For Each objPropertyQualifier In objClassProperty.Qualifiers_
+        If VarType(objPropertyQualifier.Value) = (vbVariant + vbArray) Then
+            strQualifier = i & "." & j & ". " & _
+                objPropertyQualifier.Name & " = " & _
+            Join(objPropertyQualifier.Value, ",")
+        Else
+            strQualifier = i & "." & j & ". " & _
+                objPropertyQualifier.Name & " = " & _
+            objPropertyQualifier.Value
+        End If
+        WScript.Echo strQualifier
+        strQualifier = ""
+        j = j + 1
+    Next
+    WScript.Echo
+    i = i + 1 : j = 1
+Next
+ 
+WScript.Echo
+WScript.Echo strClass & " Class Methods and Method Qualifiers"
+WScript.Echo "-------------------------------------------------"
+i = 1 : j = 1
+ 
+For Each objClassMethod In objClass.Methods_
+    WScript.Echo i & ". " & objClassMethod.Name
+    For Each objMethodQualifier In objClassMethod.Qualifiers_
+        If VarType(objMethodQualifier.Value) = (vbVariant + vbArray) Then
+            strQualifier = i & "." & j & ". " & _
+                objMethodQualifier.Name & " = " & _
+            Join(objMethodQualifier.Value, ",")
+        Else
+            strQualifier = i & "." & j & ". " & _
+                objMethodQualifier.Name & " = " & _
+                    objMethodQualifier.Value
+        End If
+    WScript.Echo strQualifier
+    strQualifier = ""
+    j = j + 1
+    Next
+ 
+    WScript.Echo
+    i = i + 1 : j = 1
+Next

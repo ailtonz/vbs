@@ -1,0 +1,38 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 6.0
+### Category3 : Logging
+### Description : Returns information about all the custom log modules on an IIS server.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject _
+    ("winmgmts:{authenticationLevel=pktPrivacy}\\" _
+        & strComputer & "\root\microsoftiisv2")
+
+Set colItems = objWMIService.ExecQuery _
+    ("Select * from IIsCustomLogModuleSetting")
+
+For Each objItem in colItems
+    Wscript.Echo "Log Custom Property Data Type: " & _
+        objItem.LogCustomPropertyDataType
+    Wscript.Echo "Log Custom Property Header: " & _
+        objItem.LogCustomPropertyHeader
+    Wscript.Echo "Log Custom Property ID: " & _
+        objItem.LogCustomPropertyID
+    Wscript.Echo "Log Custom Property Mask: " & _
+        objItem.LogCustomPropertyMask
+    Wscript.Echo "Log Custom Property Name: " & _
+        objItem.LogCustomPropertyName
+    Wscript.Echo "Log Custom Property Node ID: " & _
+        objItem.LogCustomPropertyNodeID
+    For Each strProperty in objItem.LogCustomPropertyServicesString
+        Wscript.Echo "Log Custom Property Services String: " & _
+            strproperty
+    Next
+    Wscript.Echo "Name: " & objItem.Name
+    Wscript.Echo "Setting ID: " & objItem.SettingID
+Next
