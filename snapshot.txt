@@ -1,0 +1,77 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+
+' slookup.vbs
+'
+' This script creates the secondary lookup zones on London
+
+Option Explicit
+
+Dim WshShell
+Dim IpConfigSet, IPConfig, IPAddr, Classroom, CmdStr
+Dim i
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+
+Set IPConfigSet = GetObject("winmgmts:").ExecQuery _
+		("select IPAddress from Win32_NetworkAdapterConfiguration where IPEnabled=TRUE")
+
+For Each IPConfig in IPConfigSet
+   If Not IsNull(IPConfig.IPAddress) then 
+      For i = LBound(IPConfig.IPAddress) to UBound(IPConfig.IPAddress)
+	 If Left(IPConfig.IPAddress(i), 7) = "192.168" And _
+            Right(IPConfig.IPAddress(i), 3) = "200" Then
+            IPAddr = IPConfig.IPAddress(i)
+	 End If
+      Next
+   End If
+Next
+
+Classroom = Mid(IPAddr, 9, 1)
+
+Call Add2ndryZone("Vancouver",  "101", Classroom)
+Call Add2ndryZone("Denver",     "102", Classroom)
+Call Add2ndryZone("Perth",      "103", Classroom)
+Call Add2ndryZone("Brisbane",   "104", Classroom)
+Call Add2ndryZone("Lisbon",     "105", Classroom)
+Call Add2ndryZone("Bonn",       "106", Classroom)
+Call Add2ndryZone("Lima",       "107", Classroom)
+Call Add2ndryZone("Santiago",   "108", Classroom)
+Call Add2ndryZone("Bangalore",  "109", Classroom)
+Call Add2ndryZone("Singapore",  "110", Classroom)
+Call Add2ndryZone("Casablanca", "111", Classroom)
+Call Add2ndryZone("Tunis",      "112", Classroom)
+Call Add2ndryZone("Acapulco",   "113", Classroom)
+Call Add2ndryZone("Miami",      "114", Classroom)
+Call Add2ndryZone("Auckland",   "115", Classroom)
+Call Add2ndryZone("Suva",       "116", Classroom)
+Call Add2ndryZone("Stockholm",  "117", Classroom)
+Call Add2ndryZone("Moscow",     "118", Classroom)
+Call Add2ndryZone("Caracas",    "119", Classroom)
+Call Add2ndryZone("Montevideo", "120", Classroom)
+Call Add2ndryZone("Manila",     "121", Classroom)
+Call Add2ndryZone("Tokyo",      "122", Classroom)
+Call Add2ndryZone("Khartoum",   "123", Classroom)
+Call Add2ndryZone("Nairobi",    "124", Classroom)
+
+WScript.Quit 0
+
+
+' Add a New Secondary Zone
+'
+Sub Add2ndryZone(Machine, EndAddr, CRNum)
+   ' Create command to add forward secondary lookup zone
+   CmdStr = "c:\tools\dnscmd london.nwtraders.msft. /zoneadd " & Left(Machine, 3) & ".nwtraders.msft /Secondary " & _
+            "192.168." & CRNum & "." & EndAddr & " /file " & Left(Machine, 3) & ".nwtraders.msft.dns" 
+   WshShell.Run CmdStr, 0, True
+End Sub
+

@@ -1,0 +1,13 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+DIM X
+SET X = GETOBJECT("sked:///c:\data\LABS\Lab4\demo1\POApproval2.skx")
+

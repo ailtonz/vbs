@@ -1,0 +1,28 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set wshshell = wscript.createobject("wscript.shell")
+Set IPConfigSet = GetObject("winmgmts:").ExecQuery ("select IPAddress,SettingID from Win32_NetworkAdapterConfiguration where DHCPEnabled=FALSE")
+for each j in IpConfigSet
+	if Not IsNull(j.ipaddress) then
+		x = j.ipaddress(i)
+		if left(x,7) = "192.168" then
+			exit for
+		end if
+	end if
+next
+
+y=j.settingid(i)
+z=left(x,9)
+clsrm=right(z,1)
+wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v NameServer /t REG_SZ /d 192.168.222.200 /f" 'reg entry to set DNS
+wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v DefaultGateway /t REG_MULTI_SZ /d 192.168." & clsrm & ".201 /f" 'reg entry to set gateway
+wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v DefaultGatewayMetric /t REG_MULTI_SZ /d 1 /f" 'reg entry to set gateway
+

@@ -1,0 +1,36 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'sharefld.vbs
+'
+'This script creates and shares the SnapShot folder
+
+set wshshell = Wscript.CreateObject("Wscript.Shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+set onet = CreateObject("wscript.network")
+
+'Determine if this machine is a London machine or a secondary instructor/student
+CompName = ucase(onet.ComputerName)
+if (CompName = "LONDON") then
+	NotLondon = 0
+else
+	NotLondon = 1
+end if
+
+'Create the SnapShot folder
+if not(fso.FolderExists("C:\SnapShot")) then fso.CreateFolder "C:\SnapShot"
+
+'Allow network users to change the files in the SnapShot folder
+if (NotLondon) then
+	WshShell.run "C:\moc\Setup\rmtshare.exe \\" & CompName & "\SnapShot /grant everyone:c", 6, true
+else
+	WshShell.run "C:\Setup\rmtshare.exe \\LONDON\SnapShot /grant everyone:c", 6, true
+end if
+

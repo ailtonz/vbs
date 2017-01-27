@@ -1,0 +1,44 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' super.vbs
+'
+' This script installs the SuperScan application on the student machines
+
+set wshshell = wscript.CreateObject("wscript.shell")
+Set oShell = CreateObject("WScript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
+
+
+' Run the file.
+wshshell.Run "C:\moc\2810\labfiles\setup\superscan.exe /s", 0, true
+
+
+' Close the app
+Set oWMI = GetObject("winmgmts:")
+for each Process in oWMI.InstancesOf("Win32_Process")
+    if (Process.Name = "scanner.exe")  then
+	Process.Terminate
+	Set Process = Nothing
+    End If
+next
+
+
+' Move the contents of the folder
+fso.MoveFile "C:\Program Files\SuperScan\*.*", "C:\MOC\2810\Labfiles\Lab10\"
+
+wscript.Sleep 5000
+
+'Delete the SuperScan folder in C:\Program Files
+if fso.FolderExists ("C:\Program Files\SuperScan") then
+	Set MyFolder = fso.GetFolder("C:\Program Files\SuperScan\")
+	MyFolder.Delete
+end if
+

@@ -1,0 +1,437 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' stuusers.vbs
+'
+' This script creates the domain accounts on the student computer
+
+Option Explicit
+
+Dim WSHShell, IPConfigSet, pos, strDomainNum, strDomain, strBase, strFullDomain, i, j, ipAddr
+Dim odomDomain
+Dim oouCSO, oouDev, oouHR, oouSales, oouMA, oouMSF, oouSAA, oouGPMCPrac, oouMktg, oouFin, oouEng, oouDB
+Dim ogrpMktg, ogrpSalesIT, ogrpDBU, OgrpDBO, ogrpHR
+Dim ousrCurrent
+Dim ocontUsers
+Dim ocompCurrent
+Dim strPassword
+Dim strStreet
+Dim oSec, oACL, oACE1, oACE2
+
+Const ADS_UF_PASSWD_NOTREQD            = &H20
+Const ADS_UF_NORMAL_ACCOUNT            = &H200
+Const ADS_UF_WORKSTATION_TRUST_ACCOUNT = &H1000
+Const ADS_UF_DONT_EXPIRE_PASSWD        = &H10000
+
+Const ADS_RIGHT_DS_CREATE_CHILD = &H1 
+Const ADS_RIGHT_GENERIC_READ    = &H80000000
+
+Const ADS_ACETYPE_ACCESS_DENIED = &H1 
+
+Const ADSI_TYPE_CONT  = "container"
+Const ADSI_TYPE_GROUP = "group"
+Const ADSI_TYPE_OU    = "organizationalUnit"
+Const ADSI_TYPE_USER  = "user"
+Const ADSI_TYPE_COMP  = "computer"
+
+Const PASSWORD = "P@ssw0rd"
+Const BADPASSWORD = "BadP@ssw0rd"
+
+
+Set WSHShell = WScript.CreateObject("wscript.shell")
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create domain name by retrieving NIC address and use
+'' last quad for domain number X (in nwradersX.msft)
+set WSHShell = WScript.CreateObject("wscript.shell")
+Set IPConfigSet = GetObject("winmgmts:").ExecQuery ("select IPAddress from Win32_NetworkAdapterConfiguration where IPenabled=TRUE and DHCPEnabled=FALSE")
+for each j in IpConfigSet
+   if Not IsNull(j.ipaddress) then
+      ipAddr = j.ipaddress(i)
+      pos = InStrRev(ipAddr, ".")
+      strDomainNum = Mid(ipAddr, pos + 1)
+      strDomain = "nwtraders" & strDomainNum
+   end if
+next
+
+strBase = "msft"
+strFullDomain = strDomain & "." & strBase
+
+'MsgBox("Domain:  " & strDomain)
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the CSO organizational unit 
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set odomDomain = GetObject("LDAP://" & strFullDomain)
+Set oouCSO = odomDomain.Create(ADSI_TYPE_OU, "OU=CSO")
+oouCSO.SetInfo
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the user accounts
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Call CreateUser(oouCSO, "Holly", "Holt", ousrCurrent, PASSWORD)
+Call AddStrAddr(ousrCurrent)
+ousrCurrent.Put "description", "Phone Rep Manager"
+ousrCurrent.Put "countryCode", 840
+ousrCurrent.Put "c", "US"
+ousrCurrent.Put "l", "Redmond"
+ousrCurrent.Put "st", "WA"
+ousrCurrent.Put "title", "Phone Rep Manager"
+ousrCurrent.Put "postalCode", "98052"
+ousrCurrent.Put "physicalDeliveryOfficeName", "Lakeridge Towers"
+ousrCurrent.Put "telephoneNumber", "X2596"
+ousrCurrent.Put "co", "United States"
+ousrCurrent.Put "department", "CSO"
+ousrCurrent.Put "company", "Northwind Traders"
+ousrCurrent.AccountDisabled = True
+ousrCurrent.Put "pwdLastSet", 0
+ousrCurrent.SetInfo
+
+Call CreateUser(oouCSO, "Michael", "Allen", ousrCurrent, PASSWORD)
+Call AddStrAddr(ousrCurrent)
+
+Call CreateUser(oouCSO, "Don",     "Hall", ousrCurrent, PASSWORD)
+Call AddStrAddr(ousrCurrent)
+Call DontExpPwd(ousrCurrent)
+
+Call CreateUser(oouCSO, "Max",     "Benson", ousrCurrent, PASSWORD)
+Call AddStrAddr(ousrCurrent)
+
+Call CreateUser(oouCSO, "Nicole",  "Caron", ousrCurrent, PASSWORD)
+Call AddStrAddr(ousrCurrent)
+
+Call CreateUser(oouCSO, "Eva",     "Corets", ousrCurrent, PASSWORD)
+Call AddStrAddr(ousrCurrent)
+
+Call CreateUser(oouCSO, "Andrew",  "Ma", ousrCurrent, PASSWORD)
+Call AddStrAddr(ousrCurrent)
+Call DontExpPwd(ousrCurrent)
+
+Call CreateUser(oouCSO, "Sairaj",  "Uddin", ousrCurrent, PASSWORD)
+Call AddStrAddr(ousrCurrent)
+
+Call CreateUser(oouCSO, "Mandy",   "Vance", ousrCurrent, PASSWORD)
+Call AddStrAddr(ousrCurrent)
+Call DontExpPwd(ousrCurrent)
+
+Call CreateUser(oouCSO, "Brian",   "Walton", ousrCurrent, PASSWORD)
+Call AddStrAddr(ousrCurrent)
+
+Call CreateUser(oouCSO, "Tai",     "Yee", ousrCurrent, PASSWORD)
+Call AddStrAddr(ousrCurrent)
+
+Call CreateUser(oouCSO, "Mary",    "Baker", ousrCurrent, PASSWORD)
+Call AddStrAddr(ousrCurrent)
+
+'''''''''''''''''''''''''''''''''''
+'' Create the Marketing user group 
+'''''''''''''''''''''''''''''''''''
+Set ocontUsers = odomDomain.GetObject(ADSI_TYPE_CONT, "CN=Users")
+Call CreateGroup(ocontUsers, "Marketing", ogrpMktg)
+
+''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Development organizational unit 
+''''''''''''''''''''''''''''''''''''''''''''''
+Set oouDev = odomDomain.Create(ADSI_TYPE_OU, "OU=Development")
+oouDev.SetInfo
+
+'''''''''''''''''''''''''''''
+'' Create more user accounts
+'''''''''''''''''''''''''''''
+Call CreateUser(oouDev, "Bjorn", "Rettig", ousrCurrent, PASSWORD)
+
+'''''''''''''''''''''''''
+'' Add members to groups
+'''''''''''''''''''''''''
+Call AddMember("Bjorn", "Rettig", "OU=Development", "CN=Marketing,CN=Users")
+Call AddMember("Bjorn", "Rettig", "OU=Development", "CN=Domain Admins,CN=Users")
+
+'''''''''''''''''''''''''''''
+'' Create more user accounts
+'''''''''''''''''''''''''''''
+Call CreateUser(oouCSO, "John", "Rodman", ousrCurrent, BADPASSWORD)
+
+'''''''''''''''''''''''''''''''''''''
+'' Create the HR organizational unit 
+'''''''''''''''''''''''''''''''''''''
+Set oouHR = odomDomain.Create(ADSI_TYPE_OU, "OU=HR")
+oouHR.SetInfo
+
+'''''''''''''''''''''''''''''''
+'' Create another user account
+'''''''''''''''''''''''''''''''
+Call CreateUser(oouHR, "Peter", "Houston", ousrCurrent, PASSWORD)
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the bakerm1 computer account
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Call CreateComputer("bakerm1", ocompCurrent)
+ocompCurrent.AccountDisabled = True
+ocompCurrent.SetInfo
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Remove Marketing's permission to Create All Child Objects in the CSO OU 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set oSec = oouCSO.Get("ntSecurityDescriptor")
+Set oACL = oSec.DiscretionaryAcl
+Set oACE1 = CreateObject("AccessControlEntry") 
+oACE1.Trustee    = strDomain & "\Marketing"
+oACE1.AceType    = 0
+oACE1.AccessMask = ADS_RIGHT_GENERIC_READ
+oACE1.AceFlags   = 0
+oACE1.Flags      = 0
+oACL.AddAce oACE1
+Set oACE2 = CreateObject("AccessControlEntry") 
+oACE2.Trustee    = strDomain & "\Marketing"
+oACE2.AceType    = ADS_ACETYPE_ACCESS_DENIED
+oACE2.AccessMask = ADS_RIGHT_DS_CREATE_CHILD
+oACE2.AceFlags   = 0
+oACE2.Flags      = 0
+oACL.AddAce oACE2
+oSec.DiscretionaryAcl = oACL
+oouCSO.Put "ntSecurityDescriptor", oSec
+oouCSO.SetInfo 
+Set oACE2 = Nothing
+Set oACE1 = Nothing
+Set oACL = Nothing
+Set oSec = Nothing
+
+''''''''''''''''''''''''''''''''''''''''
+'' Create the Sales organizational unit 
+''''''''''''''''''''''''''''''''''''''''
+Set oouSales = odomDomain.Create(ADSI_TYPE_OU, "OU=Sales")
+oouSales.SetInfo
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Mobile Sales Force organizational unit 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set oouMSF = oouSales.Create(ADSI_TYPE_OU, "OU=Mobile Sales Force")
+oouMSF.SetInfo
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Sales Admin Assistants organizational unit 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set oouSAA = oouSales.Create(ADSI_TYPE_OU, "OU=Sales Admin Assistants")
+oouSAA.SetInfo
+
+'''''''''''''''''''''''''''''
+'' Create the Sales IT group 
+'''''''''''''''''''''''''''''
+Call CreateGroup(oouSales, "Sales IT", ogrpSalesIT)
+
+'''''''''''''''''''''''''''''
+'' Create more user accounts
+'''''''''''''''''''''''''''''
+Call CreateUser(oouSales, "Lori", "Kane", ousrCurrent, PASSWORD)
+
+Call CreateUser(oouSales, "Sharon", "Salavaria", ousrCurrent, PASSWORD)
+
+Call CreateUser(oouMSF, "Andy", "Ruth", ousrCurrent, PASSWORD)
+
+Call CreateUser(oouMSF, "Sunil", "Koduri", ousrCurrent, PASSWORD)
+
+Call CreateUser(oouSAA, "Josh", "Barnhill", ousrCurrent, PASSWORD)
+
+Call CreateUser(oouSAA, "Ben", "Smith", ousrCurrent, PASSWORD)
+
+'''''''''''''''''''''''''
+'' Add members to groups
+'''''''''''''''''''''''''
+Call AddMember("Sharon", "Salavaria", "OU=Sales", "CN=Sales IT,OU=Sales")
+
+Call AddMember("Sunil", "Koduri", "OU=Mobile Sales Force,OU=Sales", "CN=Sales IT,OU=Sales")
+
+Call AddMember("Ben", "Smith", "OU=Sales Admin Assistants,OU=Sales", "CN=Sales IT,OU=Sales")
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the GPMCPractice organizational unit 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set oouGPMCPrac = odomDomain.Create(ADSI_TYPE_OU, "OU=GPMCPractice")
+oouGPMCPrac.SetInfo
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Marketing organizational unit 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set oouMktg = oouGPMCPrac.Create(ADSI_TYPE_OU, "OU=Marketing")
+oouMktg.SetInfo
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Finance organizational unit 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set oouFin = oouGPMCPrac.Create(ADSI_TYPE_OU, "OU=Finance")
+oouFin.SetInfo
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Engineering organizational unit 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set oouEng = oouGPMCPrac.Create(ADSI_TYPE_OU, "OU=Engineering")
+oouEng.SetInfo
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Marketing Assistants organizational unit 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set oouMA = oouMktg.Create(ADSI_TYPE_OU, "OU=Marketing Assistants")
+oouMA.SetInfo
+
+'''''''''''''''''''''''''''''
+'' Create more user accounts
+'''''''''''''''''''''''''''''
+Call CreateUser2(oouFin, "Server", "Admin", ousrCurrent, PASSWORD)
+
+Call CreateUser2(oouFin, "Finance", "Admin", ousrCurrent, PASSWORD)
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Databases organizational unit 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set oouDB = odomDomain.Create(ADSI_TYPE_OU, "OU=Databases")
+oouDB.SetInfo
+
+'''''''''''''''''''''''''''''
+'' Create the DB Users group 
+'''''''''''''''''''''''''''''
+Call CreateGroup(oouDB, "DB Users", ogrpDBU)
+
+'''''''''''''''''''''''''''''''''
+'' Create the DB Operators group 
+'''''''''''''''''''''''''''''''''
+Call CreateGroup(oouDB, "DB Operators", ogrpDBO)
+
+'''''''''''''''''''''''''''''
+'' Create more user accounts
+'''''''''''''''''''''''''''''
+Call CreateUser(oouDB, "John", "Frum", ousrCurrent, PASSWORD)
+
+''''''''''''''''''''''''''''''''''''
+'' Create the Human Resources group 
+''''''''''''''''''''''''''''''''''''
+Call CreateGroup(oouHR, "Human Resources", ogrpHR)
+
+'''''''''''''''''''''''''''''
+'' Create more user accounts
+'''''''''''''''''''''''''''''
+Call CreateUser(oouHR, "Julia", "Moseley", ousrCurrent, PASSWORD)
+
+'''''''''''''''''''''''''
+'' Add members to groups
+'''''''''''''''''''''''''
+Call AddMember("Julia", "Moseley", "OU=HR", "CN=Human Resources,OU=HR")
+
+'MsgBox("Done")
+
+WScript.Quit 0
+
+
+'''''''''''''''''''''''''''''''''''
+' Create a user account
+' Sets: ousrOut to user object
+'''''''''''''''''''''''''''''''''''
+Sub CreateUser(oouThis, strFirst, strLast, ousrOut, strPwd)
+   Set ousrOut = oouThis.Create(ADSI_TYPE_USER, "CN=" & strFirst & " " & strLast) 
+   ousrOut.Put "name",              strFirst & " " & strLast
+   ousrOut.Put "sAMAccountName",    strLast & Left(strFirst, 1)
+   ousrOut.Put "sn",                strLast
+   ousrOut.Put "givenName",         strFirst
+   ousrOut.Put "userPrincipalName", strLast & Left(strFirst, 1) & "@" & strFullDomain 
+   ousrOut.Put "displayName",       strFirst & " " & strLast
+   ousrOut.SetInfo
+   ousrOut.SetPassword strPwd
+   ousrOut.Put "UserAccountControl", ousrOut.Get("UserAccountControl") Xor ADS_UF_PASSWD_NOTREQD
+   ousrOut.AccountDisabled = False
+   ousrOut.SetInfo
+End Sub
+
+
+'''''''''''''''''''''''''''''''''''
+' Create a user account 2
+' Sets: ousrOut to user object
+'''''''''''''''''''''''''''''''''''
+Sub CreateUser2(oouThis, strFirst, strLast, ousrOut, strPwd)
+   Set ousrOut = oouThis.Create(ADSI_TYPE_USER, "CN=" & strFirst & " " & strLast) 
+   ousrOut.Put "name",              strFirst & " " & strLast
+   ousrOut.Put "sAMAccountName",    strFirst & strLast
+   ousrOut.Put "sn",                strLast
+   ousrOut.Put "givenName",         strFirst
+   ousrOut.Put "userPrincipalName", strFirst & strLast & "@" & strFullDomain 
+   ousrOut.Put "displayName",       strFirst & " " & strLast
+   ousrOut.SetInfo
+   ousrOut.SetPassword strPwd
+   ousrOut.Put "UserAccountControl", ousrOut.Get("UserAccountControl") Xor ADS_UF_PASSWD_NOTREQD
+   ousrOut.AccountDisabled = False
+   ousrOut.SetInfo
+End Sub
+
+
+'''''''''''''''''''''''''''''''''''''''''''''
+' Add street address
+' '''''''''''''''''''''''''''''''''''''''''''
+Sub AddStrAddr(ousrThis)
+   ousrThis.Put "streetAddress", "40 North 1st Street"
+   ousrThis.SetInfo
+End Sub
+
+
+'''''''''''''''''''''''''''''''''''''''''''''
+' Don't expire password
+' '''''''''''''''''''''''''''''''''''''''''''
+Sub DontExpPwd(ousrThis)
+   ousrThis.Put "UserAccountControl", ousrThis.Get("UserAccountControl") Or ADS_UF_DONT_EXPIRE_PASSWD
+   ousrThis.SetInfo
+End Sub
+
+
+'''''''''''''''''''''''''''''''''''''''''''''
+' Add user as member of a group
+' '''''''''''''''''''''''''''''''''''''''''''
+Sub AddMember(strFirst, strLast, strOU, strGroup)
+   Dim strDN
+   Dim ogrpThis
+
+   ' Retrieve group object from Active Directory
+   Set ogrpThis = GetObject("LDAP://" & strGroup & ",DC=" & strDomain & ",DC=" & strBase)
+
+   ' Add user to member list
+   ogrpThis.Add "LDAP://CN=" & strFirst & " " & strLast & "," & strOU & ",DC=" & strDomain & ",DC=" & strBase
+   Set ogrpThis = Nothing
+End Sub
+
+
+'''''''''''''''''''''''''''''''''''
+' Create a computer account
+' Sets: ocompOut to user object
+'''''''''''''''''''''''''''''''''''
+Sub CreateComputer(strCompName, ocompOut)
+   Dim ocontComps
+   ' Retrieve Computers object from Active Directory
+   Set ocontComps = GetObject("LDAP://CN=Computers,DC=" & strDomain & ",DC=" & strBase)
+
+   ' Create computer account
+   Set ocompOut = ocontComps.Create(ADSI_TYPE_COMP, "CN=" & strCompName)
+ 
+   ocompOut.Put "localPolicyFlags", 0
+   ocompOut.Put "sAMAccountName", Ucase(strCompName) & "$"
+   ocompOut.SetInfo
+   ocompOut.Put "userAccountControl", ocompOut.Get("userAccountControl") Xor ADS_UF_WORKSTATION_TRUST_ACCOUNT Xor ADS_UF_NORMAL_ACCOUNT
+   ocompOut.SetPassword PASSWORD
+   ocompOut.SetInfo
+End Sub
+
+'''''''''''''''''''''''''''''''''''
+' Create a group
+' Sets: ogrpOut to group object
+'''''''''''''''''''''''''''''''''''
+Sub CreateGroup(oIn, strGroupName, ogrpOut)
+   Set ogrpOut = oIn.Create(ADSI_TYPE_GROUP, "CN=" & strGroupName)
+   ogrpOut.Put "sAMAccountName", strGroupName
+   ogrpOut.SetInfo
+End Sub
+
+
+
+

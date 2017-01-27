@@ -1,0 +1,76 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' stuadmin.vbs
+'
+' This script adds the Administrative Privilege to the Student Computer
+
+set wshshell = wscript.CreateObject("wscript.shell")
+
+set onet   = CreateObject("wscript.network")
+cname      = ucase(onet.ComputerName)
+
+' now make it lowercase
+lcname  = LCase(cname)
+
+Select  Case lcname
+	Case "vancouver"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G VancouverAdmins"" /ADD", 0, true
+	Case "denver"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G DenverAdmins"" /ADD", 0, true
+	Case "perth"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G PerthAdmins"" /ADD", 0, true
+	Case "brisbane"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G BrisbaneAdmins"" /ADD", 0, true
+	Case "lisbon"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G LisbonAdmins"" /ADD", 0, true
+	Case "bonn"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G BonnAdmins"" /ADD", 0, true
+	Case "lima"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G LimaAdmins"" /ADD", 0, true
+	Case "santiago"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G SantiagoAdmins"" /ADD", 0, true
+	Case "bangalore"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G BangaloreAdmins"" /ADD", 0, true
+	Case "singapore"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G SingaporeAdmins"" /ADD", 0, true
+	Case "casablanca"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G CasablancaAdmins"" /ADD", 0, true
+	Case "tunis"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G TunisAdmins"" /ADD", 0, true
+	Case "acapulco"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G AcapulcoAdmins"" /ADD", 0, true
+	Case "miami"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G MiamiAdmins"" /ADD", 0, true
+	Case "auckland"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G AucklandAdmins"" /ADD", 0, true
+	Case "suva"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G SuvaAdmins"" /ADD", 0, true
+	Case "stockholm"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G StockholmAdmins"" /ADD", 0, true
+	Case "moscow"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G MoscowAdmins"" /ADD", 0, true
+	Case "caracas"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G CaracasAdmins"" /ADD", 0, true
+	Case "montevideo"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G MontevideoAdmins"" /ADD", 0, true
+	Case "manila"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G ManilaAdmins"" /ADD", 0, true
+	Case "tokyo"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G TokyoAdmins"" /ADD", 0, true
+	Case "khartoum"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G KhartoumAdmins"" /ADD", 0, true
+	Case "nairobi"
+		wshshell.Run "net localgroup ""Administradores"" ""nwtraders\G NairobiAdmins"" /ADD", 0, true
+	Case Else
+		wscript.Echo "Problema em stuadmin.vbs... O nome do computador não corresponde a nenhum dos nomes esperados de computador de aluno. Portanto, não foi possível adicionar ninguém ao grupo Usuários avançados."
+end select
+
+

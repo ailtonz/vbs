@@ -1,0 +1,27 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+dim sPath, WshShell
+Dim oSked, oPort, sUrl, sDestUrl
+
+sPath = WScript.ScriptFullName
+sPath = Mid(sPath, 1, InStrRev(sPath, "\"))
+sUrl = "sked:///" & sPath & "ClientApp.skx"
+
+set oXmlDoc = CreateObject("MSXML.DOMDocument")
+oXmlDoc.load sPath & "PurchaseOrder.xml"
+Set oSked = GetObject(sUrl)
+Set oPort = oSked.Port("ClientUtil")
+oPort.GetInput oXmlDoc.xml, sPath
+
+sDestUrl = "sked:///" & sPath & "DestApp.skx"
+Set oSked = GetObject(sDestUrl)
+
+

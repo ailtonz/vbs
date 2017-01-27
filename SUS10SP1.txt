@@ -1,0 +1,37 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' survey.vbs
+'
+' This script configures the SurveyApp Sample Application
+
+set wshshell = wscript.CreateObject("wscript.shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+CurrDir = wshshell.CurrentDirectory
+
+'Create a folder under d:\Inetpub\wwwroot named Survey
+if not(fso.FolderExists("d:\Inetpub\wwwroot\Survey")) then fso.CreateFolder "d:\Inetpub\wwwroot\Survey"
+
+'Create a folder under d:\Inetpub\wwwroot named SurveyVB
+if not(fso.FolderExists("d:\Inetpub\wwwroot\SurveyVB")) then fso.CreateFolder "d:\Inetpub\wwwroot\SurveyVB"
+
+'Copy all of the files under d:\Program Files\Msdntrain\2556\Sampapps\SurveyApp\C#\Survey
+'to the Survey folder that was just created at d:\Inetpub\wwwroot\Survey
+sSrc = "d:\Program Files\Msdntrain\2556\Sampapps\SurveyApp\C#\Survey"
+sDest = "d:\Inetpub\wwwroot\Survey"
+wshshell.run "xcopy " & chr(34) & sSrc & chr(34) & " " & sDest & " /E /Y /R /H", 0, true
+
+'Copy all of the files under d:\Program Files\Msdntrain\2556\Sampapps\SurveyApp\VB\Survey
+'to the Survey folder that was just created at d:\Inetpub\wwwroot\SurveyVB
+sSrc = "d:\Program Files\Msdntrain\2556\Sampapps\SurveyApp\VB\Survey"
+sDest = "d:\Inetpub\wwwroot\SurveyVB"
+wshshell.run "xcopy " & chr(34) & sSrc & chr(34) & " " & sDest & " /E /Y /R /H", 0, true
+
+

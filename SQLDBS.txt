@@ -1,0 +1,77 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Create a new SQL database and restore from disk
+
+Dim oServer, oDataCol, oDatabase, oDBFile, oLogFile, oRestore, oBack, wshNet, sName
+
+	'Get the servername
+Set wshNet = CreateObject("WSCript.Network")
+sName = wshNet.ComputerName
+
+	'Create SQL Server object and connect 
+	'Note: SQL server must be running
+Set oServer = CreateObject("SQLDMO.SQLServer")
+oServer.LoginSecure = True
+oServer.Connect sName
+
+	'Create a backupdevice object
+Set oBack = CreateObject("SQLDMO.BackupDevice")
+oBack.Name = "2609Back"
+oBack.Type = 2
+oBack.PhysicalLocation = "C:\Program Files\Msdntrain\2609\Labfiles\Setup\2609.bkp"
+oServer.BackupDevices.Add oBack
+oServer.BackupDevices.Refresh
+
+	'Create database object
+Set oDatabase = CreateObject("SQLDMO.Database")
+oDatabase.Name = "2609"
+
+	'Define the PRIMARY data file.
+Set oDBFile = CreateObject("SQLDMO.DBFile")
+oDBFile.Name = "2609_Data"
+oDBFile.PhysicalName = "c:\program files\microsoft sql server\mssql\data\2609_Data.mdf"
+oDBFile.PrimaryFile = True
+
+	'Specify file growth in chunks of fixed size for all data files.
+oDBFile.FileGrowthType = SQLDMOGrowth_MB
+oDBFile.FileGrowth = 1
+
+	'Add the data file to the database
+oDatabase.FileGroups("PRIMARY").DBFiles.Add oDBFile
+
+	'Define the database transaction log.
+Set oLogFile = CreateObject("SQLDMO.LogFile")
+oLogFile.Name = "2609_Log"
+oLogFile.PhysicalName = "c:\program files\microsoft sql server\mssql\data\2609_Log.ldf"
+
+	'Add the log file to the database
+oDatabase.TransactionLog.LogFiles.Add oLogFile
+For Each dat In oServer.Databases 
+	If dat.Name = "2609" Then
+		oServer.Databases.remove("2609")
+	End if
+Next
+oServer.Databases.Add oDatabase
+
+	'Create the restore object
+Set oRestore = CreateObject("SQLDMO.Restore")
+oRestore.Action = 0  
+oRestore.Database = "2609"
+'oRestore.Files = "C:\Program Files\Msdntrain\2609\Labfiles\Setup\2609.bkp"
+oRestore.ReplaceDatabase = True
+oRestore.Devices = "2609Back"
+
+	'Restore from backup
+oRestore.SQLRestore oServer
+
+	'disconnect 
+oServer.DisConnect 
+

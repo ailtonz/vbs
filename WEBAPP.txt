@@ -1,0 +1,31 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Do Until Resp = vbYes
+
+   Msg = "STOP - DO NOT CONTINUE" & vbCRLF & vbCRLF
+   Msg = Msg + "Click the 'OK' button AFTER all student machines have completed their installation."
+   MsgBox Msg, vbOKOnly + vbCritical, "Custom Setup for Course 2126b"
+
+   Msg = "STOP - VERIFY" & vbCRLF & vbCRLF
+   Msg = Msg + "Have all the student machines have completed their installation?"
+   Resp = MsgBox(Msg, vbYesNo + vbCritical + vbDefaultButton2, "Custom Setup for Course 2126b")
+
+Loop
+
+Msg = "STOP!" & vbCRLF & vbCRLF
+Msg = Msg + "Perform the following step only after Glasgow and" & vbCRLF
+Msg = Msg + "ALL student machines have completed their installation:" & vbCRLF & vbCRLF
+Msg = Msg + "Disconnect the cables connecting LONDON and GLASGOW to the classroom network." & vbCRLF 
+Msg = Msg + "Reconfigure the network as described in the Classroom Configuration" & vbCRLF
+Msg = Msg + "section of the Automated Setup Guide" & vbCRLF & vbCRLF
+Msg = Msg + ""
+MsgBox Msg, 16, "Custom Setup for Course 2126b"
+

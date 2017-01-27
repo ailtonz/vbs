@@ -1,0 +1,84 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' studns.vbs
+'
+' This script configures DNS Server Service
+
+Option Explicit
+
+Dim WshShell
+Dim IpConfigSet, IPConfig, IPAddr, Classroom, CmdStr, ServerStr, oNet
+Dim i
+
+set oNet = CreateObject("wscript.network")
+
+ServerStr = LCase(oNet.ComputerName)
+Classroom = getclsrm
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+
+' Add the forward lookup zone(s)
+Select Case ServerStr
+	Case "vancouver"  Call AddFwdLookupZone("adatum")
+	Case "perth"      Call AddFwdLookupZone("fabrikam")
+	Case "lisbon"     Call AddFwdLookupZone("lucernpublish")
+	Case "lima"       Call AddFwdLookupZone("litwareinc")
+	Case "bangalore"  Call AddFwdLookupZone("tailspintoys")
+	Case "casablanca" Call AddFwdLookupZone("wingtiptoys")
+	Case "acapulco"   Call AddFwdLookupZone("thephonecompany")
+	Case "auckland"   Call AddFwdLookupZone("cpandl")
+	Case "stockholm"  Call AddFwdLookupZone("adventureworks")
+	Case "caracas"    Call AddFwdLookupZone("blueyonderair")
+	Case "manila"     Call AddFwdLookupZone("woodgrovebank")
+	Case "khartoum"   Call AddFwdLookupZone("treyresearch")
+	Case Else MsgBox "Invalid student computer name."
+End Select
+
+' Add 192.168.x reverse lookup zone
+CmdStr = "c:\moc\setup\dnscmd " & ServerStr & " /ZoneAdd " & Classroom & ".168.192.in-addr.arpa /Primary /file " & _
+          Classroom & ".168.192.in-addr.arpa.dns"
+WshShell.Run CmdStr, 0, True
+
+CmdStr = "c:\moc\setup\dnscmd " & ServerStr & " /Config " & Classroom & ".168.192.in-addr.arpa /AllowUpdate 1"
+WshShell.Run CmdStr, 6, True
+
+WScript.Quit 0
+
+
+'''''''''''''''''''''''''''
+' Retrieve classroom number
+'''''''''''''''''''''''''''
+private function getclsrm
+Dim fso, fl, x, lgn
+	set fso = createobject("scripting.filesystemobject")
+
+	set fl = fso.OpenTextFile ("c:\moc\setup\mocset\mocset2.cmd")
+	while left (x,13) <> "set classroom"
+		x = fl.readline
+	wend
+	fl.close
+	rtrim x
+	lgn = len(x)
+	getclsrm = left(right(x,lgn-14),1)
+end function
+
+'''''''''''''''''''''''''''
+' Add a Forward Lookup Zone
+'''''''''''''''''''''''''''
+Sub AddFwdLookupZone(DomainName)
+	CmdStr = "c:\moc\setup\dnscmd " & ServerStr & " /ZoneAdd " & DomainName & ".msft " & _
+	"/Primary /file " & DomainName & ".msft.dns"
+	WshShell.Run CmdStr, 0, True
+
+	CmdStr = "c:\moc\setup\dnscmd " & ServerStr & " /Config " & DomainName & ".msft /AllowUpdate 1"
+	WshShell.Run CmdStr, 6, True
+End Sub
+

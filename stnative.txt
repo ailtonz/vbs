@@ -1,0 +1,36 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set fso = createobject("scripting.filesystemobject")
+set wshshell = wscript.createobject("wscript.shell")
+set objnet = wscript.CreateObject("wscript.network")
+cname = objnet.Computername
+namearr = split(cname,"-",-1)
+fso.createtextfile("c:\tools\stdomain.txt")
+set x = fso.opentextfile("c:\tools\stdomain.txt",8)
+if namearr(0) = "VAN" then
+	x.WriteLine "namerica"
+elseif namearr(0) = "LIM" then
+	x.writeline "samerica"
+elseif namearr(0) = "PAR" then
+	x.writeline "europe"
+elseif namearr(0) = "CAP" then
+	x.writeline "africa"
+elseif namearr(0) = "MOS" then
+	x.writeline "asia"
+elseif namearr(0) = "CAN" then
+	x.writeline "spacific"
+else
+	wscript.quit
+end if
+
+x.close
+wshshell.run "C:\tools\stdel.exe", 6, true
+

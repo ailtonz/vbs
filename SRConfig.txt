@@ -1,0 +1,17 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set wshshell = createobject("wscript.shell")
+set fso = createobject("scripting.FileSystemObject")
+
+if fso.FolderExists("\\London\SQL2000") then	
+	wshshell.run "\\london\setup\sqlsetup.cmd", 6, true
+end if ' if source files were not copied, don't install SQL
+

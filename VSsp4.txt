@@ -1,0 +1,25 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' vsfonts.vbs
+'
+' This script configures Visual Studio .NET to display larger fonts
+' It sets the following defaults:
+'	Text Size: 16
+'	(the other three values need to be set as well for some reason)
+
+set wshshell = wscript.CreateObject("wscript.shell")
+
+WshShell.RegWrite "HKCU\Software\Microsoft\VisualStudio\7.0\FontAndColors\{A27B4E24-A735-4D1D-B8E7-9716E1E3D8E0}\Colorable item format version", &h00000008& ,"REG_DWORD"
+WshShell.RegWrite "HKCU\Software\Microsoft\VisualStudio\7.0\FontAndColors\{A27B4E24-A735-4D1D-B8E7-9716E1E3D8E0}\FontName", "Courier New" ,"REG_SZ"
+WshShell.RegWrite "HKCU\Software\Microsoft\VisualStudio\7.0\FontAndColors\{A27B4E24-A735-4D1D-B8E7-9716E1E3D8E0}\FontPointSize", &h00000010& ,"REG_DWORD"
+WshShell.RegWrite "HKCU\Software\Microsoft\VisualStudio\7.0\FontAndColors\{A27B4E24-A735-4D1D-B8E7-9716E1E3D8E0}\FontCharSet", &h00000000& ,"REG_DWORD"
+
+

@@ -1,0 +1,58 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'==========================================================================
+' NAME: SQLlogin.vbs
+'
+' AUTHOR: Doug Quinn 
+' DATE  : 2/20/2002
+'
+' COMMENT: Adds and configures logins for SQL Server
+'==========================================================================
+Dim oSqlServer, oLoginAdmin, oLoginUser, oUser, oDatabase, oServerRole, sName, wshNet
+Dim i, arrD
+
+	'Get computer name to keep generic
+Set wshNet = CreateObject("WScript.Network")
+sName = wshNet.ComputerName 
+
+	'Create SQL Server object
+Set oSqlServer = CreateObject("SQLDMO.SQLServer")
+oSqlServer.LoginSecure = true
+oSqlServer.Connect sName & "\MOC"
+
+	'Create the Login objects
+Set oLoginAdmin = CreateObject("SQLDMO.Login")
+Set oLoginUser = CreateObject("SQLDMO.Login")
+
+oLoginAdmin.Type = 1
+oLoginAdmin.Name = sName & "\SQL Server Administrators"
+oLoginUser.Type = 1
+oLoginUser.Name = sName & "\SQL Server Users"
+oSqlServer.Logins.Add oLoginAdmin
+oSqlServer.Logins.Add oLoginUser
+
+	'Add admins to Server Role
+oSqlServer.ServerRoles("sysadmin").AddMember oLoginAdmin.Name
+
+	'Add Users to databases
+arrD = Array("Northwind", "master", "pubs", "tempdb")
+
+For each Dat in arrD
+	Set oUser = CreateObject("SQLDMO.User")
+	oUser.Login = oLoginUser.Name 
+	Set oDatabase = oSqlServer.Databases(Dat)
+	oDatabase.Users.Add oUser
+	set oUser = nothing
+Next
+oDatabase.Users.Refresh true
+set oDatabase = nothing
+set oSqlServer = nothing
+

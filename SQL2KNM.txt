@@ -1,0 +1,145 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'' SQL2KDE.VBS
+''
+'' This script installs and Configures Microsoft SQL Server 2000 Developer Edition
+'' This script is used for the London setup as well as the Student setup
+'' 
+'' Tasks:
+''   1. Install SQL Server 2000 Developer Edition
+''   2. Start the SQL Server Service and SQL Server Agent
+''   *REMOVED* 3. Re-register SQL Server
+''       Has been removed due to problems with automating the process.
+''   4. Configure SQL Server user security and access rights
+''   5. Install SQL Server 2000 Service Pack 2
+''
+''
+
+set wshshell = wscript.CreateObject("wscript.shell")
+set wshNet = CreateObject("WScript.Network")
+set fso = CreateObject("Scripting.FileSystemObject")
+sCompName = wshNet.ComputerName
+sName = "(local)"
+isLondon = 0
+
+	' Determine if we are on a London machine
+if (sCompName = "LONDON") then
+	isLondon = 1
+else
+	isLondon = 0
+end if
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' 1. Install SQL Server 2000 Developer Edition
+''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+if (isLondon) then
+	WshShell.run "D:\SQL2KDE\x86\setup\setupsql.exe -s -SMS -f1 C:\SETUP\SETUP.ISS", 6, true
+else
+	WshShell.run "\\london\SQL2KDE\x86\setup\setupsql.exe -s -SMS -f1 C:\MOC\SETUP\SETUP.ISS", 6, true
+end if
+
+	' Copy the logfile to the root of C: and rename it.  It could be helpful in debugging any problems.
+if fso.FileExists("C:\windows\setup.log") then
+   fso.MoveFile "C:\windows\setup.log", "C:\sql_install.log"
+end if
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' 2. Start the SQL Server Service and SQL Server Agent
+''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Set oSqlServer = CreateObject("SQLDMO.SQLServer")
+oSqlServer.Name = sName
+
+	' Start the SQL Server Service
+if oSQLServer.Status = 3 then		' 3 = SQLDMOSvc_Stopped
+    oSqlServer.Start False
+end if
+
+	' Connect to the Server
+oSqlServer.LoginSecure = true
+oSqlServer.Connect sName
+
+	' Set the sql server agent to auto-start
+	' Note: The JobServer object exposes attributes associated with SQL Server Agent
+oSqlServer.JobServer.AutoStart = True
+
+	' Start the SQL Server Agent
+oSqlServer.JobServer.Start
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' 3. Re-register SQL Server
+'' 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'*REMOVED*
+' Will be a Post-Install task
+
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' 4. Configure SQL Server user security and access rights
+'' 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Const SQLDMOLogin_Standard = 2
+
+	' Create the SQLUser Login object
+Set oLoginUser = CreateObject("SQLDMO.Login")
+oLoginUser.Type = SQLDMOLogin_Standard
+oLoginUser.Name = "SQLUser"
+oLoginUser.SetPassword "", "SQL$UserPwd"
+oSqlServer.Logins.Add oLoginUser
+
+	' Add SQLUser to databases
+arrD = Array("Northwind", "pubs")
+For each Dat in arrD
+	Set oUser = CreateObject("SQLDMO.User")
+	oUser.Login = oLoginUser.Name 
+	Set oDatabase = oSqlServer.Databases(Dat)
+	oDatabase.Users.Add oUser
+
+		' Add the db_datawriter database role for SQLUser
+	Set oDatabaseRole = oDatabase.DatabaseRoles("db_datawriter")
+	oDatabaseRole.AddMember "SQLUser"
+
+	set oUser = nothing
+Next
+oDatabase.Users.Refresh true
+
+	' Clean-up
+set oSqlServer = nothing
+set oLoginUser = nothing
+set oDatabase = nothing
+set oDatabaseRole = nothing
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' 5. Install SQL Server 2000 Service Pack 2
+'' 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+if (isLondon) then
+	WshShell.run "D:\SQL2KDE\SP2\x86\setup\setupsql.exe -s -SMS -f1 C:\SETUP\SQL2KSP2.ISS", 6, true
+else
+	WshShell.run "\\london\SQL2KDE\SP2\x86\setup\setupsql.exe -s -SMS -f1 C:\MOC\SETUP\SQL2KSP2.ISS", 6, true
+end if
+
+	' Copy the logfile to the root of C: and rename it.  It could be helpful in debugging any problems.
+if fso.FileExists("C:\windows\setup.log") then
+   fso.MoveFile "C:\windows\setup.log", "C:\sqlsp2_install.log"
+end if
+

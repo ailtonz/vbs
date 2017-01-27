@@ -1,0 +1,20 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'	Uninstall an msi package
+Set objSvc = GetObject("WinMgmts:")
+Set obj = objSvc.Get("Win32_Product.identifyingNumber='{D7A5C29F-B974-47EF-BC71-04F5152C027A}',name='ScriptApp',version='1.0.0'")
+retval = obj.Uninstall
+If Retval <> 0 Then
+	wscript.echo "something went wrong"
+Else
+	wscript.echo "Package Uninstalled"
+End If
+

@@ -1,0 +1,47 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'on error resume next
+Dim objnet, wshShell, fso, ie, url, sf
+Set objNet = WScript.CreateObject("WScript.Network")
+Set WshShell = WScript.CreateObject("WScript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+url = "file:///c:/moc/setup/html/WIN98.HTM?Step="
+ie.left=0
+ie.top=0
+ie.height=570
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "c:\moc\setup\html\win98.htm"
+ie.visible=1
+
+'WScript.Sleep 5000
+
+set strt = fso.GetFile("C:\Windows\Desktop\Continue Automated Setup.lnk")
+strt.Delete
+fso.CopyFile "c:\tools\Auto2.lnk", "c:\windows\desktop\Auto Setup Windows 2000 on Drive D.lnk", True
+'fn = "runnext.vbs"
+'set nxt = fso.getfile("c:\moc\setup\STUDW981.vbs")
+'set fl = fso.createtextfile(strt & "\" & fn, true)
+'fl.writeline "set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41)
+'fl.writeline "wshshell.run " & chr(34) & nxt & chr(34)
+
+
+'Install Directory Service Client
+wshShell.Run "c:\tools\DSClient.vbs", 1, True
+
+'Reboot by DSC
+'wshShell.Run "c:\tools\Reboot98.vbs", 6, true
+
+

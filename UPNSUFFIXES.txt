@@ -1,0 +1,43 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+
+Function strFormatDateCanonical(datTime)
+    strFormatDateCanonical = DatePart("yyyy", datTime) & pad(DatePart("m", datTime), "0", 2) & pad(DatePart("d", datTime), "0", 2) & _
+       " " & pad(DatePart("h", datTime), "0", 2) & ":" & pad(DatePart("n", datTime), "0", 2) & ":" & pad(DatePart("s", datTime), "0", 2)
+End Function
+
+
+
+Private Sub UpdateUserQuery(objDSC, lngKey, strExpression, datTime )
+	'// This routine will update a saved user query.  This allows
+	'// users to edit their saved queries.
+	
+	'// INPUTS
+	'// objDSC = a reference to a Data Source Control
+	'// lngKey = the unique key of the saved expression
+	'// strExpress = the string of what the expression should be updated to
+
+	Dim objConn
+	Dim strArg1
+	Dim strArg2
+	Dim datArg
+	Dim strCmdString
+	
+	Set objConn = objDSC.Connection
+	strArg1 = lngKey
+	strArg2 = "N'" & strExpression & "'"
+	datArg = "'" & strFormatDateCanonical(datTime) & "'"
+	strCmdString = "dta_ui_update_userquery(" & strArg1 & ", " & strArg2 & ", " & datArg & ")"
+	objConn.Execute strCmdString,,4
+
+End Sub
+

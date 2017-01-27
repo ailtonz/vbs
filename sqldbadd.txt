@@ -1,0 +1,24 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set fso = CreateObject("Scripting.FileSystemObject")
+set wshShell = CreateObject("WScript.Shell")
+
+OrigDirectory = wshShell.CurrentDirectory
+
+' change the working directory to \\London\sql2ksp2
+wshShell.CurrentDirectory = "\\London\Sql2kSp2\"
+
+' run the unattended install of sql 2k sp2
+wshShell.Run "\\London\sql2ksp2\sql2knm.bat", 6, true
+
+' restore the working directory
+wshShell.CurrentDirectory = OrigDirectory
+

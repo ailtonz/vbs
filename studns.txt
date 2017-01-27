@@ -1,0 +1,21 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Msgbox "O Programa de instalação precisará copiar os arquivos para a unidade de disco rígido local do computador London. Quando o arquivo tiver sido copiado, uma instalação automatizada será iniciada. A cópia do arquivo pode levar alguns minutos para ser concluída." 
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "\\london\setup\student.cmd", 1, true
+
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\moccust.vbs", 1, true
+
+WScript.Quit
+

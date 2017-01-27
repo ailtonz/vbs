@@ -1,0 +1,49 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'on error resume next
+Dim objnet, wshShell, fso, ie, url, strt
+Set objNet = WScript.CreateObject("WScript.Network")
+Set WshShell = WScript.CreateObject("WScript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+url = "file:///c:/moc/setup/html/WIN98.HTM?Step="
+ie.left=0
+ie.top=0
+ie.height=570
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "c:\moc\setup\html\win98.htm"
+ie.visible=1
+
+'WScript.Sleep 5000
+
+strt = "c:\windows\desktop\Auto Setup Windows 2000 on Drive D.lnk"
+
+'Remove file from startup group to prevent this script from running again
+Dim MyFile
+Set MyFile = fso.GetFile(strt)
+MyFile.Delete
+
+
+
+'Disable Internet Connection Wizard
+wshShell.Run "c:\tools\ie.vbs",1 , True
+
+ie.Navigate url & 3
+'Start Installation of Windows 2000 Adv Server on D:
+wshShell.Run "\\london\setup\winsrc\i386\winnt32.exe /s:\\london\setup\winsrc\i386\ /unattend:c:\moc\setup\ms_un.txt /tempdrive:D:\Winsrc", 6, true
+
+
+
+

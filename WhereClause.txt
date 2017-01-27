@@ -1,0 +1,107 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+WorkingPath = "C:\Program Files\Msdntrain\2310\Democode"
+WorkingPath2 = "C:\Program Files\Msdntrain\2310\LabFiles\LabSolution"
+VSPath = "C:\Documents and Settings"
+Dest = "C:\Inetpub\wwwroot"
+FolderPrefix = "Mo"
+NoCopy = "06"
+
+set wshshell = CreateObject("wscript.shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+
+' copy all the Mod0x folder except Mod06 to inetpub\wwwroot
+set Folders = fso.GetFolder(WorkingPath).SubFolders
+for each folder in Folders
+	TempName = folder.name
+	TempArray = split(TempName, "d")
+	if TempArray(0) = FolderPrefix then
+		if left(TempArray(1), 2) <> NoCopy then
+			if (not fso.FolderExists (Dest & "\" & TempName)) then
+				fso.CreateFolder Dest & "\" & TempName
+			end if
+			wshshell.Run "xcopy """ & WorkingPath & "\" & TempName & """ " & Dest & "\" & TempName & " /e /y /r /h", 0, true
+			if left(TempArray(1),2) > 4 then
+				MakeVDir(TempName)
+			end if
+		else ' copy subfolder of the Mod06 folder to inetpub\wwwroot
+			wshshell.Run "xcopy """ & WorkingPath & "\" & TempName & """ " & Dest & " /e /y /r /h", 0, true
+			set mod06folders = fso.GetFolder(WorkingPath & "\" & TempName).Subfolders
+			for each sf in mod06folders
+				MakeVDir(sf.name)
+			next
+		end if
+	end if
+next
+
+' create Lab15 folders in inetpub\wwwroot
+labs = Array("Lab15VB", "Lab15CS")
+for each f in labs
+	if (not fso.FolderExists(Dest & "\" & f)) then
+		fso.CreateFolder Dest & "\" & f
+	end if
+	MakeVDir(f)
+next
+
+' copy files to Visual Studio Projects Folder
+VSProjFolder = "My Documents\Visual Studio Projects" 
+DemosFolder = VsProjFolder & "\2310Demos"
+LabsFolder = VSProjFolder & "\2310LabSolution"
+
+set Folders = fso.GetFolder(VSPath).SubFolders
+for each folder in Folders
+	username = folder.name
+	if fso.FolderExists(VSPath & "\" & username & "\" & "My Documents") then
+		' create the visual studio projects folder
+		if (not fso.FolderExists(VSPath & "\" & username & "\" & VSProjFolder)) then
+			fso.CreateFolder VSPath & "\" & username & "\" & VSProjFolder
+		end if
+		' create the 2310 demos folder in the vs projects folder
+		if (not fso.FolderExists (VSPath & "\" & username & "\" & DemosFolder)) then
+			fso.CreateFolder VSPath & "\" & username & "\" & DemosFolder
+ 		end if
+' 		if (not fso.FolderExists (VSPath & "\" & username & "\" & LabsFolder)) then
+' 			fso.CreateFolder VSPath & "\" & username & "\" & LabsFolder
+'		end if
+		wshshell.Run "xcopy """ & WorkingPath & "\2310Demos"" """ & VSPath & "\" & username & "\" & DemosFolder & """ /e /y /r /h", 0, true
+'		wshshell.Run "xcopy """ & WorkingPath2 & "\2310LabSolution"" """ & VSPath & "\" & username & "\" & LabsFolder & """ /e /y /r /h", 0, true
+		
+	end if
+next
+
+
+Sub MakeVDir(vfolderspec)
+	Dim WebSrv, VDir
+	Const FILE_EXISTS = -2147024713
+	Const INPROC = 0 
+  	Const OUTPROC = 1 
+  	Const POOLED = 2
+	
+	set WebSrv = GetObject("IIS://LocalHost/W3SVC/1/ROOT")
+ 	On Error Resume Next	
+ 		' .Create will throw an error if the vdir already exists
+	 	set VDir = WebSrv.Create("IISWebVirtualDir", vfolderspec)
+		if err.Number = FILE_EXISTS then 
+			' the vdir already exists. reset the properties to be safe
+			set VDir = GetObject("IIS://LocalHost/W3SVC/1/ROOT/" & vfolderspec)
+		end if
+		err.Clear
+	On Error GoTo 0
+	With VDir     
+		.AppCreate2 POOLED
+		.AppFriendlyName = vfolderspec
+		.SetInfo
+	End With
+	
+	set VDir = nothing
+	set WebSrv = nothing
+End Sub
+

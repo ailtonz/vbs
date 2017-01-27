@@ -1,0 +1,30 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Option Explicit
+Dim vArg, aArgs(), iCount
+If WScript.Arguments.Count = 0 then
+	MsgBox "No Arguments Supplied"
+	WScript.Quit
+Else
+	ReDim aArgs(WScript.Arguments.Count - 1)
+	For iCount = 0 to WScript.Arguments.Count - 1
+		aArgs(iCount) = WScript.Arguments(iCount)
+		MsgBox aArgs(iCount)
+	Next
+End If
+Dim oShell, sLogEntry
+Set oShell = CreateObject("WScript.Shell")
+sLogEntry = "Script was run with :"
+For iCount = 0 to UBound(aArgs)
+	sLogEntry = sLogEntry & vbCrLf & aArgs(iCount)
+Next
+oShell.LogEvent 4, sLogEntry
+

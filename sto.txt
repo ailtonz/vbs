@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set fso = createobject("scripting.filesystemobject")
+Set WshShell = WScript.CreateObject("WScript.Shell")
+Set objNet = WScript.CreateObject("WScript.Network")
+CompName = objNet.ComputerName
+CompName = lcase(CompName)
+
+compname = split(compname, "-")
+if compname(1) = "pf1" THEN
+	'Set Domain to Native Mode
+	wshshell.Run "c:\tools\native.vbs", 6, true
+end if
+

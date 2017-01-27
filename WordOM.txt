@@ -1,0 +1,71 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' WINSREP.VBS
+'
+' Configures the WINS Replication Partners on London
+
+set wshshell = wscript.CreateObject("wscript.shell")
+
+classroom = getclsrm
+
+Cities = Array(	"VANCOUVER",_
+		"DENVER",_
+		"PERTH",_
+		"BRISBANE",_
+		"LISBON",_
+		"BONN",_
+		"LIMA",_
+		"SANTIAGO",_
+		"BANGALORE",_
+		"SINGAPORE",_
+		"CASABLANCA",_
+		"TUNIS",_
+		"ACAPULCO",_
+		"MIAMI",_
+		"AUCKLAND",_
+		"SUVA",_
+		"STOCKHOLM",_
+		"MOSCOW",_
+		"CARACAS",_
+		"MONTEVIDEO",_
+		"MANILA",_
+		"TOKYO",_
+		"KHARTOUM",_
+		"NAIROBI")
+
+lastpart = 101
+
+for i = 0 to ubound(Cities) step 1
+	wshshell.Run "netsh wins server add partner server=192.168." & classroom & "." & lastpart & " NetBIOS=" & Cities(i), 0, true
+	lastpart = lastpart + 1
+next
+
+
+'Set the push partner parameters for the specified WINS server
+wshshell.Run "netsh wins server set pushparam State=1 Strtup=1 AddChange=1 Update=1", 0, true
+
+'Set the pull partner parameters for the specified WINS server
+wshshell.Run "netsh wins server set pullparam State=1 Start=60 Interval=300", 0, true
+
+
+
+private function getclsrm
+	set fso = createobject("scripting.filesystemobject")
+	set fl = fso.OpenTextFile ("c:\setup\instruct\lonset2.cmd")
+	while left (x,13) <> "set classroom"
+		x = fl.readline
+	wend
+	fl.close
+	rtrim x
+	lgn = len(x)
+	getclsrm = left(right(x,lgn-14),1)
+end function
+

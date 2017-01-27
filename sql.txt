@@ -1,0 +1,106 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+ON ERROR RESUME NEXT
+dim fso, d, dc, dl, run
+set wshshell=wscript.CreateObject("Wscript.Shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+set dc = fso.drives
+
+' Separate paths with a coma (,)
+pathSet = Array("\","\ENGLISH\WIN2000\SP1\")
+
+' file to look for
+lookfile = "SP1NETWORK.EXE"
+
+do until resp = VBCANCEL
+	' check each drive
+    For each d in dc
+        set dl = fso.GetDrive(d)
+        ' check each possible path
+        For each path in pathSet
+	    	lookfor=dl & path & lookfile
+        	if dl.IsReady then
+            	if (fso.FileExists(lookfor)) then
+            		copyFiles(dl & path)
+            	end if
+        	End If
+        Next
+    Next
+    resp = Msgbox ("Please insert the Windows 2000 Service Pack 1 compact disc into the CD drive, and then click OK." & CHR(10) & _
+    			   CHR(10) & _
+    			   "NOTE:  This setup was built with the Retail and January 2001 MSDN Subscription CDs." & CHR(10) & _
+    			   "If you are using a different version of the MSDN Subscription, or are using a custom CD," & CHR(10) & _
+    			   "you may need to click Cancel to enter the path to the source files." & CHR(10) & _
+    			   "If the source files are in a location other than a compact disc, click Cancel" & CHR(10) & _
+    			   "and enter the path to that location.", _
+    			   vbOKCancel or vbinformation, "CD Path")
+loop
+
+valid = false
+Do While valid = false
+	path = InputBox("Please specify the path to SP1NETWORK.EXE for Windows 2000 Service Pack 1.", "CD Path", dl & "\")
+	
+	If path <> "" Then
+		'format input string
+		If right(path, 1) <> "\" Then
+			path = path & "\"
+		End IF
+		
+		'verify path and copy if correct
+		If (fso.FileExists(path & lookfile)) Then
+	       	copyFiles(path)
+	       	valid = true
+	    Else
+	    	resp = Msgbox ("This location does not appear to contain the source files for Windows 2000 Service Pack 1." & CHR(10) & _
+	       			 	   "To enter a new path, click OK. To copy the files manually after the instructor computer" & CHR(10) & _
+	       			 	   "setup has completed, click Cancel.", _
+	   				 	   vbOKCancel OR vbInformation, "CD Path")
+	   		
+	   		If resp = VBCANCEL Then
+	   			copyerr
+				valid = true 	' set to true to exit loop and end script
+			End IF
+	    End If
+	Else		' user clicked cancel or entered a blank path
+		copyerr
+		valid = true
+	End If
+Loop
+
+
+
+sub copyerr
+	msgbox "Setup cannot copy the Windows 2000 Service Pack 1 source files. After the automated setup finishes, " & chr(10) & _
+		   "complete the installation of the instructor computer by following the instructions " & chr(10) & _
+		   "for installing Windows 2000 Service Pack 1 in the automated setup guide.", vbCritical, "CD Path"
+end sub
+
+
+
+sub copyfiles(path)
+	Set ts = fso.CreateTextFile("c:\tools\copycd.vbs", True)
+	If NOT fso.FolderExists("D:\SP1") Then
+		fso.CreateFolder "D:\SP1"
+	End If
+	wshshell.Run "net share SP1=D:\SP1"
+	'copy setup folder
+	ts.WriteLine "ON ERROR RESUME NEXT"
+	ts.WriteLine "Set oSHApp = CreateObject(" & chr(34) & "Shell.Application" & chr(34) & ")" 
+	ts.writeline "sSrc = " & chr(34) & path & "*.*" & chr(34)
+	ts.writeline "sDest = " & chr(34) & "D:\SP1" & chr(34)
+	ts.writeline "oSHApp.Namespace(sDest).CopyHere sSrc, &H10&"
+	ts.writeline "Set oSHApp = nothing"
+	ts.writeline "WScript.Quit"
+	ts.Close
+	WshShell.run "c:\tools\copycd.vbs", 1, true
+	wscript.quit
+end sub
+

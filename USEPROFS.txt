@@ -1,0 +1,19 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Const ADS_PROPERTY_APPEND = 3 
+Set objPartitions = GetObject("LDAP://cn=Partitions,cn=Configuration,dc=nwtraders,dc=msft")
+objPartitions.PutEx ADS_PROPERTY_APPEND, "upnSuffixes", Array("Vancouver","Denver","Perth","Brisbane","Lisbon","Bonn","Lima","Santiago","Bangalore","Singapore","Casablanca","Tunis","Acapulco","Miami","Auckland","Suva","Stockholm","Moscow","Caracas","Montevideo","Manila","Tokyo","Khartoum","Nairobi")
+objPartitions.SetInfo
+
+For Each Suffix in objPartitions.GetEx("upnSuffixes")
+  WScript.Echo Suffix
+Next
+

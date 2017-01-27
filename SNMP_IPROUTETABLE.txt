@@ -1,0 +1,102 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+Set wshshell = wscript.CreateObject("wscript.shell")
+set objnet = wscript.createObject("wscript.network")
+Set rootDSE = GetObject("LDAP://RootDSE")
+domain = rootDSE.Get("defaultnamingcontext")
+compname = objnet.computername
+
+if compname = "VANCOUVER" then
+	usrname = "SNA70"
+	usrname1 = "SNA71"
+end if
+
+if compname = "PERTH" then
+	usrname = "SNA72"
+	usrname1 = "SNA73"
+end if
+
+if compname = "LISBON" then
+	usrname = "SNA74"
+	usrname1 = "SNA75"
+end if
+
+if compname = "LIMA" then
+	usrname = "SNA76"
+	usrname1 = "SNA77"
+end if
+
+if compname = "BANGALORE" then
+	usrname = "SNA78"
+	usrname1 = "SNA79"
+end if
+
+if compname = "CASABLANCA" then
+	usrname = "SNA80"
+	usrname1 = "SNA81"
+end if
+
+if compname = "ACAPULCO" then
+	usrname = "SNA82"
+	usrname1 = "SNA83"
+end if
+
+if compname = "AUCKLAND" then
+	usrname = "SNA84"
+	usrname1 = "SNA85"
+end if
+
+if compname = "STOCKHOLM" then
+	usrname = "SNA86"
+	usrname1 = "SNA87"
+end if
+
+if compname = "CARACAS" then
+	usrname = "SNA88"
+	usrname1 = "SNA89"
+end if
+
+if compname = "MANILA" then
+	usrname = "SNA90"
+	usrname1 = "SNA91"
+end if	
+
+if compname = "KHARTOUM" then
+	usrname = "SNA92"
+	usrname1 = "SNA93"
+end if
+	
+	
+set cont = GetObject("LDAP://cn=users," & domain)
+set usr = cont.create("user", "cn=" & usrname)
+usr.Put "samAccountName", UsrName
+usr.Put "userPrincipalName", UsrName
+usr.Put "givenName", UsrName
+usr.Put "displayName", UsrName
+usr.SetInfo
+set usr = getobject("LDAP://cn=" & usrname & ",cn=users," & domain)
+usr.setpassword "password"
+usr.AccountDisabled = False
+usr.setinfo
+
+set cont = GetObject("LDAP://cn=users," & domain)
+set usr = cont.create("user", "cn=" & usrname1)
+usr.Put "samAccountName", UsrName1
+usr.Put "userPrincipalName", UsrName1
+usr.Put "givenName", UsrName1
+usr.Put "displayName", UsrName1
+usr.SetInfo
+set usr = getobject("LDAP://cn=" & usrname1 & ",cn=users," & domain)
+usr.setpassword "password"
+usr.AccountDisabled = False
+usr.setinfo
+

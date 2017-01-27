@@ -1,0 +1,119 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Option Explicit
+
+On Error Resume Next
+
+Dim objRootDSE
+Dim strSearchRoot
+Dim strADServer
+Dim strConfigDN 
+Dim strSQL
+Dim strValue
+Dim strExchServer
+
+Dim objIADs
+Dim objIADsClass
+
+Dim objConnection 
+Dim objRSExchServers
+Dim objRSSMTPVirtualServers
+Dim objCommand
+Dim objArgs
+
+Const ADS_PROPERTY_CLEAR        		= 1
+Const ADS_PROPERTY_UPDATE       		= 2
+Const ADS_PROPERTY_APPEND       		= 3
+Const ADS_PROPERTY_DELETE       		= 4
+
+Sub ConfigureRecipTurfList(strObject, strValue)
+
+   On Error Resume Next
+
+   Dim objSMTPVS
+   Dim objClass
+   Dim objProperty
+   Dim objList
+   Dim objElement
+   Dim strCurrentValue
+
+   Set objSMTPVS = GetObject(strObject)
+   Set objClass = GetObject(objSMTPVS.Schema)
+
+   Set objProperty = GetObject(objClass.Parent & "/" & "msExchRecipTurfListNames")
+
+   objList = objSMTPVS.GetEx("msExchRecipTurfListNames")
+   for each objElement in objList
+      if strCurrentValue = "" then 
+         strCurrentValue = CStr(objElement) 
+      else
+         strCurrentValue = CStr(objElement) & "," & strCurrentValue
+      end if
+   Next
+
+   if strCurrentValue = "" then 
+      objSMTPVS.PutEx ADS_PROPERTY_UPDATE, "msExchRecipTurfListNames", Array(strValue)
+      objSMTPVS.SetInfo
+   else
+      objSMTPVS.PutEx ADS_PROPERTY_APPEND, "msExchRecipTurfListNames", Array(strValue)
+      objSMTPVS.SetInfo
+   end if
+   objSMTPVS.SetInfo
+
+End Sub
+
+
+Set objRootDSE = GetObject("LDAP://RootDSE")
+strADServer = objRootDSE.Get("dnshostname")
+strConfigDN = objRootDSE.Get("configurationNamingContext")
+strSearchRoot = "LDAP://" & strADServer & "/" & strConfigDN
+
+Set objConnection= CreateObject("ADODB.Connection")
+with objConnection
+   .Provider = "ADsDSOobject"
+   .Open strSearchRoot
+end With
+
+Set objArgs = Wscript.Arguments
+strExchServer = objArgs (0)
+strValue = objArgs (1)
+
+WScript.DisconnectObject objArgs
+Set objArgs = Nothing
+ 
+strSearchRoot = "LDAP://" & strExchServer & "/" & strConfigDN
+
+strSQL = "Select adsPath, cn, distinguishedname " & _
+         "From '" & strSearchRoot & "' " & _
+         "Where objectCategory='msExchSMTPTurfList'"
+
+Set objCommand = CreateObject("ADODB.Command")
+with objCommand
+   Set .ActiveConnection = objConnection
+       .CommandText = strSQL
+       .Properties("Page Size") = 99
+End With
+
+
+Set objRSSMTPVirtualServers = objCommand.Execute
+
+Do Until objRSSMTPVirtualServers.EOF
+   ConfigureRecipTurfList objRSSMTPVirtualServers.Fields("adspath"), strValue
+   objRSSMTPVirtualServers.MoveNext
+Loop
+
+objRSSMTPVirtualServers.Close
+objConnection.Close
+
+Set objRootDSE = Nothing 
+Set objRSSMTPVirtualServers = Nothing
+Set objConnection = Nothing
+

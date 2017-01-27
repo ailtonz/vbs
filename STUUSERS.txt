@@ -1,0 +1,27 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' stushare.vbs
+'
+' This script creates the shared folder on the Student machine.
+
+dim fso
+
+set fso = CreateObject("Scripting.FileSystemObject")
+set wshshell = Wscript.CreateObject("Wscript.Shell")
+set onet = CreateObject("wscript.network")
+
+cname = ucase(onet.ComputerName)
+
+if not(fso.FolderExists("C:\Temp")) then fso.CreateFolder "C:\Temp"
+   WshShell.Run "net share Temp=C:\Temp", 6, true
+
+WshShell.Run "C:\moc\setup\rmtshare.exe \\" & cname & "\Temp /grant Toda a rede:f", 6, true
+

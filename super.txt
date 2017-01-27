@@ -1,0 +1,346 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'---------------------------------------------------------------------------------------------------
+'This sample submits a document synchronously to Biztalk Server 2000, using a custom Submit method. 
+'(Organization and document information are supplied as parameters to the SubmitSyncCall method).
+'This sample sets up the BizTalk Management database, and synchronously submits the document with 
+'the resulting file created in the root directory of C:\.
+'
+'File name: SubmitSyncCustom.vbs
+'
+'Browse to \Program Files\Microsoft BizTalk Server\Samples on the installation drive to find 
+'SubmitSyncCustom.vbs.
+'---------------------------------------------------------------------------------------------------
+
+    On Error Resume Next
+
+'---------------------------------------------------------------------------------------------------    
+'   Object variables
+'---------------------------------------------------------------------------------------------------
+    Dim objConfig, objOrganization, objOrganization2, objDocument, objPort, objChannel, objInterchange
+    Dim objADO
+    
+'---------------------------------------------------------------------------------------------------    
+'   Database  variables
+'---------------------------------------------------------------------------------------------------
+    Dim idSourceOrg, idSourceAlias, idDestOrg, idDestAlias, idDocument, idPort, idChannel
+    
+'--------------------------------------------------------------------------------------------------- 
+'   Document and SubmissionHandle
+'---------------------------------------------------------------------------------------------------
+    Dim strDocument, strSubmitHandle, strResponseData
+    
+'---------------------------------------------------------------------------------------------------
+'   Constants
+'---------------------------------------------------------------------------------------------------
+    
+    Const BIZTALK_TRANSPORT_TYPE_FILE = 256
+    Const BIZTALK_OPENNESS_TYPE_NOTOPEN = 1
+
+'---------------------------------------------------------------------------------------------------
+'   Server Name
+'---------------------------------------------------------------------------------------------------
+    Dim strServerName
+    strServerName = SetGetEnvVar("PROCESS", "COMPUTERNAME", "localhost", False)
+'---------------------------------------------------------------------------------------------------
+'   Set up the source and destination organizations in the BizTalk Management database
+
+'---------------------------------------------------------------------------------------------------    
+'   Create the configuration object. This is the root object by which all other
+'   objects are created
+'---------------------------------------------------------------------------------------------------
+    Set objConfig = CreateObject("BizTalk.BizTalkConfig")
+    If err.number <> 0 then Wscript.Echo "[FAIL] Failed Creating Config Object with error - " & err.description
+   
+'--------------------------------------------------------------------------------------------------- 
+'   Use the configuration object to get a pointer to the organization object
+'---------------------------------------------------------------------------------------------------
+    Set objOrganization = objConfig.CreateOrganization()
+    
+'---------------------------------------------------------------------------------------------------
+'   Create the source organization and get its 
+'---------------------------------------------------------------------------------------------------
+    objOrganization.Name = "SourceOrg"
+    idSourceOrg = objOrganization.Create
+    
+'---------------------------------------------------------------------------------------------------
+'   Check to see if organization already exists. If found, clear the error, load the existing ,
+'   and continue
+'---------------------------------------------------------------------------------------------------
+    if err.number = -1061154272 then 
+    	Set objADO = objConfig.Organizations
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "SourceOrg" then
+    		idSourceOrg = objADO.fields("id").Value
+    		objOrganization.Load idSourceOrg
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    	
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Source Organization with error - " & err.description
+        Wscript.Quit
+    else
+    	Wscript.Echo "[PASS] Successfully Created Source Organization with  - " & idSourceOrg
+    End If
+    
+    idSourceAlias = objOrganization.GetDefaultAlias()
+    
+
+'---------------------------------------------------------------------------------------------------
+'   Create the destination organization and get its 
+'---------------------------------------------------------------------------------------------------
+    Set objOrganization2 = objConfig.CreateOrganization()
+    objOrganization2.Name = "DestOrg"
+    idDestOrg = objOrganization2.Create    
+
+'---------------------------------------------------------------------------------------------------
+'   Check to see if organization already exists. If found, clear error, load , and continue
+'---------------------------------------------------------------------------------------------------
+    if err.number = -1061154272 then 
+    	Set objADO = objConfig.Organizations
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "DestOrg" then
+    		idDestOrg = objADO.fields("id").Value
+    		objOrganization2.Load idDestOrg
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    idDestAlias = objOrganization2.GetDefaultAlias()
+    	
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Destination Organization with error - " & err.description
+        Wscript.Quit        
+    else
+    	Wscript.Echo "[PASS] Successfully Created Destination Organization with  - " & idDestOrg
+    End If
+    
+    Set objOrganization2 = Nothing
+    Set objOrganization = Nothing
+    
+'---------------------------------------------------------------------------------------------------   
+'   Add "CommonAdvancedShipNotice" document specification to the BizTalk Management database
+'---------------------------------------------------------------------------------------------------
+    
+'---------------------------------------------------------------------------------------------------
+'   Use the configuration object to get a poitner to the document object
+'---------------------------------------------------------------------------------------------------
+    Set objDocument = objConfig.CreateDocument()
+    
+'---------------------------------------------------------------------------------------------------
+'   Create the CommonAdvancedShipNotice document
+'---------------------------------------------------------------------------------------------------
+    objDocument.Name = "SubmitSyncCustom Sample Document"
+    objDocument.Reference = "http://" & strServerName & "/BiztalkServerRepository/DocSpecs/Microsoft/CommonAdvancedShipNotice.xml"
+    idDocument = objDocument.Create
+    
+'---------------------------------------------------------------------------------------------------
+'   Check to see if the document already exists. If found, clear error, load , and continue
+'---------------------------------------------------------------------------------------------------
+    if err.number = -1061154262 then 
+    	Set objADO = objConfig.Documents
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "SubmitSyncCustom Sample Document" then
+    		idDocument = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Document with error - " & err.description
+        Wscript.Quit        
+    else
+    	Wscript.Echo "[PASS] Successfully Created Document with  - " & idDocument
+    End If    
+    
+    Set objDocument = Nothing
+    
+'---------------------------------------------------------------------------------------------------    
+'   Create the Port between the source and destination organizations in the BizTalk
+'   Management database
+'---------------------------------------------------------------------------------------------------
+
+'---------------------------------------------------------------------------------------------------
+'   Use the configuration object to get a poitner to the Port object
+'---------------------------------------------------------------------------------------------------
+    Set objPort = objConfig.CreatePort()    
+    
+'---------------------------------------------------------------------------------------------------
+'   Create the Port object and set up for local file send 
+'---------------------------------------------------------------------------------------------------
+    objPort.Name = "SubmitSyncCustom Sample Port"
+    objPort.DestinationEndpoint.Organization = idDestOrg
+    objPort.DestinationEndpoint.Alias = idDestAlias    
+    objPort.PrimaryTransport.Type = BIZTALK_TRANSPORT_TYPE_FILE
+    objPort.PrimaryTransport.Address = "file://c:\SubmitSyncCustom.txt"
+    idPort = objPort.Create
+
+
+'---------------------------------------------------------------------------------------------------
+'   Check to see if the Port already exists. If found, clear error, load , and continue
+'---------------------------------------------------------------------------------------------------
+    if err.number = -1061154236 then 
+    	Set objADO = objConfig.Ports
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "SubmitSyncCustom Sample Port" then
+    		idPort = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    else
+    	Wscript.Echo "[PASS] Successfully Created Port with  - " & idPort
+    End If        
+    
+    Set objPort = Nothing
+    
+'---------------------------------------------------------------------------------------------------    
+'   Create the Channel to complete the BizTalk Management database setup 
+'---------------------------------------------------------------------------------------------------
+    
+'---------------------------------------------------------------------------------------------------
+'   Use the configuration object to get a poitner to the Channel object
+'---------------------------------------------------------------------------------------------------
+    Set objChannel = objConfig.CreateChannel()    
+    
+'---------------------------------------------------------------------------------------------------
+'   Create the Channel object.  Notice both input and output documents use the same document 
+'   specification, which means that no mapping will occur
+'---------------------------------------------------------------------------------------------------
+    objChannel.Name = "SubmitSyncCustom Sample Channel"
+    objChannel.SourceEndpoint.Organization = idSourceOrg
+    objChannel.SourceEndpoint.Alias = idSourceAlias
+    objChannel.Port = idPort
+    objChannel.InputDocument = idDocument
+    objChannel.OutputDocument = idDocument
+    idChannel = objChannel.Create
+
+'---------------------------------------------------------------------------------------------------
+'   Check to see if Channel already exists. If found, clear error, load , and continue
+'---------------------------------------------------------------------------------------------------
+    if err.number = -1061154245 then 
+    	err.clear
+    end if    
+    
+    If err.number <> 0 then 
+         Wscript.Echo "[FAIL] Failed Creating Channel with error - " & err.description
+         Wscript.Quit        
+    else
+         Wscript.Echo "[PASS] Successfully Created Channel"
+    End If     
+    
+    Set objChannel = Nothing
+    
+'---------------------------------------------------------------------------------------------------    
+'   Create the document to send and submit it synchronously to BizTalk Server for processing
+'---------------------------------------------------------------------------------------------------
+    
+'---------------------------------------------------------------------------------------------------
+'   Store the document information and organization informationpProvided in the call
+'---------------------------------------------------------------------------------------------------
+    strDocument = "<CommonAdvancedShipNotice><ShipmentHeader Purpose=""11"" ShipmentID=""ShipmentID_1"" NotificationDate=""1999-09-09"" NotificationTime=""1999-09-09""/><Shipment><Order><Party EntityID=""XX""/><Item/></Order></Shipment></CommonAdvancedShipNotice>"
+
+'---------------------------------------------------------------------------------------------------
+'   Create the interchange object used to submit the document
+'---------------------------------------------------------------------------------------------------
+    Set objInterchange = CreateObject("BizTalk.Interchange")	
+    
+    If err.number <> 0 then 
+         Wscript.Echo "[FAIL] Failed Creating Interchange Object with error - " & err.description
+         Wscript.Quit        
+    else
+         Wscript.Echo "[PASS] Successfully Created Interchange Object "
+    End If     
+stop    
+'---------------------------------------------------------------------------------------------------
+'   Call SubmitSync with document and organization parameters
+'---------------------------------------------------------------------------------------------------
+'    objInterchange.SubmitSync BIZTALK_OPENNESS_TYPE_NOTOPEN, strDocument, , "OrganizationName", "SourceOrg", "OrganizationName", "DestOrg", , , , , strSubmitHandle, strResponseData
+    objInterchange.SubmitSync BIZTALK_OPENNESS_TYPE_NOTOPEN, strDocument, , "OrganizationName", "SourceOrg", "OrganizationName", "DestOrg", , , , , strSubmitHandle, strResponseData
+        
+    If err.number <> 0 then 
+         Wscript.Echo "[FAIL] Failed Calling SubmitSync with Error - " & err.description
+         Wscript.Quit        
+    else
+         Wscript.Echo "[PASS] Successfully Called SubmitSync.  Submission Handle - " & strSubmitHandle & " returned can be used to check document status programmatically."
+         Wscript.Echo "[INFO] Check for Result Document c:\SubmitSyncCustom.txt  to be created"
+    End If     
+    
+'-------------------------------------------------------------------------------------------
+' Fail() will always report a failure and exit the script
+'-------------------------------------------------------------------------------------------
+Sub Fail(strScope)
+	WScript.Echo "[FAIL] " & SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False) & ":" & strScript & ": " & strScope
+	WScript.Quit
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Pass() will report pass
+'-------------------------------------------------------------------------------------------
+Sub Pass(strScope)
+	WScript.Echo "[PASS] " & SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False) & ":" & strScript & ": " & strScope
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' FailOnError() will call Fail() on Error
+'-------------------------------------------------------------------------------------------
+Sub FailOnError(strScope)
+	If Err.Number <> 0 Then
+		Fail strScope & " Error: x" & Hex(Err.Number) & " Description: " & Err.Description & " Source: " & Err.Source
+		Err.Clear
+	End If
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Set or get environment variables
+'-------------------------------------------------------------------------------------------
+Function SetGetEnvVar(strType, strName, strDefaultValue, bSet)
+	On Error Resume Next
+	Dim wshShell, wshSysEnv
+	SetGetEnvVar = strDefaultValue
+	If (TypeName(strName) <> "String") Or IsEmpty(strName) Or Len(strName) = 0 Or (TypeName(strType) <> "String") Or IsEmpty(strType) Or Len(strType) = 0 Then
+		FailOnError "SetGetEnvVar().CheckParameters"
+		Exit Function
+	End If
+	Set wshShell = CreateObject("WScript.Shell")
+	Set wshSysEnv = wshShell.Environment(strType)
+	FailOnError "SetGetEnvVar().SetwshSysEnv"
+	If bSet Then
+		wshSysEnv(strName) = strDefaultValue
+		FailOnError "SetGetEnvVar().Set_wshSysEnv(" & strName & ")"
+	Else
+		SetGetEnvVar = wshSysEnv(strName)
+	End If
+	If SetGetEnvVar = "" Then
+		SetGetEnvVar = strDefaultValue
+	End If
+End Function
+

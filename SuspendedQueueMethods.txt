@@ -1,0 +1,73 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' SharedQueue.vbs
+' Copyright (C) 2000 Microsoft Corporation
+'
+' This script outputs and deletes all Suspended queue items for input Submission ID
+' or all items if Submission ID parameter is missing.
+'
+' To run the sample scripts, type the following at the command prompt:
+'   CSCRIPT SharedQueue.vbs <DocName> <SourceName> <DestName>
+
+'------------------------------------------------------------------------------------------
+' Process command line parameters and verify format of the Submission ID
+'------------------------------------------------------------------------------------------
+Dim doc, src, dst, reas, data, SQArray, bDelete
+
+doc = GetCmdLineArg(1)
+src = GetCmdLineArg(2)
+dst = GetCmdLineArg(3)
+bDelete = (GetCmdLineArg(4) <> "")
+
+Dim Interchange, strFilePath, FSO
+Set Interchange = CreateObject("BizTalk.Interchange")
+
+SQArray = Interchange.CheckSuspendedQueue(doc, src, dst)
+
+If (TypeName(SQArray) = "Variant()") Then
+    Separator
+    WSCript.Echo "There are " & UBound(SQArray) + 1 & " items in the Suspended Queue"
+    Separator
+    For a = 0 To UBound(SQArray)
+        Separator
+        Interchange.GetSuspendedQueueItemDetails SQArray(a), src, dst, doc, reas, data
+        WSCript.Echo "Suspended Queue Item #" & a + 1
+        WSCript.Echo Chr(9) & "GUID:" & Chr(9) & SQArray(a)
+        WSCript.Echo Chr(9) & "DOC:" & Chr(9) & doc
+        WSCript.Echo Chr(9) & "SRC:" & Chr(9) & src
+        WSCript.Echo Chr(9) & "DST:" & Chr(9) & dst
+        WSCript.Echo Chr(9) & "REASON:" & Chr(9) & reas
+        'WSCript.Echo Chr(9) & "DATA:" & Chr(9) & data
+        If (bDelete) Then
+            Interchange.DeleteFromSuspendedQueue SQArray(a)
+            WSCript.Echo "Deleted Suspended Queue Item #" & a + 1
+        End If
+        Separator
+    Next
+Else
+    WSCript.Echo "There is no items in the Suspended Queue for Document [" & doc & "] Source [" & src & "] Destination [" & dst & "]"
+End If
+
+Function GetCmdLineArg(iArgIndex)
+    GetCmdLineArg = ""
+
+    If iArgIndex > 0 Then
+        If WSCript.Arguments.Count >= iArgIndex Then
+            GetCmdLineArg = CStr(WSCript.Arguments(iArgIndex - 1))
+        End If
+    End If
+End Function
+
+Sub Separator()
+    WSCript.Echo "======================================================================="
+End Sub
+
+

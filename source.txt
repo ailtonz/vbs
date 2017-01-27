@@ -1,0 +1,80 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+wscript.echo "This script creates the OUs and Users for the labs in this module", Chr(10), "Please wait until the script has finished executing before continuing with the lab", Chr(10), "Please click OK to continue."
+'Script to create users in the Active Directory
+
+
+' Determine the LDAP path for your domain
+Set Root = GetObject("LDAP://RootDSE")
+DomainPath = Root.Get("DefaultNamingContext")
+Set Domain = GetObject("LDAP://" & DomainPath)
+Set adminGroup = GetObject("LDAP://CN=Administrators,CN=Builtin," & DomainPath)
+Set WshShell = Wscript.CreateObject("Wscript.Shell")
+Set WshSysEnv = WshShell.Environment("Process")
+upnDomain = WshSysEnv("USERDOMAIN")
+
+' Create Top Level OUs
+Set ouIS1 = Domain.Create("organizationalUnit", "OU=Information Services")
+ouIS1.Put "Description", "Information Services"
+ouIS1.SetInfo
+
+'Create subordinate OUs
+
+Set ouCSupp = ouIS1.Create("organizationalUnit", "OU=Customer Support")
+ouCSupp.Put "Description", "Customer Support"
+ouCSupp.SetInfo
+
+Set ouHDesk = ouIS1.Create("organizationalUnit", "OU=Help Desk")
+ouHDesk.Put "Description", "Help Desk"
+ouHDesk.SetInfo
+
+Set ouDev = ouIS1.Create("organizationalUnit", "OU=Development")
+ouDev.Put "Description", "Development"
+ouDev.SetInfo
+
+
+wscript.echo "OUs created. Now creating users.", Chr(10), "Please click OK to continue."
+
+'Create users in the Top Level OUs
+
+Set usr = ouIS1.Create("user", "CN=ISAdmin")
+usr.Put "samAccountName", "isadmin1"
+usr.Put "userPrincipalName", "isadmin" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = ouHDesk.Create("user", "CN=HDUser")
+usr.Put "samAccountName", "hduser"
+usr.Put "userPrincipalName", "hduser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+adminGroup.Add("LDAP://CN=hduser,OU=Help Desk,OU=Information Services," & DomainPath)
+
+Set usr = ouCSupp.Create("user", "CN=CSUser")
+usr.Put "samAccountName", "csuser"
+usr.Put "userPrincipalName", "csuser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = ouDev.Create("user", "CN=DUser")
+usr.Put "samAccountName", "duser"
+usr.Put "userPrincipalName", "duser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+
+wscript.echo "Active Directory Structure Created", Chr(10), "Please click OK to finish.", Chr(10), "You may now proceed with the lab."
+

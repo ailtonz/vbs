@@ -1,0 +1,33 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' create the interchange object on the given machine
+    Set objInt = CreateObject("BizTalk.Interchange")
+    
+    dim VItemHandles
+    ' call IInterchange::CheckSuspended queue
+    vItemHandles = objInt.CheckSuspendedQueue
+    
+    If Not (IsEmpty(vItemHandles)) Then
+	For i = LBound(vItemHandles) To UBound(vItemHandles)
+    
+                ItemHandle = vItemHandles(i)
+                objInt.GetSuspendedQueueItemDetails ItemHandle, SourceName, DestName, DocName, ReasonCode, ItemData
+		MsgBox "Item Handle " & i & " is " & Itemhandle
+		MsgBox "SourceName " & i & " is " & SourceName
+		MsgBox "Destination Name " & i & " is " & DestName
+		MsgBox "Document Name " & i & " is " & DocName
+		MsgBox "Reason Code " & i & " is " & ReasonCode
+		MsgBox "Item Data " & i & " is " & ItemData
+            
+        Next
+    End If
+
+

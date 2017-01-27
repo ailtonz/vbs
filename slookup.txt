@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Moves the slides to the All Users menu
+Dim fso, srcFolder, destFolder, wshShell
+
+Set wshShell = CreateObject("WSCript.Shell")
+wshShell.Run "C:\Tools\2557_ppt.msi /q", 6, true
+srcFolder = wshShell.SpecialFolders("StartMenu") & "\Programs\2557A Slides"
+destFolder = wshShell.SpecialFolders("AllUsersStartMenu") & "\Programs\"
+Set fso = CreateObject("Scripting.FileSystemObject")
+If fso.FolderExists (srcFolder) Then
+	fso.MoveFolder srcFolder, destFolder
+End if
+
