@@ -1,0 +1,56 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' RENLAC.VBS
+'
+' Renames the Local Area Connection from
+' "Local Area Connection" to "Classroom Network Connection"
+
+sNewName = "Classroom Network Connection"
+sComputer = "."   ' use "." for local computer
+
+'Constants for WMI StdRegProv
+'Const HKCR = &H80000000
+'Const HKCU = &H80000001
+Const HKLM = &H80000002
+
+Const NetBase = "SYSTEM\CurrentControlSet\Control\Network\"
+
+
+On Error Resume Next
+
+Set oReg=GetObject("winmgmts:{impersonationLevel=impersonate}!\\" _
+  & sComputer & "\root\default:StdRegProv")
+
+' Get adapter collection
+Set oAdapters = GetObject("winmgmts:").ExecQuery( _
+  "SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True and DHCPEnabled=False")
+
+' Get all subkeys under NetBase in an array
+iRC = oReg.EnumKey(HKLM, NetBase, aRegKeys)
+
+' Finding adapter(s) with connection name "Local Area Connection"
+If (Err.Number = 0) And (iRC = 0) Then
+  On Error Goto 0
+  For Each oAdapter In oAdapters
+    sSettingID = oAdapter.SettingID
+    ' Loop through all registry keys
+    For i = 0 To Ubound(aRegKeys)
+      sKeyName = NetBase & aRegKeys(i) & "\" _
+                 & sSettingID & "\Connection"
+      oReg.GetStringValue HKLM, sKeyName, "Name", sValue
+      If Instr(LCase(sValue), "local area connection") Then
+        oReg.SetStringValue HKLM, sKeyName, "Name", sNewName
+        Exit For
+      End If
+    Next
+  Next
+End If
+

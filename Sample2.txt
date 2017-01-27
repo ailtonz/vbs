@@ -1,0 +1,560 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'-------------------------------------------------------------------------------------------
+'This sample shows how to set up BizTalk Management databases and call the Submit method 
+'of the Interchange object, which submits a business document to BizTalk Server 2000. 
+'Also included in the sample are the creation and use of open destination Port, 
+'organization aliases, and custom envelopes.
+'
+'File name: Sample1.vbs
+'
+'The following are required for using this sample: 
+'
+'Sample1.xml (sample business document)
+'
+'CommonPO.xml document specification. 
+'-------------------------------------------------------------------------------------------
+
+Option Explicit
+On Error Resume Next
+
+Dim configIterations, submitIterations
+configIterations = 1
+submitIterations = 1
+
+'-------------------------------------------------------------------------------------------
+' Constants, which you can alter
+'-------------------------------------------------------------------------------------------
+Const cSrcOrg = "Sample1 Source Org"
+Const cSrcAPP = "Sample1 Source Org Application"
+
+Const cSrcDocDef = "Sample1 Source Document Definition"
+Const cDstDocDef = "Sample1 Destination Document Definition"
+Const cEnvelope = "Sample1 Envelope"
+
+Const cOutPort = "Sample1 OutBound Port"
+
+Const cCustomSrcQualifier = "BizTalk"
+Const cCustomSrc = "Source Custom Value"
+
+Const cTransportType = 256	' BIZTALK_TRANSPORT_TYPE_FILE
+Const cTempDir = "c:\temp"	' this directory has to exist because Sample1.xml points to it
+Const cAny = "file://c:\any.txt"
+
+Const cChannel = "Sample1 Channel"
+Const cFileToSubmit = "Sample1.xml"
+
+Const BIZTALK_OPENNESS_TYPE_DESTINATION = 4
+Const BIZTALK_TRANSPORT_TYPE_OPENDESTINATION = 2048
+
+Const clngErrNotFound = -1061154302
+Const cstrErrNotFound = "The object was not found"
+
+PassFail "Constants"
+
+'-------------------------------------------------------------------------------------------
+' Globals
+'-------------------------------------------------------------------------------------------
+Dim gSrc
+Dim gSrcAlias
+Dim gSRCAPP
+Dim gSrcDocDef
+Dim gDstDocDef
+Dim gEnvelope
+Dim gOutPort
+Dim gChannel
+Dim gSubmissionGUID
+Dim gApps
+Dim strInfo
+Dim strDocReference 
+
+strInfo = "[INFO] "
+
+PassFail "Globals"
+
+'-------------------------------------------------------------------------------------------
+' Setup
+'-------------------------------------------------------------------------------------------
+Dim BTM, Handle, Port, PortGroup, Document, Envelope, Organization, Channel
+Dim strServerName
+
+strServerName = SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False)
+strDocReference = "http://" & strServerName & "/BizTalkServerRepository/DocSpecs/Microsoft/CommonPO.xml"
+AssureThePath cTempDir
+
+PassFail "Setup"
+
+'-------------------------------------------------------------------------------------------
+' Create the configuration object, which is the root object by which all other objects are created
+'-------------------------------------------------------------------------------------------
+Set BTM = CreateObject("BizTalk.BizTalkConfig")
+
+'-------------------------------------------------------------------------------------------
+' Create Sample1 Management Objects and Remove them
+'-------------------------------------------------------------------------------------------
+Dim index
+for index = 1 to configIterations
+	CreateBTMObjects
+	RemoveBTMObjects
+	ConfigureBTMObjects
+	DestroyBTMObjects
+	PassFail "---------- Config Iteration #" & index & " ----------"
+next
+PassFail "Management Objects"
+
+'-------------------------------------------------------------------------------------------
+' Create the interchange object to submit the business document
+'-------------------------------------------------------------------------------------------
+Dim Interchange, strFilePath, FSO
+Set Interchange = CreateObject("BizTalk.Interchange")
+
+'-------------------------------------------------------------------------------------------
+' Get the absolute path for the file being Submitted
+'-------------------------------------------------------------------------------------------
+Set FSO = CreateObject("Scripting.FileSystemObject")
+strFilePath = FSO.GetAbsolutePathName(cFileToSubmit)
+Set FSO = Nothing
+PassFail "FSO.GetAbsolutePathName for " & strFilePath
+
+'-------------------------------------------------------------------------------------------
+' Call the Submit method of the interchange object
+'-------------------------------------------------------------------------------------------
+for index = 1 to submitIterations
+	gSubmissionGUID = Interchange.Submit (BIZTALK_OPENNESS_TYPE_DESTINATION, , cSrcDocDef, , , , , , strFilePath, "")
+	PassFail "Submit() GUID " & gSubmissionGUID
+	PassFail "---------- Submit Iteration #" & index & " ----------"
+next
+
+Set Interchange = Nothing
+
+' Wait for 10 seconds for the file to appear
+WScript.Echo strInfo & CDate(Now()) & " ... Please Wait for 10 seconds ..."
+WSCript.Sleep 10000
+
+'-------------------------------------------------------------------------------------------
+' Check DTA to verify that the document was actually moved
+'-------------------------------------------------------------------------------------------
+DumpDTAData gSubmissionGUID
+
+Dim strFN
+
+strFN = cTempDir & "\Sample1_" & GetTrackingID(gSubmissionGUID) & ".TXT"
+If FileExists(strFN) Then
+	Pass "Sample1.vbs Succeeded! " & strFN & " File Exists!"
+Else
+	Fail "Sample1.vbs FAILED! " & strFN & " FILE IS MISSING!"
+End If
+
+'-------------------------------------------------------------------------------------------
+' Helper routines
+'-------------------------------------------------------------------------------------------
+
+' PassFail() will report Pass or Fail
+Sub PassFail(strScope)
+	If Err.Number <> 0 Then
+		Fail strScope & " Error: x" & Hex(Err.Number) & " Description: " & Err.Description & " Source: " & Err.Source
+		Err.Clear
+	Else
+		Pass strScope 
+	End If
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Fail() will always report failure and exit the script
+'-------------------------------------------------------------------------------------------
+Sub Fail(strScope)
+	WScript.Echo "[FAIL] " & SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False) & ": " & strScope
+	WScript.Quit
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Pass() will report pass
+'-------------------------------------------------------------------------------------------
+Sub Pass(strScope)
+	WScript.Echo "[PASS] " & SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False) & ": " & strScope
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' FailOnError() will call Fail() on Error
+'-------------------------------------------------------------------------------------------
+Sub FailOnError(strScope)
+	If Err.Number <> 0 Then
+		Fail strScope & " Error: x" & Hex(Err.Number) & " Description: " & Err.Description & " Source: " & Err.Source
+		Err.Clear
+	End If
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Set or get environment variables
+'-------------------------------------------------------------------------------------------
+Function SetGetEnvVar(strType, strName, strDefaultValue, bSet)
+	On Error Resume Next
+	Dim wshShell, wshSysEnv
+	SetGetEnvVar = strDefaultValue
+	If (TypeName(strName) <> "String") Or IsEmpty(strName) Or Len(strName) = 0 Or (TypeName(strType) <> "String") Or IsEmpty(strType) Or Len(strType) = 0 Then
+		FailOnError "SetGetEnvVar().CheckParameters"
+		Exit Function
+	End If
+	Set wshShell = CreateObject("WScript.Shell")
+	Set wshSysEnv = wshShell.Environment(strType)
+	FailOnError "SetGetEnvVar().SetwshSysEnv"
+	If bSet Then
+		wshSysEnv(strName) = strDefaultValue
+		FailOnError "SetGetEnvVar().Set_wshSysEnv(" & strName & ")"
+	Else
+		SetGetEnvVar = wshSysEnv(strName)
+	End If
+	If SetGetEnvVar = "" Then
+		SetGetEnvVar = strDefaultValue
+	End If
+End Function
+
+'-------------------------------------------------------------------------------------------
+'	GetCmdLineArg(iArgIndex) As String (iArgIndex starts 
+'			from 1, empty string is returned if failed)
+Function GetCmdLineArg(iArgIndex)
+	GetCmdLineArg = ""
+
+	If iArgIndex > 0 Then
+		If WScript.Arguments.Count >= iArgIndex Then
+			GetCmdLineArg = CStr(WScript.Arguments(iArgIndex-1))
+		End If
+	End If
+End Function
+
+
+'------------------------------------------------------------------------------------------
+Sub DumpDTAData(Submission)
+	On Error Resume Next
+	Dim DTARead, Interchanges, InDocDetails, OutDocDetails
+
+	Set DTARead = CreateObject("BizTalk.DTA")
+
+	Set Interchanges = DTARead.GetInterchanges(Submission)
+	PassFail "DTARead.GetInterchanges(" & Submission & ")"
+	Set InDocDetails = DTARead.GetInDocDetails(Submission)
+	PassFail "DTARead.GetInDocDetails(" & Submission & ")"
+	Set OutDocDetails = DTARead.GetOutDocDetails(Submission)
+	PassFail "DTARead.GetOutDocDetails(" & Submission & ")"
+	
+	WScript.Echo strInfo & "DTA Records Dump:"
+
+	If TypeName(Interchanges) = "Recordset" Then
+		DumpRecordSet "Interchanges", Interchanges
+	End If
+	If TypeName(InDocDetails) = "Recordset" Then
+		DumpRecordSet "InDocDetails", InDocDetails
+	End If
+	If TypeName(OutDocDetails) = "Recordset" Then
+		DumpRecordSet "OutDocDetails", OutDocDetails
+	End If
+	PassFail "Dump DTA Data for " & Submission
+End Sub
+
+'------------------------------------------------------------------------------------------
+Sub DumpRecordSet(strName, RS)
+    Dim i, j, k
+
+	On Error Resume Next
+
+    k = RS.Fields.Count - 1
+    If RS.EOF And RS.BOF Then
+        Exit Sub
+    End If
+    RS.MoveFirst
+	j = 1
+    While Not RS.EOF
+WScript.Echo strInfo & "START_FIELD_VALUES_FOR___" & strName & "(" & j & ")___"
+        For i = 0 To k
+            WScript.Echo strInfo & RS.Fields(i).Name & " = " & RS.Fields(RS.Fields(i).Name) & " (" & RS.Fields(i).Type & ")"
+        Next
+WScript.Echo strInfo & "END_FIELD_VALUES_FOR_____" & strName & "(" & j & ")___"
+        RS.MoveNext
+		j = j + 1
+    Wend
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Function GetTrackingID(Submission)
+	On Error Resume Next
+	GetTrackingID = ""
+
+	Dim DTARead, Interchanges
+
+	Set DTARead = CreateObject("BizTalk.DTA")
+
+	Set Interchanges = DTARead.GetInterchanges(Submission)
+	If TypeName(Interchanges) = "Recordset" Then
+		If Interchanges.EOF And Interchanges.BOF Then
+			Exit Function
+		End If
+
+		Interchanges.MoveFirst
+		While Not Interchanges.EOF
+			' find the outbound interchange
+			If CInt(Interchanges.Fields("nDirection").Value) = 0 Then
+				' return the tracking_id field from it
+				GetTrackingID = CStr(Interchanges.Fields("uidInterchangeGUID").Value)
+				Exit Function
+			End If
+			Interchanges.MoveNext
+		Wend
+	End If
+	Set Interchanges = Nothing
+	Set DTARead = Nothing
+	Set DTA = Nothing
+End Function
+
+'-------------------------------------------------------------------------------------------
+Sub AssureThePath(strPath)
+	Dim fso
+
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If not fso.FolderExists(strPath) Then
+		fso.CreateFolder strPath
+	End If
+	Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Function FileExists(filespec)
+	Dim fso
+
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If fso.FileExists(filespec) Then
+		FileExists = True
+	End If
+	Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------------------------------------
+Sub RemoveManagementObject(ByRef brObj, strName)
+    On Error Resume Next
+
+    ' first load the object
+	brObj.LoadByName strName
+    If Err.Number = 0 Then
+        brObj.Remove
+    ElseIf Err.Number <> clngErrNotFound Or InStr(Err.Description, cstrErrNotFound) < 1 Then
+        FailOnError "RemoveManagementObject() " & strName
+        Exit Sub
+    Else
+        ' Object just does not exist, ignore the error
+        Err.Clear
+    End If
+End Sub
+
+Sub CreateBTMObjects()
+	On Error Resume Next
+	Set Channel = BTM.CreateChannel
+	Set Port = BTM.CreatePort
+	Set Envelope = BTM.CreateEnvelope
+	Set Document = BTM.CreateDocument
+	Set Organization = BTM.CreateOrganization
+	PassFail "CreateBTMObjects"
+End Sub
+
+Sub RemoveBTMObjects()
+	On Error Resume Next
+	RemoveManagementObject Channel, cChannel
+	RemoveManagementObject Port, cOutPort
+	RemoveManagementObject Envelope, cEnvelope
+	RemoveManagementObject Document, cSrcDocDef
+	RemoveManagementObject Document, cDstDocDef
+	RemoveManagementObject Organization, cSrcOrg
+	PassFail "RemoveBTMObjects"
+End Sub
+
+Sub ConfigureBTMObjects()
+	On Error Resume Next
+	'-------------------------------------------------------------------------------------------
+	' Create the source organization
+	'-------------------------------------------------------------------------------------------
+	Organization.Clear
+	Organization.NAME = cSrcOrg
+	Organization.CreateAlias cCustomSrc, True, cCustomSrcQualifier, cCustomSrc
+	Organization.CreateApplication cSRCAPP
+	gSrc = Organization.Create
+	Handle  = Organization.Handle
+	gSrcAlias = Organization.GetDefaultAlias
+
+	'----------------------------------------------------------------------------------------
+	' Get the application 
+	'----------------------------------------------------------------------------------------
+	Set gApps = Organization.Applications
+	gSRCAPP = gApps.Fields("id")
+
+	Set gApps = Nothing
+	PassFail "Create Organization Handle: " & Handle
+
+	'-------------------------------------------------------------------------------------------
+	' Create the source document definition
+	'-------------------------------------------------------------------------------------------
+	Document.Clear
+	Document.Name = cSrcDocDef
+	Document.Reference = strDocReference
+	' Setup Tracking Fields for this Document Definition
+	Set Document.TrackFields = CreateObject("Commerce.Dictionary")
+	Document.TrackFields.r_value1 = "/CommonPO/SpecialCharge/@Amount"
+	Document.TrackFields.r_value2 = "/CommonPO/Currency/@ExchangeRate"
+	
+	Document.TrackFields.s_value1 = "/CommonPO/TermsOfSale/@PaymentMethod"
+	Document.TrackFields.s_value2 = "/CommonPO/CarrierDetail/@Routing"
+	
+	Document.TrackFields.i_value1 = "/CommonPO/TermsOfSale/@NetDays"
+	Document.TrackFields.i_value2 = "/CommonPO/TermsOfSale/@DiscountDaysDue"
+	
+	Document.TrackFields.d_value1 = "/CommonPO/Item/DateReference/@Date"
+	Document.TrackFields.d_value2 = "/CommonPO/POHeader/@CreationDate"
+
+	'-------------------------------------------------------------------------------------------
+	' Set up the custom fields for this document definition to be tracked in the 
+	' DTA database
+	'-------------------------------------------------------------------------------------------
+	Set Document.TrackFields.x_custom_search = CreateObject("Commerce.SimpleList")
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Total/@LineItemTotal"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Total/@QuantityTotal"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Total/@POTotal"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/POHeader/@Purpose"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/POHeader/@Type"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/POHeader/@Number"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/POHeader/@CreationDate"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Currency/@EntityID"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Currency/@CurrencyCode"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Currency/@ExchangeRate"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/TaxReference/@TaxIDNumber"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/TaxReference/@LocationQualifier"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/TaxReference/@Location"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/TaxReference/@TaxExemptCode"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/FOB/@ShipPaymentMethod"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/FOB/@TransferPoint"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/FOB/@Description"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/SpecialCharge/@Type"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/SpecialCharge/@HandlingMethod"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/SpecialCharge/@Amount"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/SpecialCharge/@Description"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/TermsOfSale/@DiscountPercent"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/TermsOfSale/@DiscountDaysDue"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/TermsOfSale/@NetDays"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/TermsOfSale/@Description"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/TermsOfSale/@PaymentMethod"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/DateReference/@Description"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/DateReference/@Date"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/CarrierDetail/@Name"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/CarrierDetail/@TransportType"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/CarrierDetail/@Routing"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/CarrierDetail/@TransitTimeQualifier"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/CarrierDetail/@TransitTime"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/BillTo/Address/@Name"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/BillTo/Address/@Address1"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/BillTo/Address/@Address2"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/BillTo/Address/@City"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/BillTo/Address/@State"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/BillTo/Address/@PostalCode"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/BillTo/Address/@Country"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/BillTo/ContactInfo/@ContactType"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/BillTo/ContactInfo/@ContactName"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/BillTo/ContactInfo/@NumberType"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/BillTo/ContactInfo/@ContactNumber"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/ShipTo/Address/@Name"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/ShipTo/Address/@Address1"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/ShipTo/Address/@Address2"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/ShipTo/Address/@City"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/ShipTo/Address/@State"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/ShipTo/Address/@PostalCode"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/ShipTo/Address/@Country"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/ShipTo/ContactInfo/@ContactType"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/ShipTo/ContactInfo/@ContactName"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/ShipTo/ContactInfo/@NumberType"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/ShipTo/ContactInfo/@ContactNumber"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/ItemHeader/@LineNumber"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/ItemHeader/@Quantity"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/ItemHeader/@Price"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/ItemHeader/@UnitOfMeasure"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/ItemHeader/@ExtendedPrice"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/ItemHeader/@BuyerPart"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/ItemHeader/@VendorPart"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/ItemHeader/@UPC"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/ItemDescription/@Type"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/ItemDescription/@Description"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/DateReference/@Description"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/DateReference/@Date"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Total/@LineItemTotal"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Total/@QuantityTotal"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Total/@POTotal"
+	gSrcDocDef = Document.Create
+	Handle  = Document.Handle
+	PassFail "Create Document Handle: " & Handle
+
+	'-------------------------------------------------------------------------------------------
+	' Create the destination document definition
+	'-------------------------------------------------------------------------------------------
+	Document.Clear
+	Document.Name = cDstDocDef
+	Document.Reference = strDocReference
+	gDstDocDef = Document.Create
+	Handle  = Document.Handle
+	PassFail "Create Document Handle: " & Handle
+
+	'-------------------------------------------------------------------------------------------
+	' Create a custom envelope, using the CommonPriceCatalog reference in the
+	' repository
+	'-------------------------------------------------------------------------------------------
+	Envelope.Clear
+	Envelope.Name = cEnvelope
+	Envelope.Format = "Custom XML"
+	gEnvelope = Envelope.Create
+	Handle  = Envelope.Handle
+	PassFail "Create Envelope Handle: " & Handle
+
+	'-------------------------------------------------------------------------------------------
+	' Create an outbound Port with an open destination
+	'-------------------------------------------------------------------------------------------
+	Port.Clear
+	Port.Name = cOutPort
+	Port.Comments = "This is " & cOutPort
+	Port.DestinationEndPoint.Openness = BIZTALK_OPENNESS_TYPE_DESTINATION
+	Port.Envelope = gEnvelope
+	Port.PrimaryTransport.Type = BIZTALK_TRANSPORT_TYPE_OPENDESTINATION
+	gOutPort = Port.Create
+	PassFail "Create SRC -> Open Destination Port with  = " & gOutPort
+
+	'-------------------------------------------------------------------------------------------
+	' Create a Channel with an open destination
+	'-------------------------------------------------------------------------------------------
+	Channel.Clear
+	Channel.Name = cChannel
+	Channel.Comments = "This is " & cChannel
+	Channel.SourceEndPoint.Organization = gSrc
+	Channel.SourceEndPoint.Alias = gSrcAlias
+	Channel.SourceEndPoint.Application = gSRCAPP
+	Channel.InputDocument = gSrcDocDef
+	Channel.OutputDocument = gDstDocDef
+	Channel.Port = gOutPort
+	Channel.LoggingInfo.LogXMLInputDocument = True
+	Channel.LoggingInfo.LogXMLOutputDocument = True
+	Channel.LoggingInfo.LogNativeInputDocument = True
+	Channel.LoggingInfo.LogNativeOutputDocument = True
+	gChannel = Channel.Create
+	PassFail "Create SRC -> Open Destination Channel with  = " & gChannel
+	PassFail "ConfigureBTMObjects"
+End Sub
+
+Sub DestroyBTMObjects()
+	On Error Resume Next
+	Set Channel = Nothing
+	Set Port = Nothing
+	Set Envelope = Nothing
+	Set Document = Nothing
+	Set Organization = Nothing
+	PassFail "DestroyBTMObjects"
+End Sub
+

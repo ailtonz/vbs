@@ -1,0 +1,29 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' Submit the document
+'-------------------------------------------------------------------------------------------
+Dim Interchange, strFilePath, FSO
+Set Interchange = CreateObject("BizTalk.Interchange")
+
+'-------------------------------------------------------------------------------------------
+' get the absolute path for the file being Submitted
+'-------------------------------------------------------------------------------------------
+Set FSO = CreateObject("Scripting.FileSystemObject")
+strFilePath = FSO.GetAbsolutePathName("Sample2.xml")
+Set FSO = Nothing
+
+'-------------------------------------------------------------------------------------------
+' Call Submit()
+'-------------------------------------------------------------------------------------------
+gSubmissionGUID = Interchange.Submit (1, , "Sample2 PO Document Definition", "Organization Name", "Sample2 Source Org", "Organization Name", "Sample2 Source Org", , strFilePath, "")
+WSCript.Echo "Submit() returned Submission GUID " & gSubmissionGUID
+
+

@@ -1,0 +1,24 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set objnet = wscript.CreateObject("wscript.network")
+set wshshell = wscript.CreateObject("wscript.shell")
+cname = objnet.ComputerName
+y = split (cname,"-",-1)
+if y(1) = "PF1" then
+	set fso = createobject("scripting.filesystemobject")
+	set x = fso.createtextfile("c:\tools\cname.txt")
+	x.writeline cname
+	x.close
+	wshshell.Run "c:\tools\pubfldr1.exe", 6, true
+else
+	wscript.Quit
+end if
+

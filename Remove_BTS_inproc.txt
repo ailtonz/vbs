@@ -1,0 +1,24 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' remove.vbs
+' 
+' This script calls the remove_CGU_OU.bat file, which Removes the User, Group, and Computer
+' OUs from the Location\CityName OU
+
+set wshshell = CreateObject("wscript.shell")
+CurrDir = wshshell.CurrentDirectory
+wshshell.CurrentDirectory = "c:\Moc\2274\Labfiles\Setup"
+
+'Populate Active Directory
+WshShell.run "remove_CGU_OU.bat", 6, true
+
+wshshell.CurrentDirectory = CurrDir
+

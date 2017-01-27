@@ -1,0 +1,95 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+set wshshell = wscript.CreateObject("wscript.shell")
+set fso = createobject("scripting.filesystemobject")
+fso.CreateFolder("c:\setup\holding")
+wshshell.Run "c:\moc\setup\reg export HKLM\SYSTEM\CurrentControlSet\Services\TCPIP\Parameters\Interfaces c:\setup\holding\interfaces.reg /nt4", 6, true
+set fn = fso.CreateTextFile("c:\setup\holding\int.txt")
+fn.Close
+set fn = fso.opentextfile("c:\setup\holding\int.txt", 8)
+set fl = fso.OpenTextFile("c:\setup\holding\interfaces.reg", 1, 0)
+fl.SkipLine
+fl.SkipLine
+fl.Skipline
+fl.SkipLine
+done = 0
+Do while done = 0
+	ln = fl.ReadLine
+	blank = ""
+	if ln = blank then
+		if fso.FileExists("c:\setup\holding\int10.txt") then
+			done = 1
+		elseif fso.FileExists("c:\setup\holding\int9.txt") then
+			set fn = fso.createtextfile("c:\setup\holding\int10.txt")
+			fn.close
+			set fn = fso.opentextfile("c:\setup\holding\int10.txt", 8)
+		elseif fso.FileExists("c:\setup\holding\int8.txt") then
+			set fn = fso.createtextfile("c:\setup\holding\int9.txt")
+			fn.close
+			set fn = fso.opentextfile("c:\setup\holding\int9.txt", 8)
+		elseif fso.FileExists("c:\setup\holding\int7.txt") then
+			set fn = fso.createtextfile("c:\setup\holding\int8.txt")
+			fn.close
+			set fn = fso.opentextfile("c:\setup\holding\int8.txt", 8)
+		elseif fso.FileExists("c:\setup\holding\int6.txt") then
+			set fn = fso.createtextfile("c:\setup\holding\int7.txt")
+			fn.close
+			set fn = fso.opentextfile("c:\setup\holding\int7.txt", 8)
+		elseif fso.FileExists("c:\setup\holding\int5.txt") then
+			set fn = fso.createtextfile("c:\setup\holding\int6.txt")
+			fn.close
+			set fn = fso.opentextfile("c:\setup\holding\int6.txt", 8)
+		elseif fso.FileExists("c:\setup\holding\int4.txt") then
+			set fn = fso.createtextfile("c:\setup\holding\int5.txt")
+			fn.close
+			set fn = fso.opentextfile("c:\setup\holding\int5.txt", 8)
+		elseif fso.FileExists("c:\setup\holding\int3.txt") then
+			set fn = fso.createtextfile("c:\setup\holding\int4.txt")
+			fn.close
+			set fn = fso.opentextfile("c:\setup\holding\int4.txt", 8)
+		elseif fso.FileExists("c:\setup\holding\int2.txt") then
+			set fn = fso.createtextfile("c:\setup\holding\int3.txt")
+			fn.close
+			set fn = fso.opentextfile("c:\setup\holding\int3.txt", 8)
+		elseif fso.FileExists("c:\setup\holding\int1.txt") then
+			set fn = fso.createtextfile("c:\setup\holding\int2.txt")
+			fn.close
+			set fn = fso.opentextfile("c:\setup\holding\int2.txt", 8)
+		elseif fso.FileExists("c:\setup\holding\int.txt") then
+			set fn = fso.createtextfile("c:\setup\holding\int1.txt")
+			fn.close
+			set fn = fso.opentextfile("c:\setup\holding\int1.txt", 8)
+		else 
+			set fn = fso.createtextfile("c:\setup\holding\int.txt")				
+		end if
+	else
+		fn.WriteLine ln
+	end if
+loop
+fl.close
+set fld = fso.getfile("c:\setup\holding\interfaces.reg")
+fld.Delete
+wshshell.Run "c:\moc\setup\sfindfil.cmd", 6, true
+set nfl = fso.OpenTextFile("c:\setup\holding\file.txt")
+nln = nfl.readline
+set nfl1 = fso.OpenTextFile (nln)
+rkey = nfl1.ReadLine
+fid = right(rkey,39)
+id = left(fid,38)
+cmd = "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & id & "\DisableDynamicUpdate"
+wshshell.RegWrite cmd, 1, "REG_DWORD"
+nfl.close
+nfl1.Close
+fn.Close
+fl.close
+fso.DeleteFolder("c:\setup\holding")
+

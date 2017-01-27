@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'SHAREFLD.VBS
+'
+'This script shares the Lab9 and Lab6 folders
+
+set wshshell = Wscript.CreateObject("Wscript.Shell")
+
+'share the C:MOC\2810\Labfiles\Lab9 folder as Research
+wshshell.Run "net share Research=C:\MOC\2810\Labfiles\Lab9"
+
+'share the C:MOC\2810\Labfiles\Lab6 folder
+wshshell.Run "net share Lab6=C:\MOC\2810\Labfiles\Lab6"
+

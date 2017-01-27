@@ -1,0 +1,160 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set objNet = WScript.CreateObject("WScript.Network")
+
+
+if objNet.ComputerName="VANCOUVER" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\van.cmd", 6, true
+end if
+
+if objNet.ComputerName="DENVER" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\den.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="ACAPULCO" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\aca.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="MIAMI" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\mia.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="LISBON" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\lis.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="BONN" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\bon.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="STOCKHOLM" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\sto.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="MOSCOW" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\mos.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="BANGALORE" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\ban.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="SINGAPORE" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\sin.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="MANILA" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\man.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="TOKYO" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\tok.cmd", 6, true	
+end if
+
+
+if objNet.ComputerName="PERTH" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\per.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="BRISBANE" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\bri.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="AUCKLAND" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\auc.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="SUVA" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\suv.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="LIMA" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\lim.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="SANTIAGO" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\san.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="CARACAS" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\car.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="MONTEVIDEO" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\mon.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="CASABLANCA" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\cas.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="TUNIS" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\tun.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="KHARTOUM" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\kha.cmd", 6, true
+end if
+
+
+if objNet.ComputerName="NAIROBI" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\rights\nai.cmd", 6, true
+end if
+
+
+
+
+
+

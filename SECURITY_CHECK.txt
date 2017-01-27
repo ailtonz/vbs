@@ -1,0 +1,257 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' security.vbs
+'
+' This script configures additional security in Active Directory.
+' It delegates control of certain objects in Active Directory to the DL IT OU Administrators
+
+Option Explicit
+
+Dim WSHShell, oNet
+
+Set WSHShell = WScript.CreateObject("wscript.shell")
+Set oNet = CreateObject("wscript.network")
+
+' Define a ADS_RIGHTS_ENUM constants:
+'
+  const ADS_RIGHT_DELETE                 = &h10000
+  const ADS_RIGHT_READ_CONTROL           = &h20000
+  const ADS_RIGHT_WRITE_DAC              = &h40000
+  const ADS_RIGHT_WRITE_OWNER            = &h80000
+  const ADS_RIGHT_SYNCHRONIZE            = &h100000
+  const ADS_RIGHT_ACCESS_SYSTEM_SECURITY = &h1000000
+  const ADS_RIGHT_GENERIC_READ           = &h80000000
+  const ADS_RIGHT_GENERIC_WRITE          = &h40000000
+  const ADS_RIGHT_GENERIC_EXECUTE        = &h20000000
+  const ADS_RIGHT_GENERIC_ALL            = &h10000000	
+  const ADS_RIGHT_DS_CREATE_CHILD        = &h1		
+  const ADS_RIGHT_DS_DELETE_CHILD        = &h2
+  const ADS_RIGHT_ACTRL_DS_LIST          = &h4
+  const ADS_RIGHT_DS_SELF                = &h8
+  const ADS_RIGHT_DS_READ_PROP           = &h10
+  const ADS_RIGHT_DS_WRITE_PROP          = &h20
+  const ADS_RIGHT_DS_DELETE_TREE         = &h40
+  const ADS_RIGHT_DS_LIST_OBJECT         = &h80
+  const ADS_RIGHT_DS_CONTROL_ACCESS      = &h100
+
+  Dim AM_CD_CHILD
+  Dim AM_FULL
+  Dim AM_RW_PROP
+  AM_CD_CHILD = ADS_RIGHT_DS_CREATE_CHILD Or ADS_RIGHT_DS_DELETE_CHILD ' = 3
+  AM_FULL     = ADS_RIGHT_WRITE_OWNER Or _
+                ADS_RIGHT_WRITE_DAC Or _
+                ADS_RIGHT_READ_CONTROL Or _
+                ADS_RIGHT_DELETE Or _
+                ADS_RIGHT_DS_CONTROL_ACCESS Or _
+                ADS_RIGHT_DS_LIST_OBJECT Or _
+                ADS_RIGHT_DS_DELETE_TREE Or _
+                ADS_RIGHT_DS_WRITE_PROP Or _
+                ADS_RIGHT_DS_READ_PROP Or _
+                ADS_RIGHT_DS_SELF Or _
+                ADS_RIGHT_ACTRL_DS_LIST Or _
+                ADS_RIGHT_DS_DELETE_CHILD Or _
+                ADS_RIGHT_DS_CREATE_CHILD ' = 983551
+  AM_RW_PROP  = ADS_RIGHT_ACTRL_DS_LIST Or _
+                ADS_RIGHT_DS_SELF Or _
+                ADS_RIGHT_DS_READ_PROP Or _
+                ADS_RIGHT_DS_WRITE_PROP Or _
+                ADS_RIGHT_READ_CONTROL ' = 131132
+
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+'  
+' ADS_ACETYPE_ENUM
+' Ace Type definitions
+'
+  const ADS_ACETYPE_ACCESS_ALLOWED        = 0
+  const ADS_ACETYPE_ACCESS_DENIED         = &h1
+  const ADS_ACETYPE_SYSTEM_AUDIT          = &h2
+  const ADS_ACETYPE_ACCESS_ALLOWED_OBJECT = &h5
+  const ADS_ACETYPE_ACCESS_DENIED_OBJECT  = &h6
+  const ADS_ACETYPE_SYSTEM_AUDIT_OBJECT   = &h7
+  const ADS_ACETYPE_SYSTEM_ALARM_OBJECT   = &h8
+
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+'
+' ADS_ACEFLAGS_ENUM
+' Ace Flag Constants
+'
+  const ADS_ACEFLAG_INHERIT_ACE              = &h2
+  const ADS_ACEFLAG_NO_PROPAGATE_INHERIT_ACE = &h4
+  const ADS_ACEFLAG_INHERIT_ONLY_ACE         = &h8
+  const ADS_ACEFLAG_INHERITED_ACE            = &h10
+  const ADS_ACEFLAG_VALID_INHERIT_FLAGS      = &h1f
+  const ADS_ACEFLAG_SUCCESSFUL_ACCESS        = &h40
+  const ADS_ACEFLAG_FAILED_ACCESS            = &h80
+
+  Dim   AF_INH
+  Dim   AF_INH_ONLY 
+  AF_INH      = ADS_ACEFLAG_INHERIT_ACE
+  AF_INH_ONLY = ADS_ACEFLAG_INHERIT_ACE Or ADS_ACEFLAG_INHERIT_ONLY_ACE ' = 10
+
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+'
+' ADS_FLAGTYPE_ENUM
+' Ace Flag Constants
+'
+  const ADS_FLAG_OBJECT_TYPE_PRESENT           = &h1
+  const ADS_FLAG_INHERITED_OBJECT_TYPE_PRESENT = &h2
+
+  const AC_NONE       = &h0
+  Dim   AC_OBJ
+  Dim   AC_INHOBJ
+  Dim   AC_BOTH
+  AC_OBJ    = ADS_FLAG_OBJECT_TYPE_PRESENT
+  AC_INHOBJ = ADS_FLAG_INHERITED_OBJECT_TYPE_PRESENT
+  AC_BOTH   = ADS_FLAG_OBJECT_TYPE_PRESENT Or ADS_FLAG_INHERITED_OBJECT_TYPE_PRESENT
+
+
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+'
+' Object GUIDS
+'
+  const GUID_NONE     = "{00000000-0000-0000-0000-000000000000}"
+  const GUID_OBJECT_1 = "{BF967ABA-0DE6-11D0-A285-00AA003049E2}"
+  const GUID_OBJECT_2 = "{BF967950-0DE6-11D0-A285-00AA003049E2}"
+  const GUID_OBJECT_3 = "{BF967A9C-0DE6-11D0-A285-00AA003049E2}"
+  const GUID_OBJECT_4 = "{BF967A86-0DE6-11D0-A285-00AA003049E2}"
+  const GUID_OBJECT_5 = "{FA4693BB-7BC2-4CB9-81A8-C99C43B7905E}"
+
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+'    DlgtCtrl(               Object Name                     ,    Access Mask          ,   Flags   ,  Object Type , Inherited Obj Type)
+'
+Call DlgtCtrl("OU=IT Users,OU=IT Admin,DC=nwtraders,DC=msft", AM_FULL                 , AF_INH_ONLY, AC_INHOBJ , GUID_NONE    , GUID_OBJECT_1)
+Call DlgtCtrl("OU=IT Users,OU=IT Admin,DC=nwtraders,DC=msft", AM_CD_CHILD             , AF_INH     , AC_OBJ    , GUID_OBJECT_1, GUID_NONE    )  
+
+Call DlgtCtrl("OU=IT Test,DC=nwtraders,DC=msft"             , AM_FULL                 , AF_INH     , AC_NONE   , GUID_NONE    , GUID_NONE    )
+
+Call DlgtCtrl("CN=Users,DC=nwtraders,DC=msft"               , AM_FULL                 , AF_INH_ONLY, AC_INHOBJ , GUID_NONE    , GUID_OBJECT_1)  
+Call DlgtCtrl("CN=Users,DC=nwtraders,DC=msft"               , AM_CD_CHILD             , AF_INH     , AC_OBJ    , GUID_OBJECT_1, GUID_NONE    )  
+
+Call DlgtCtrl("CN=Computers,DC=nwtraders,DC=msft"           , AM_CD_CHILD             , AF_INH     , AC_OBJ    , GUID_OBJECT_4, GUID_NONE    )  
+Call DlgtCtrl("CN=Computers,DC=nwtraders,DC=msft"           , ADS_RIGHT_DS_WRITE_PROP , AF_INH_ONLY, AC_BOTH   , GUID_OBJECT_5, GUID_OBJECT_4)  
+Call DlgtCtrl("CN=Computers,DC=nwtraders,DC=msft"           , AM_RW_PROP              , AF_INH_ONLY, AC_INHOBJ , GUID_NONE    , GUID_OBJECT_4)  
+
+WScript.Quit 0
+
+
+'====================================================================================
+' Sub to add delegate control for an existing object to the DL IT OU Adminitrators OU
+' Comments in the subroutine explain how it works
+' Note that this then calls the Reorder sub routine so if you
+' use this code in other projects, you will need that as well.
+'
+Sub DlgtCtrl(ADOName, AccMask, AceFlags, Flags, ObjType, InhObjType)
+   Dim oADO, oSD, oACL, oAdminACE
+
+   Set oADO = GetObject("LDAP://" & ADOName)
+
+   'Now for the tricky part.  Adding the security permissions.
+   Set oSD = oADO.Get("ntSecurityDescriptor")
+   Set oACL = oSD.DiscretionaryAcl
+   Set oAdminACE = CreateObject("AccessControlEntry") 
+
+   oAdminACE.Trustee    = "NWTRADERS\DL IT OU Administrators"
+   oAdminACE.AceType    = ADS_ACETYPE_ACCESS_ALLOWED_OBJECT
+   oAdminACE.AccessMask = AccMask
+   oAdminACE.AceFlags   = AceFlags
+   oAdminACE.Flags      = Flags
+   Select Case Flags
+      Case 1
+         oAdminACE.ObjectType = ObjType
+      Case 2
+         oAdminACE.InheritedObjectType = InhObjType
+      Case 3
+         oAdminACE.ObjectType = ObjType
+         oAdminACE.InheritedObjectType = InhObjType
+      Case Else
+   End Select
+
+  oACL.AddAce oAdminACE
+  
+  ' Now make sure the ACL that we just created are at the front of the list.
+  Call ReorderDacl(oACL)
+
+'  Call EchoDACL(oACL)
+  
+  oSD.DiscretionaryAcl = oACL
+  oADO.Put "nTSecurityDescriptor", oSD
+  oADO.SetInfo 
+
+  Set oADO = Nothing
+  Set oACL = Nothing
+  Set oSD  = Nothing
+End Sub
+
+
+'==========================================================================
+' Sub to reorder an ACL
+' Comments in the subroutine explain how the ACL should be ordered.
+' The IADsAccessControlList::AddAce method makes not attempt to properly
+' order the ACE being added.
+'
+Sub ReorderDacl(oDACL)
+   Dim oNewDACL, oFirstDACL, oSecondDACL, oACE
+   '
+   ' Initialize all of the new ACLs
+   '
+   ' VBS methods of creating the ACL bins
+   '
+   Set oNewDACL    = CreateObject("AccessControlList")
+   Set oFirstDACL  = CreateObject("AccessControlList")
+   Set oSecondDACL = CreateObject("AccessControlList")
+
+   '
+   For Each oACE In oDACL 
+      ' 
+      ' Sort the original ACEs into their appropriate 
+      ' ACLs.  If the Trustee is Admin or Student, then it should be first
+      '
+      If instr(oACE.Trustee, "OU Administrators") then
+	 oFirstDACL.AddAce oACE
+      Else
+	 oSecondDACL.AddAce oACE
+      End If
+   Next
+   '
+   ' Combine the ACEs in the proper order
+   For Each oACE In oFirstDACL
+       oNewDACL.AddAce oACE 
+   Next
+   For Each oACE In oSecondDACL
+        oNewDACL.AddAce oACE
+   Next
+   Set oFirstDACL  = Nothing
+   Set oSecondDACL = Nothing
+
+   oNewDACL.AclRevision = oDACL.AclRevision
+
+   Set oDACL = Nothing
+   Set oDACL = oNewDACL
+End Sub
+
+
+Sub EchoDACL(oDACL)
+   Dim oACE
+   For Each oACE In oDACL 
+	WScript.Echo "===========================================" & CHR(10) & _
+	             "Trustee:       " & oACE.Trustee & CHR(10) & _
+	             "AceType:       " & Hex(oACE.AceType) & CHR(10) & _
+	             "AccessMask:    " & Hex(oACE.AccessMask) & CHR(10) & _
+	             "ObjectType:    " & oACE.ObjectType & CHR(10) & _
+	             "InheritedObj:  " & oACE.InheritedObjectType & CHR(10) & _
+	             "AceFlags:      " & Hex(oACE.AceFlags) & CHR(10) & _
+	             "Flags:         " & Hex(oACE.Flags)
+   Next
+End Sub
+

@@ -1,0 +1,69 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+On error resume next
+Dim config, srcorg, destorg, doc, port, channel
+set config = CreateObject("BizTalk.BizTalkConfig.1")
+
+
+Set channel = config.CreateChannel
+channel.LoadByName("__channel__")
+channel.Remove
+
+Set port = config.CreatePort
+port.LoadByName("__port__")
+port.Remove
+
+Set doc = config.CreateDocument
+doc.LoadByName("__sourcedoc__")
+doc.Remove
+
+Set doc2 = config.CreateDocument
+doc2.LoadByName("__destdoc__")
+doc2.Remove
+
+Set srcorg = config.CreateOrganization
+srcorg.LoadByName("__source__")
+srcorg.Remove
+
+Set dstorg = config.CreateOrganization
+dstorg.LoadByName("__destination__")
+dstorg.Remove
+
+RemoveFilesFromRepository
+
+MsgBox "Configuration objects removed successfully", vbOkOnly, "XML Translation Sample"
+
+sub RemoveFilesFromRepository
+	dim vDir, sDocPath, sMapPath
+	dim sCurPath, WshShell, fso
+
+	set vDir = nothing
+	on error resume next
+
+	sCurPath = WScript.ScriptFullName
+	sCurPath = Mid(strPath, 1, InStrRev(strPath, "\"))
+
+	set vDir = GetObject("IIS://localhost/w3svc/1/Root/BizTalkServerRepository")
+	if not (vDir is nothing) then
+		sDocPath = vDir.Path & "\DocSpecs\Microsoft\"
+		sMapPath = vDir.Path & "\Maps\Microsoft\"
+
+		Set fso = CreateObject("Scripting.FileSystemObject")
+		fso.DeleteFile sDocPath & "SamplePO.xml", true
+		fso.DeleteFile sDocPath & "SamplePOShipping.xml", true
+		fso.DeleteFile sMapPath & "SamplePOMap.xml", true
+	else
+		msgbox "Unable to locate directory for ""http://localhost/BizTalkServerRepository"""
+	end if
+end sub
+
+ 
+

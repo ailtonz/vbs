@@ -1,0 +1,81 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Function ReadConfig(strName)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	configfile = "C:\software.cfg"
+	'configfile = "D:\ngasII\software.cfg" ' for debugging purpouses
+	
+	if fso.FileExists (configfile) then	' is there a config file?
+		Set f = fso.OpenTextFile(configfile)
+		
+		' check each line of the config file until strName is found
+		do while not f.AtEndOfStream
+			s = f.ReadLine
+			s = split(s,"=")
+			if strcomp(s(0),strName) = 0 then exit do 
+			s(1) = ""
+		loop
+		f.Close 
+		
+		' was the path found?
+		if strcomp(s(1), "") <> 0 then
+			path = s(1)
+			'format path
+			If right(path, 1) = "\" Then
+				path = left(path, len(path)-1)
+			End IF
+			ReadConfig = path
+			' is path valid?
+			'set regex = new regexp
+			'regex.pattern = "(\\{2}[A-Za-z].*\\[A-Za-z].*|[A-Za-z]:(\\[A-Za-z].*)*)"
+			'set matches = regex.execute(path)
+			'if matches.count <> 0 and matches(0) = path then ReadConfig = path
+	
+		end if
+	end if
+	if ReadConfig = "" then ReadConfig = False
+End Function
+
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+set usuario = getobject("LDAP://cn=administrator,cn=users,dc=nwtraders,dc=msft")
+usuario.getinfo
+wscript.Echo "Existem " & usuario.propertycount & " propriedades para o objeto " & usuario.adspath
+
+for x=0 to usuario.propertycount-1
+	txt = txt & usuario.item(cint(x)).name & " / " & usuario.get(usuario.item(cint(x)).name) & vbnewline
+	if err.number <> 0 then 
+	oerro = oerro & usuario.item(cint(x)).name & vbnewline
+	end if
+next
+
+
+'wscript.Echo "Propriedades que aceitam GET: " & vbnewline & txt
+
+'wscript.Echo "Propriedades que não aceitam GET: " & vbnewline & oerro
+
+set fso = createobject("scripting.filesystemobject")
+set arq = fso.createtextfile("c:\x.txt")
+arq.writeline(txt & vbnewline & vbnewline & vbnewline & oerro)
+arq.close
+
+set oshell = createobject("wscript.shell")
+oshell.run "notepad c:\x.txt",3
+

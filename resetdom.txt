@@ -1,0 +1,35 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim cont 
+Dim ops
+dim tester
+
+dim rootDSE
+set rootDSE = GetObject("LDAP://RootDSE")
+domainname=rootDSE.Get("defaultnamingcontext")
+
+Set domain = GetObject("LDAP://" & domainname)
+
+for each obj in domain
+ tester= left(obj.name,3)
+ if tester = "OU=" then
+  if obj.name <> "OU=Domain Controllers" then
+  Set cont = GetObject("LDAP://" & obj.name & "," & domainname)
+  Set ops = cont 
+  ops.DeleteObject (0)
+ end if
+ end if
+next
+
+wscript.echo "Active Directory has been reset."
+
+
+

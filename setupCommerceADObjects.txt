@@ -1,0 +1,828 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' *** place this file in the setup folder on the intructor computer *** '
+
+set MySetup = new AutoSetup
+MySetup.AutoSet
+MySetup.GetComputerName
+MySetup.GetClassroom
+MySetup.GetDomain
+MySetup.CopyFiles
+MySetup.Run
+
+set MySetup = nothing
+' TODO: Add option for command line parameters for a silent setup
+' TODO: Verify the students don't copy over the winsrc directory
+
+
+Class AutoSetup
+	Private m_Name
+	Private m_Number
+	Private m_Domain
+	Private m_Source
+	Private m_Root
+	Private m_IP
+	Private Names
+	Private CopyFlag
+	Private DomInfo
+	
+	Private MAIN_INSTRUCTOR
+
+	    
+    Private Sub Class_Initialize()
+    	set DomInfo = New DomainType
+		m_source = Wscript.ScriptFullName
+		m_source = left(m_source, len(m_source)-len(wscript.ScriptName)-1)
+		position = InstrRev(m_Source, "\")
+		m_Root = left(m_source, position-1)
+		Names = Array("Vancouver", "Denver", "Perth", "Brisbane", "Lisbon", "Bonn", "Lima", "Santiago", "Bangalore", "Singapore", "Casablanca", "Tunis", "Acapulco", "Miami", "Auckland", "Suva", "Stockholm", "Moscow", "Caracas", "Montevideo", "Manila", "Tokyo", "Khartoum", "Nairobi", "London", "Glasgow", "Melbourne")
+		MAIN_INSTRUCTOR = UCase(Names(24))
+		CopyFlag = false
+	End Sub
+	
+	
+	Public Property Get MySource()
+		MySource = m_Source
+	End Property
+	
+	Public Property Get MyRoot()
+		MyRoot = m_Root
+	End Property
+	
+	Public Property Get Classroom()
+		Classroom = m_Number
+	End Property
+	Private Property Let Classroom(strNumber)
+		m_Number = strNumber
+	End Property
+	
+	Public Property Get IP()
+		IP = m_IP
+	End Property
+	Private Property Let IP(strIP)
+		m_IP = strIP
+		DomInfo.citynum = strIP
+		DomInfo.GetDomainType
+	End Property
+	
+	Public Property Get ComputerName()
+		ComputerName = m_Name	
+	End Property
+	Private Property Let ComputerName(strName)
+		m_Name = strName
+		DomInfo.city = strName
+		DomInfo.citycode = Left(strName, 3)
+	End Property
+			
+	Public Property Get Domain()
+		Domain = m_Domain
+	End Property
+
+	
+	Public Function GetDomain()
+	'
+	' This function prompts the user for the domain information
+	'
+	Title = "Domain Model"
+	Prompt1 = "Select the domain model you are installing (1-4):" & vbCRLF & _
+			  vbCRLF & _
+			  "1 - Single Domain Model (nwtraders.msft)" & vbCRLF & _
+			  vbCRLF & _
+			  "2 - Multiple Domain Model" & vbCRLF & _
+			  "     (north.nwtraders.msft, south.nwtraders.msft)" & vbCRLF & _
+			  vbCRLF & _
+			  "3 - Multiple-Maximum Domain Model" & vbCRLF & _
+			  "     NAmerica1-2, Europe1-2, Asia1-2, etc." & vbCRLF & _			  
+			  vbCRLF & _
+			  "4 - Maximum Domain Model" & vbCRLF & _
+		 	  "     (Vancoverdom, Denverdom, etc.)"
+		 	  
+	Prompt2 = "Select the domain configuration:" & vbCRLF & _
+			  vbCRLF & _
+			  "1 - Domain Controller in classroom domain" & vbCRLF & _
+			  "2 - Member Server in classroom domain" & vbCRLF & _
+			  "3 - Member of the workgroup WORKGROUP"
+		      
+		' instructor computer doesn't allow for different domains
+		if ComputerName = MAIN_INSTRUCTOR then exit function
+		strDomain = "-1"		' initialize strDomain to an invalid value
+		
+		Do While strDomain = "-1"
+			strDomain = inputbox (Prompt1, title)
+			if strDomain = "" then 
+				strDomain = "-1"
+				Cancel
+			else
+				on error resume next
+					intDomain = cint(strDomain)
+					if err.Number <> 0 then intDomain = 0
+				on error goto 0
+				
+				if intDomain < 1 Or intDomain > 4 then
+					msgbox strDomain & " is not a valid domain model."
+					strDomain = "-1"
+				else
+					select case intDomain
+						case 1
+							strDomain = "-1"
+							Do While strDomain = "-1"
+								strDomain = inputbox (Prompt2, title)
+								if strDomain = "" then
+									strDomain = "-1"
+									Cancel
+								else
+									on error resume next
+										intDomain = cint(strDomain)
+										if err.Number <> 0 then intDomain = 0
+									on error goto 0
+									
+									if intDomain < 1 Or intDomain > 3 then
+										msgbox strDomain & " is not a valid domain configuration."
+										strDomain = ""
+									else
+										select case intDomain
+											case 1
+												m_Domain = "Single-Domain Controller"
+											case 2
+												m_Domain = "Single-Member Domain"
+											case 3
+												m_Domain = "Single-Member Workgroup"
+										end select
+									end if
+								end if
+							loop
+							
+						case 2
+							m_Domain = "Multiple"
+						case 3
+							m_Domain = "Mult-Maximum"
+						case 4
+							m_Domain = "Maximum"
+					end select			
+				end if
+			end if
+		loop
+	
+	End Function
+	
+	
+	
+	Public Function GetClassroom()
+	'
+	' This function prompts the user for the classroom number
+	'
+		Title = "Classroom Number"
+		Prompt = "Type the classroom number for this installation:" & Chr(13) & _
+ 				 "The number you select is used to configure the IP address for this computer (192.168.X.0). " & _
+ 				 "Since each classroom uses a separate IP address, this will avoid name and IP address conflicts." & Chr(13) & _
+				 Chr(13) & _
+				 "Important: Use the same classroom number on all of the computers used for this course."
+				 
+		strNumber = "-1"
+		Do While strNumber = "-1"
+			strNumber = InputBox (Prompt, Title)
+			if strNumber = "" then
+				strNumber = "-1"
+				Cancel
+			else
+				on error resume next
+					intNumber = cint(strNumber)
+					if err.Number <> 0 then intNumber = 0
+				on error goto 0
+				
+				if intNumber < 1 Or intNumber > 9 then
+					msgbox strNumber & " is not a valid classroom number."
+					strNumber = ""
+				else
+					Classroom = strNumber
+				end if
+			end if
+		loop
+	
+	End Function
+	
+
+	
+	Private Function GetIP()
+	'
+	' This function gets the final octet of the ip address
+	' based on the array index of the computer name
+	'
+		For i = 0 to 26
+			if strComp(ComputerName, UCase(Names(i))) = 0 then
+				' name was found in the list
+				i = i + 1 ' since the array is 0 based
+				if i = 25 then i = 200
+				if i = 26 then i = 201
+				if i = 27 then i = 210
+				IP = i
+				exit function
+			end if
+		next
+	End Function
+	
+	
+	
+	Public Function GetComputerName()
+	'
+	' This function prompts the user for the computer name
+	'
+		Iterate = 1
+		Title = "Computer Name"
+		Prompt = "Type the name of the computer for this installation:" & Chr(13) & Chr(13)
+		for each Name in Names
+			Prompt = Prompt & Name
+			if Iterate mod 3 = 0 then 
+				Prompt = Prompt & Chr(13)
+			else
+				if len(Name) <= 7 then Prompt = Prompt & vbTab
+				Prompt = Prompt & vbTab
+			end if
+			iterate = Iterate + 1
+		next
+		
+		strName = "-1"
+		Do While found = false
+			strName = inputbox (Prompt, Title)
+			if strName = "" then
+				strName = "-1"
+				Cancel
+			else
+				for each Name in Names
+					if strComp(UCase(strName), UCase(Name)) = 0 then found = true
+				next
+				if found = false then 
+					msgbox strName & " is not a valid computer name."
+				else 
+					ComputerName = UCase(strName)
+					GetIP
+				end if
+			end if
+		Loop
+	End Function
+	
+	
+	
+	Public Function CopyFiles()
+	'
+	' This function copies the required setup files to the computer
+	' and copies the Windows source files to the instructor computer
+	'
+		set WshShell = Wscript.CreateObject("Wscript.Shell")
+		set fso = CreateObject("Scripting.FileSystemObject")
+		
+		WshShell.Popup "Setup is now copying the automated setup files.  This may take a minute.", 5, "Setup"
+		on error resume next
+			if fso.FolderExists(m_Root & "\Setup") then
+				if ComputerName = MAIN_INSTRUCTOR then
+					if fso.FolderExists(m_Root & "\Tools") AND fso.FolderExists(m_Root & "\PPTView") then
+						fso.CopyFolder m_Root & "\Setup", "C:\Setup"
+						fso.CopyFolder m_Root & "\Tools", "C:\Tools"
+						fso.CopyFolder m_Root & "\PPTView", "C:\PPTView"
+						wshShell.Run "C:\Tools\CopyWin.vbs", 6, true
+					else
+						err.Raise 76
+					end if
+				else
+					fso.CreateFolder "C:\MOC"
+					fso.CreateFolder "C:\Moc\Setup"
+					fso.CreateFolder "C:\Setup"
+					fso.CopyFolder m_Root & "\Setup\Images", "C:\Setup\"
+					fso.CopyFile m_Root & "\Setup\*.*", "C:\MOC\Setup"
+					fso.CopyFolder m_Root & "\Setup\MOCSET", "C:\MOC\Setup\"
+					fso.CopyFolder m_Root & "\Setup\Instruct", "C:\Moc\Setup\"
+					fso.CopyFolder m_Root & "\Setup\MOCHTML", "C:\MOC\Setup\"
+					fso.CopyFolder m_Root & "\Setup\Moc", "C:\Tools"
+					
+				end if
+			else
+				err.Raise 76		' Generate path not found runtime error
+			end if
+			
+			if err.Number <> 0 then
+				
+				ErrMsg = "There was an error while copying the automated setup source files." & _
+						 vbCrLf & vbCrLf & "Error Description: " & err.Description & vbCrLf & vbCrLf
+						 
+				select case err.Number 
+					case 70
+						' permission denied.  Destination is set to read only
+						ErrMsg = ErrMsg & "Make sure the disk is not full or write-protected" & vbCrLf & _
+										  "and that the source files are not currently in use."
+					case 76
+						' path not found.  Source directory does not exist
+						ErrMsg = ErrMsg & "Make sure the source directory exists" & vbCrLf & _
+										  "and that the source files are not currently in use."
+				end select
+				
+				msgbox ErrMsg, vbCritical, "Error Copying File or Folder"
+				resp = Msgbox ("If all the source files did not copy, the automated setup may not work properly." & vbCrLf & _
+							   "Do you want the setup to continue anyway?", vbYesNo OR vbQuestion)
+				
+				if resp = vbYes then 
+					CopyFlag = true
+				else
+					CopyFlag = false
+					wscript.Quit
+				end if
+				
+			else
+				CopyFlag = true		
+			end if
+			
+		on error goto 0
+		set WshShell = nothing
+		set fso = nothing
+
+	End Function
+	
+	
+	
+	Private Function SetDHCP()
+	'
+	' This function creates the setdhcp.cmd file based on the classroom number
+	'
+		if ComputerName <> MAIN_INSTRUCTOR then exit function
+		set fso = CreateObject("Scripting.FileSystemObject")
+		lookfile = "C:\Tools\DHCP\DHCP" & Classroom & ".txt"
+		
+		on error resume next
+			if fso.FileExists(lookfile) then
+				CreateFromFile lookfile, "C:\Setup\setdhcp.cmd"
+			else
+				err.Raise 76	' generate path not found error
+			end if
+			
+			if err.Number <> 0 then
+				msgbox "Could not create the DHCP command file." & vbCrLf & err.Description, vbCritical, "Error"
+			end if
+		on error goto 0
+		set fso = nothing
+
+	End Function
+	
+	
+	
+	Private Function InstallDHCP()
+	'
+	' This function checks to see if MAIN_INSTRUCTOR is a Windows 2000 or .NET Server
+	' If so, it will install DHCP using sysocmgr
+	'
+		if ComputerName = MAIN_INSTRUCTOR then
+			Set WshShell = WScript.CreateObject("WScript.Shell")
+			Set objServices = GetObject("winmgmts:root/cimv2")
+			objServices.Security_.ImpersonationLevel = 3
+	
+			Set objEnum = objServices.execquery("select caption from win32_OperatingSystem","WQL",48)
+			searchname = "Caption"
+			os = ""
+			For each obj in objEnum
+				For each prop in obj.Properties_
+					if prop.name = searchname then os = prop.value
+				Next
+			Next
+			
+			select case os
+				case "Microsoft Windows 2000 Server" valid = true
+				case "Microsoft Windows 2000 Advanced Server"  valid = true
+				case "Microsoft Windows .NET Standard Server" valid = true
+				case "Microsoft Windows .NET Enterprise Server" valid = true
+				case else valid = false
+			end select
+			
+			if valid then
+				wshshell.run "sysocmgr.exe /i:sysoc.inf /u:c:\tools\dhcp.txt", 6, true
+			end if
+		end if
+		set WshShell = nothing
+		set objServices = nothing
+
+	End Function
+	
+	
+	
+	Private Function CreateUnattend()
+	'
+	' This function creats the dcpromo unattend file
+	'
+		set fso = CreateObject("Scripting.FileSystemObject")
+		
+		' remove old unattent file if it exists
+		on error resume next
+		if fso.FileExists("C:\Moc\Setup\dcpromo.txt") then fso.DeleteFile "C:\Moc\Setup\dcpromo.txt"
+		on error goto 0
+		
+		' instructor computer doesn't need to create the unattend file for dcpromo
+		if ComputerName = MAIN_INSTRUCTOR then exit function
+		
+		' Melbourne uses a separate dcpromo unattend file to create the contoso domain
+		if ComputerName = "MELBOURNE" then
+			if fso.FileExists("C:\Moc\Setup\instruct\mel_cont.txt") then
+				CreateFromFile "C:\Moc\Setup\Instruct\mel_cont.txt", "C:\Moc\Setup\dcpromo.txt"
+				exit function
+			else
+				' generate runtime error; file not found
+			end if
+		end if
+		
+ 		DomType = Domain
+ 		if DomType = "" then 
+ 			GetDomain()
+ 			DomType = Domain
+ 		end if
+		'DomInfo.Report
+			
+		Select Case DomType
+			case "Single-Domain Controller"		' Each computer joins nwtraders.msft
+				if fso.FileExists("C:\MOC\Setup\MOCSET\joindom.txt") then
+					CreateFromFile "C:\MOC\Setup\MOCSET\joindom.txt", "C:\Moc\Setup\dcpromo.txt"
+					AddToFile "C:\Moc\Setup\dcpromo.txt", "ReplicaDomainDNSName=nwtraders.msft"
+				else
+					' generate runtime error; file not found
+				end if
+
+			case "Single-Member Domain"			' dcpromo.txt not needed
+			case "Single-Member Workgroup"		' dcpromo.txt not needed
+			case "Multiple"						' Two domains (north/south) - first city creates a new domain (Vancouver / Perth)
+				if fso.FileExists("C:\MOC\Setup\MOCSET\" & DomInfo.hemisdom & "dom.txt") then
+					CreateFromFile "C:\MOC\Setup\MOCSET\" & DomInfo.hemisdom & "dom.txt", "C:\Moc\Setup\dcpromo.txt"
+					if DomInfo.hemisdom = "new" then
+						AddToFile "C:\Moc\Setup\dcpromo.txt", "ChildName=" & DomInfo.hemis & vbCrLf & _
+								  "DomainNetbiosName=" & DomInfo.hemis
+					else
+						AddToFile "C:\Moc\Setup\dcpromo.txt", "ReplicaDomainDNSName=" & DomInfo.hemis & ".nwtraders.msft"
+					end if
+				else
+					' generate runtime error; file not found
+				end if
+			
+			case "Mult-Maximum"					' Every two cities in a domain - first city creates a new domain, second city joins it
+				if fso.FileExists("C:\MOC\Setup\MOCSET\" & DomInfo.contdom & "dom.txt") then
+					CreateFromFile "C:\MOC\Setup\MOCSET\" & DomInfo.contdom & "dom.txt", "C:\Moc\Setup\dcpromo.txt"
+					if DomInfo.contdom = "new" then
+						AddToFile "C:\Moc\Setup\dcpromo.txt", "ChildName=" & DomInfo.cont & vbCrLf & _
+								  "DomainNetbiosName=" & DomInfo.cont
+					else
+						AddToFile "C:\Moc\Setup\dcpromo.txt", "ReplicaDomainDNSName=" & DomInfo.cont & ".nwtraders.msft"
+					end if
+				end if
+
+			case "Maximum"						' Each city in its own new domain
+				if fso.FileExists("C:\MOC\Setup\MOCSET\newdom.txt") then
+					CreateFromFile "C:\MOC\Setup\MOCSET\newdom.txt", "C:\Moc\Setup\dcpromo.txt"
+					AddToFile "C:\Moc\Setup\dcpromo.txt", "ChildName=" & DomInfo.city & "dom" & vbCrLf & _
+							  "DomainNetbiosName=" & DomInfo.city & "dom"
+				else
+					' generate runtime error; file not found
+				end if
+		end select
+		set fso = nothing
+
+	End Function
+	
+	
+	
+	Private Function CreateFromFile(sourcefile, destinationfile)
+	' 
+	' This function creates a new text file by using the contents of sourcefile
+	'
+		set fso = CreateObject("Scripting.FileSystemObject")
+		Set f = fso.OpenTextFile(sourcefile)
+  		s = f.ReadAll()
+  		f.Close
+  		on error resume next
+  			set f = fso.CreateTextFile(destinationfile)
+  			f.Write s
+  			f.Close
+  			
+  			if err.Number <> 0 then
+  				msgbox "Setup could not create the file " & destinationfile & ".", vbCritical, "Error"
+  			end if
+  		on error goto 0
+		set fso = nothing
+  		
+	End Function
+		
+	Private Function AddToFile(infile, addtext)
+	'
+	' This function appends addtext to infile
+	'
+		set fso = CreateObject("Scripting.FileSystemObject")
+		on error resume next
+			set f = fso.OpenTextFile(infile, 8, false)
+			f.WriteLine addtext
+			f.Close
+		
+			if err.Number <> 0 then
+	  			msgbox "Setup could not edit the file " & infile & ".", vbCritical, "Error"
+	  		end if
+		on error goto 0
+		set fso = nothing
+		
+	End Function
+	
+	
+	
+	Private Function SetNIC()	' &&&& change to private function after tests
+	'
+	' This function configures the first NIC in the computer and sets the IP address
+	' to 192.168.x.y where x is the Classroom number, and y is the computer number
+	'
+		Set cards = GetObject("winmgmts:root\cimv2").execquery("select * from Win32_NetworkAdapterConfiguration where ipenabled = true")
+		myIP = Array("192.168." & Classroom & "." & IP)
+		myNet = Array("255.255.255.0")
+		DNSSrv = Array("192.168." & Classroom & ".200")
+		
+		on error resume next	
+			
+			if Classroom = "" or IP = "" then
+				err.Raise 5000		' generate error since NIC won't be configured
+			end if
+			
+			for each card in cards
+				' find first ip enabled card and set the ip address
+				ret = card.enablestatic(myip, mynet)
+				if ret <> 0 then err.Raise ret
+				ret = card.SetDNSServerSearchOrder(DNSSrv)
+				if ret <> 0 then err.Raise ret
+				exit for
+			next
+
+			if err.Number <> 0 then
+				msgbox "There was an error configuring the network adapter", vbCritical, "Error"
+			end if
+		on error goto 0
+		set cards = nothing
+		
+	End Function
+	
+	
+	
+	Public Function AutoSet()
+	'
+	' This function sets the auto logon
+	'
+		password = InputBox ("If you are using a password other than ""P@ssw0rd"" for the built in Administrator account, please enter it now.  Otherwise, click cancel.", "Password")
+		if password = "" then password = "P@ssw0rd"
+		Set WshShell = Wscript.CreateObject("Wscript.Shell")
+		RegPath = "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\"
+		WshShell.RegWrite RegPath & "AutoAdminLogon", 1 ,"REG_SZ"
+		wshshell.Regwrite RegPath & "DefaultUserName", "administrator", "REG_SZ"
+		wshshell.Regwrite RegPath & "DefaultPassword", password, "REG_SZ"
+		set WshShell = nothing
+
+	End Function
+	
+	
+		
+	Private Function SetName()
+	'
+	'	This function renames the computer to ComputerName
+	'
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		WshShell.RegWrite "HKLM\SYSTEM\ControlSet001\Control\ComputerName\ActiveComputerName\ComputerName", ComputerName, "REG_SZ"
+		WshShell.RegWrite "HKLM\SYSTEM\ControlSet001\Control\ComputerName\ComputerName\ComputerName", ComputerName, "REG_SZ"
+		WshShell.RegWrite "HKLM\SYSTEM\ControlSet002\Control\ComputerName\ComputerName\ComputerName", ComputerName, "REG_SZ"
+		WshShell.RegWrite "HKLM\SYSTEM\ControlSet002\Services\Tcpip\Parameters\NV Hostname", ComputerName, "REG_SZ"
+		WshShell.RegWrite "HKLM\SYSTEM\ControlSet002\Services\Tcpip\Parameters\Hostname", ComputerName, "REG_SZ"
+		WshShell.RegWrite "HKLM\SYSTEM\ControlSet001\Services\Tcpip\Parameters\NV Hostname", ComputerName, "REG_SZ"
+		WshShell.RegWrite "HKLM\SYSTEM\ControlSet001\Services\Tcpip\Parameters\Hostname", ComputerName, "REG_SZ"
+		set WshShell = nothing
+
+	End Function
+	
+	
+		
+	Private Function SetCmd2()
+	'
+	' This function creates the lonset2.cmd or mocset2.cmd file
+	'
+		set fso = CreateObject("Scripting.FileSystemObject")
+		if ComputerName = MAIN_INSTRUCTOR then
+			src = "C:\Setup\Instruct\Lonset2.txt"
+			dest = "C:\Setup\Instruct\Lonset2.cmd"
+		else
+			src = "C:\Moc\Setup\Mocset\Mocset2.txt"
+			dest = "C:\Moc\Setup\Mocset\Mocset2.cmd"
+		end if
+		on error resume next
+  			' create the lonset2.cmd or mocset2.cmd file
+  			set f = fso.CreateTextFile(dest)
+  			f.WriteLine "set classroom=" & Classroom & "."		' "." is required since the dos mode has problems piping in just a number
+  			f.WriteLine "set debugfile=nul"
+  			f.Close
+  			
+  			' add the contents of lonset2.txt or mocset2.txt
+  			Set f = fso.OpenTextFile(src)
+  			s = f.ReadAll()
+  			f.Close
+  			AddToFile dest, s
+  			
+  			if err.Number <> 0 then
+  				msgbox "Setup could not create the file " & dest & ".", vbCritical, "Error"
+  			end if
+  		on error goto 0
+		set fso = nothing
+
+	End Function
+	
+	
+	
+	Public Function Run()
+	'
+	' This is the main function which should be run after the required information is gathered
+	' This function prepares the computer for the setup and launches the gui.vbs file which
+	' is the first .vbs file to run in the auto setup
+	'
+	' TODO: Check that all required information is present before running
+	'
+		set wshShell = CreateObject("wscript.shell")
+		set fso = CreateObject("Scripting.FileSystemObject")
+		if CopyFlag = false then
+			MsgBox "The automated setup sources files must be copied before the automated setup can run.", vbCritical, "Error starting automated setup"
+			Exit Function
+		end if
+		
+		CreateUnattend()
+		SetDHCP()
+		SetNIC()
+		SetName()
+		SetCmd2()
+		
+		' Reboot the computer and set lon_gui or moc_gui to run after reboot
+		if ComputerName = MAIN_INSTRUCTOR then
+			RunFile = "C:\Setup\Instruct\Lon_gui.vbs"
+			' share the setup folder on the instructor computer
+			wshShell.Run "net share Setup=C:\Setup"
+			path = "c:\setup\winsrc"
+		else
+			RunFile = "C:\Moc\Setup\Mocset\Moc_gui.vbs"
+			path = "\\" & MAIN_INSTRUCTOR & "\setup\winsrc"
+
+		end if
+		
+		if fso.FileExists (RunFile) then
+			set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+			fn = "runnext.vbs"
+			set nxt = fso.getfile(RunFile)
+			set fl = fso.createtextfile(strt & "\" & fn, true)
+			fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+			fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+			fl.Close
+		end if
+	
+		' set the source path	
+		WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SourcePath", path & "\i386" ,"REG_SZ"
+		WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\Setup\SourcePath", path, "REG_SZ"
+
+		' install DHCP if instructor computer
+		InstallDHCP
+		
+		'Reboot the Computer
+		if fso.FileExists("C:\Tools\Reboot.cmd") then
+			WshShell.run "c:\tools\reboot.cmd", 6, true
+		elseif fso.FileExists("C:\Setup\Reboot.cmd") then
+			WshShell.Run "c:\setup\reboot.cmd", 6, true
+		elseif fso.FileExists("C:\Moc\Setup\Reboot.cmd") then
+			WshShell.Run "c:\moc\setup\reboot.cmd", 6, true
+		else
+			msgbox "Setup could not find the file ""Reboot.cmd""." & vbCrLf & _
+				   "You must reboot this computer to continue the automated setup.", vbCritical, "Setup"
+		end if
+		set WshShell = nothing
+		set fso = nothing
+		
+	End Function
+	
+		
+	
+	Private Function Cancel()
+		CancelMsg = "Are you sure you want to cancel the setup?"
+		resp = Msgbox(CancelMsg, vbYesNo, "Cancel Setup?")
+		if resp = vbYes then wscript.Quit
+	End Function
+	
+	
+	
+	Public Function Test()
+		For each name in names
+			set testsetup = new autosetup
+			ComputerName = ucase(name)
+			GetIP
+			DomInfo.Report
+		next
+	End Function
+	
+End Class
+
+
+
+
+Class DomainType
+'
+' this class is mainly used as a helper class, storing information
+' specific to each city which is later used when creating
+' the various dcpromo answer files.
+'
+	Public city		' set in AutoSetup.ComputerName
+	Public citycode	' set in AutoSetup.ComputerName
+	Public citynum	' set in AutoSetup.IP
+	Public hemis	' north or south
+	Public hemisdom	' new or join (vancouver and perth are only new) set in GetDomainType
+	Public cont		' set in GetDomainType
+	Public contdom	' set in GetDomainType
+	
+	Public Function GetDomainType()
+		if citynum >= 200 then exit function
+		if citynum mod 2 = 0 then
+			contdom = "join"
+		else
+			contdom = "new"
+		end if
+		hemisdom = "join"	' set all to join.  set new in specific cases
+		
+		temp = 1
+		for i = 1 to 27
+			if temp mod 5 = 0 then temp = 1
+			if temp = 1 or temp = 2 then
+				assign = "north"
+			else
+				assign = "south"
+			end if
+			if citynum = i then hemis = assign
+			temp = temp + 1
+		next
+		
+		select case citynum
+			case 1	
+				cont = "namerica1"
+				hemisdom = "new"
+			case 2	cont = "namerica1"
+			case 3
+				cont = "spacific1"
+				hemisdom = "new"
+			case 4	cont = "spacific1"
+			case 5	cont = "europe1"
+			case 6	cont = "europe1"
+			case 7
+				cont = "samerica1"
+			case 8
+				cont = "samerica1"
+			case 9
+				cont = "asia1"
+			case 10
+				cont = "asia1"
+			case 11
+				cont = "africa1"
+			case 12
+				cont = "africa1"
+			case 13
+				cont = "namerica2"
+			case 14
+				cont = "namerica2"
+			case 15
+				cont = "spacific2"
+			case 16
+				cont = "spacific2"
+			case 17	
+				cont = "europe2"
+			case 18
+				cont = "europe2"
+			case 19
+				cont = "samerica2"
+			case 20
+				cont = "samerica2"
+			case 21
+				cont = "asia2"
+			case 22
+				cont = "asia2"
+			case 23
+				cont = "africa2"
+			case 24
+				cont = "africa2"
+			case 25
+			case 26
+			case 27
+		end select
+	End Function
+	
+	Public Function Report()
+		wscript.Echo "City: " & city & vbCrLf & _
+			   "Citycode: " & citycode & vbCrLf & _
+			   "Citynum: " & citynum & vbCrLf & _
+			   "Hemis: " & hemis & vbCrLf & _
+			   "Hemisdom: " & hemisdom & vbCrLf & _
+			   "Cont: "	& cont & vbCrLf & _
+			   "Contdom: " & contdom & vbCrLf
+	End Function
+
+End Class
+

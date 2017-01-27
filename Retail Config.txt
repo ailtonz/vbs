@@ -1,0 +1,46 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+dim fso, d, dc, dl, run
+set wshshell=wscript.createobject("wscript.shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+set dc = fso.drives
+do until resp=vbcancel
+    For each d in dc
+        set dl = fso.getdrive(d)
+        lookfor=dl & "\support\tools\2000rkst.msi"
+        if dl.isready then
+            if (fso.FileExists(lookfor)) then
+                Set ts = fso.CreateTextFile("c:\tools\copyrkst.vbs", True)
+                ts.WriteLine "Set oSHApp = CreateObject(" & chr(34) & "Shell.Application" & chr(34) & ")" 
+                ts.writeline "sSrc = " & chr(34) & dl & "\support\tools\*.*" & chr(34)
+                ts.writeline "sDest = " & chr(34) & "d:\reskit" & chr(34)
+                ts.writeline "oSHApp.Namespace(sDest).CopyHere sSrc, &H10&"
+                ts.writeline "Set oSHApp = nothing"
+                ts.writeline "WScript.Quit"
+                ts.Close
+                WshShell.run "c:\tools\reskit.cmd", 6, true
+                WshShell.run "c:\tools\copyrkst.vbs", 1, true
+                wscript.quit
+            end if
+        End If
+    Next
+
+    resp=Msgbox ("Please insert the Microsoft Windows 2000 Advanced Server compact disc into the CD drive." & CHR(10) & _ 
+                 "After you have inserted the CD, click OK. If the Microsoft Windows 2000 Advanced Server Setup Screen should appear, click Exit.", vbOKCancel or vbinformation)
+loop
+
+
+msgbox "Setup cannot copy the Windows 2000 Support Tools files. After the automated setup finishes, " & chr(10) & _
+       "complete the installation of the instructor computer by following the instructions " & chr(10) & _
+       "for installing Windows 2000 Support Tools in the automated setup guide.", vbcritical
+wscript.quit
+
+

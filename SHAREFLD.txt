@@ -1,0 +1,146 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'// sgpmc.vbs
+'//
+'//
+'// This script configures group policy for GPMC on the student computers
+
+Dim GPM       : Set GPM = CreateObject("GPMgmt.GPM")
+Dim Constants : Set Constants = GPM.GetConstants()
+Dim strBackupLocation
+Dim szTargetGPO
+Dim strDomainName
+Dim GPMDomain
+Dim GPMBackup
+
+strBackupLocation = "C:\Program Files\Microsoft Training\2209\Labfiles\Setup\BACKUP POLICIES"
+strDomainName = GetDomainName()
+strFullDomainName = strDomainName & ".msft"
+
+' Initialize the Domain object
+Set GPMDomain = GPM.GetDomain(strFullDomainName, "", Constants.UseAnyDC)
+
+
+' Get the backed-up "Default Logon Policy" GPO
+Set GPMBackup = GetBackup(strBackupLocation, "Default Logon Policy")
+' Import the "Default Logon Policy" GPO
+ImportFromBackup GPMBackup, "Default Logon Policy", GPMDomain
+
+Set GPMBackup = GetBackup(strBackupLocation, "Windows Update Policy")
+ImportFromBackup GPMBackup, "Windows Update Policy", GPMDomain
+
+Set GPMBackup = GetBackup(strBackupLocation, "Finance Restrictions")
+ImportFromBackup GPMBackup, "Finance Restrictions", GPMDomain
+
+Set GPMBackup = GetBackup(strBackupLocation, "Allow Registry Editing")
+ImportFromBackup GPMBackup, "Allow Registry Editing", GPMDomain
+
+Set GPMBackup = GetBackup(strBackupLocation, "Security Settings")
+ImportFromBackup GPMBackup, "Security Settings", GPMDomain
+
+Set GPMBackup = GetBackup(strBackupLocation, "Wireless Configuration")
+ImportFromBackup GPMBackup, "Wireless Configuration", GPMDomain
+
+Set GPMBackup = GetBackup(strBackupLocation, "Deny Windows Messenger")
+ImportFromBackup GPMBackup, "Deny Windows Messenger", GPMDomain
+
+Set GPMBackup = GetBackup(strBackupLocation, "Deny Control Panel")
+ImportFromBackup GPMBackup, "Deny Control Panel", GPMDomain
+
+Set GPMBackup = GetBackup(strBackupLocation, "Allow Control Panel")
+ImportFromBackup GPMBackup, "Allow Control Panel", GPMDomain
+
+
+' Link the "Deny Control Panel" GPO to the "Marketing" OU
+LinkGPO GPMDomain, "OU=Marketing,OU=GPMCPractice,DC=" & strDomainName & ",DC=msft", "Deny Control Panel"
+
+LinkGPO GPMDomain, "OU=Marketing,OU=GPMCPractice,DC=" & strDomainName & ",DC=msft", "Allow Control Panel"
+LinkGPO GPMDomain, "OU=Finance,OU=GPMCPractice,DC=" & strDomainName & ",DC=msft", "Finance Restrictions"
+LinkGPO GPMDomain, "OU=Finance,OU=GPMCPractice,DC=" & strDomainName & ",DC=msft", "Security Settings"
+LinkGPO GPMDomain, "OU=Sales,DC=" & strDomainName & ",DC=msft", "Deny Windows Messenger"
+LinkGPO GPMDomain, "OU=Sales,DC=" & strDomainName & ",DC=msft", "Security Settings"
+LinkGPO GPMDomain, "OU=Mobile Sales Force,OU=Sales,DC=" & strDomainName & ",DC=msft", "Wireless Configuration"
+
+
+'// GetBackup
+'//
+'// Returns the Backed up GPO
+Function GetBackup(strBackupLocation, strBackupName)
+
+	Set GPMBackupDir = GPM.GetBackupDir(strBackupLocation)
+	Set GPMSearchCriteria = GPM.CreateSearchCriteria()
+	GPMSearchCriteria.Add Constants.SearchPropertyGPODisplayName, Constants.SearchOpEquals, cstr(strBackupName)
+	Set BackupList = GPMBackupDir.SearchBackups(GPMSearchCriteria)
+	Set GetBackup = BackupList.Item(1)
+
+End Function
+
+
+'// ImportFromBackup
+'//
+'// Imports the backed up GPO
+' Imports settings from a backup into a GPO. If a target GPO name is specified, that name
+' is used for the GPO that is imported into. If a single GPO with that name already exists,
+' it is used. If no GPO with that name exists, a new one is created.
+' Also, if a blank target name is specified, then the name from the backup is re-used.
+Function ImportFromBackup(GPMBackup, szTargetGPOName, GPMDomain)
+
+	Dim GPMGPO
+
+	' Create the GPO     
+	Set GPMGPO = GPMDomain.CreateGPO()
+			
+	' Now set the display name.
+	GPMGPO.DisplayName = szTargetGPOName
+
+	' Import the settings from the backup into the new GPO
+	Set GPMResult = GPMGPO.Import(0, GPMBackup)
+
+End Function
+
+
+'// LinkGPO
+'//
+'// Links a GPO to an SOM
+Function LinkGPO(GPMDomain, strSOMToLinkTo, strGPOToLink)
+
+	Dim GPMGPOLink
+	Dim GPMGPO
+	Dim GPMSOM
+
+	Set GPMSearchCriteria = GPM.CreateSearchCriteria()
+	GPMSearchCriteria.Add Constants.SearchPropertyGPODisplayName, Constants.SearchOpEquals, cstr(strGPOToLink)
+
+	Set GPOList = GPMDomain.SearchGPOs(GPMSearchCriteria)
+	Set GPMGPO = GPOList.Item(1)
+	Set GPMSOM = GPMDomain.GetSOM(strSOMToLinkTo)
+	GPMSOM.CreateGPOLink -1, GPMGPO
+
+End Function
+
+
+'// GetDomainName
+'//
+'// Determines the domain name from the IP Address
+Function GetDomainName()
+
+	Set IPConfigSet = GetObject("winmgmts:").ExecQuery ("select IPAddress from Win32_NetworkAdapterConfiguration where IPenabled=TRUE and DHCPEnabled=FALSE")
+	for each j in IpConfigSet
+	   if Not IsNull(j.ipaddress) then
+	      ipAddr = j.ipaddress(i)
+	      pos = InStrRev(ipAddr, ".")
+	      strDomainNum = Mid(ipAddr, pos + 1)
+	      GetDomainName = "nwtraders" & strDomainNum
+	   end if
+	next
+
+End Function
+

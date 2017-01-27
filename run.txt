@@ -1,0 +1,79 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+REM RTMImport.VBS
+REM Copyright 2000 Microsoft Corporation
+
+REM Restores property values for global resources saved by RC0Export.VBS
+REM Intended to ease upgrading from CS2000 RC0 to CS2000 RTM.
+
+Option Explicit
+Dim f, fso, objGrpCfg, objResource
+Dim sLine, sResource, sProperty, sType, sValue
+Dim bResourceOk
+Dim vValue
+
+If WScript.Arguments.Count <> 1 Then
+    WScript.Echo "Usage:"
+    WScript.Echo "CScript.exe RTMImport.VBS filename"
+    WScript.Echo "'filename' was created by RC0Export.vbs, and contains the global resource settings."
+Else
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set f = Nothing
+    On Error Resume Next
+    Set f = fso.OpenTextFile(WScript.Arguments(0), 1, False, -1)
+    On Error Goto 0
+    If f Is Nothing Then
+        WScript.Echo "Error: Unable to open file '"&WScript.Arguments(0)&"' for import."
+    Else
+        Set objGrpCfg = CreateObject("Commerce.GlobalConfig")
+        objGrpCfg.Initialize
+
+        Do Until f.AtEndOfStream
+            sLine = f.ReadLine
+            If 0=StrComp(Left(sLine,10), "RESOURCE: ") Then
+                sResource = Mid(sLine, 11)
+                Set objResource = Nothing ' release previous contents
+                On Error Resume Next
+                Set objResource = objGrpCfg.Fields(sResource).Value
+                On Error GoTo 0
+                If objResource Is Nothing Then
+                    bResourceOk=False
+                    WScript.Echo "WARN: Failed to restore the resource '"&sResource&"'. Verify that this resource exists, then try again."
+                Else
+                    bResourceOk=True
+                    WScript.Echo "Info: Restoring settings for '"&sResource&"'."
+                End If
+            Else
+                sProperty = Mid(sLine, 15)
+                sLine = f.ReadLine
+                sType     = Mid(sLine, 15)
+                sLine = f.ReadLine
+                sValue    = Mid(sLine, 15)
+                Do Until 0=StrComp(Right(sLine,7), "$$END$$")
+                    sLine = f.ReadLine
+                    sValue = sValue & vbCrLf & sLine
+                Loop
+                sValue = Left(sValue, Len(sValue)-7)
+                Select Case sType
+                    Case "String"   vValue = CStr(sValue)
+                    Case "Long"     vValue = CLng(sValue)
+                    Case "Boolean"  vValue = CBool(sValue)
+                    Case "Integer"  vValue = CInt(sValue)
+                End Select
+                If bResourceOk Then objResource.Fields(sProperty).Value = vValue
+            End If
+        Loop
+        f.Close
+        objGrpCfg.SaveConfig
+    End If
+End If
+
+

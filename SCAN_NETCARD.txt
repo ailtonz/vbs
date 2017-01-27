@@ -1,0 +1,632 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'-------------------------------------------------------------------------------------------
+'A distribution list in BizTalk Server is a means of sending an identical business document,
+'containing identical data, to a number of partners. All Ports in a distribution list 
+'must be outbound, complete, and already configured to support the desired outbound document.
+'
+'This sample sets up a BizTalk Management database and calls the SubmitSync method of the 
+'Interchange object, which submits the business document to BizTalk Server 2000 synchronously. 
+'The business document originates from the source application  and is passed to the 
+'distribution list, which causes the same PO to be sent to the source application and to 
+'the destination organization. To verify that the documents have been processed correctly, 
+'look for Sample3_DST.TXT and Sample3_SRCAPP.TXT files in the C:\TEMP directory. 
+'
+'File name: Sample3.vbs.
+'
+'Dependencies: This script requires that Sample3.xml and Sample3.asp be present in the directory 
+'where the script is executed.
+
+
+Option Explicit
+On Error Resume Next
+
+
+'-------------------------------------------------------------------------------------------
+'  Constants, which you can alter
+'-------------------------------------------------------------------------------------------
+Const cSrcOrg = "Sample3 Source Org"
+Const cSrcAPP = "Sample3 Source Org Application"
+Const cDstOrg = "Sample3 Destination Org"
+
+Const cPODocDef = "Sample3 PO Document Definition"
+Const cEnvelope = "Sample3 Envelope"
+
+Const cDSTPort = "Sample3 DST Port"
+Const cSRCAPPPort = "Sample3 SRCAPP Port"
+Const cDLPortGroup = "Sample3 Distribution List Port Group"
+
+Const cDefaultOrgQualifier = "OrganizationName"
+
+Const cFileTransportType = 256		' BIZTALK_TRANSPORT_TYPE_FILE
+Const cHTTPTransportType = 4		' BIZTALK_TRANSPORT_TYPE_HTTP
+Const cFileName = "Sample3_SRCAPP.TXT"
+Const cReceivePage = "Sample3.asp"
+Const cFileToSubmit = "Sample3.xml"
+Const cFileDIR = "C:\TEMP"
+Const cFile = "file://"
+
+Const cDLChannel = "Sample3 Distribution List Channel"
+
+Const BIZTALK_OPENNESS_TYPE_NOTOPEN = 1
+Const BIZTALK_OPENNESS_TYPE_SOURCE = 2
+
+Const BIZTALK_TRANSPORT_TYPE_HTTP = 4
+Const cAny = "http://localhost/any.htm"
+
+Const clngErrNotFound = -1061154302
+Const cstrErrNotFound = "The object was not found"
+
+PassFail "Constants"
+
+'-------------------------------------------------------------------------------------------
+' Globals
+'-------------------------------------------------------------------------------------------
+Dim gSrc
+Dim gSRCAPP
+Dim gDst
+Dim gSrcAlias
+Dim gDstAlias
+Dim gPODocDef
+Dim gEnvelope
+Dim gDSTPort
+Dim gSRCAPPPort
+Dim gDLPortGroup
+Dim gDLChannel
+Dim gSubmissionGUID
+Dim BTM, Port, PortGroup, Document, Envelope, Organization, Channel
+Dim Apps, strCmd
+Dim SetupTempShell, SetupTempFS, SetupTempIIS, SetupTempFile, strServerName
+Dim index, iBTMStress, iSubmitStress, strScript
+Dim strPOReference 
+
+iBTMStress = 1
+iSubmitStress = 1
+strScript = "Sample3.vbs"
+PassFail "Globals"
+
+'-------------------------------------------------------------------------------------------
+' Setup Section
+'-------------------------------------------------------------------------------------------
+AssureThePath cFileDIR
+DeleteFile cFileDIR & "\Sample3_DST.TXT"
+DeleteFile cFileDIR & "\Sample3_SRCAPP.TXT"
+
+strServerName = SetGetEnvVar("PROCESS", "COMPUTERNAME", "localhost", False)
+strPOReference = "http://" & strServerName & "/BizTalkServerRepository/DocSpecs/Microsoft/CommonPO.xml"
+
+Set SetupTempShell = CreateObject("WScript.Shell")
+Set SetupTempFS = CreateObject("Scripting.FileSystemObject")
+
+'-------------------------------------------------------------------------------------------
+' Copy the receive page into the IIS root location
+'-------------------------------------------------------------------------------------------
+Set SetupTempIIS = GetObject("IIS://" & strServerName & "/w3svc/1/root")
+strCmd = "CMD /C COPY """ + SetupTempFS.GetAbsolutePathName(cReceivePage)+ """ """ + SetupTempIIS.Path +  "\"""
+SetupTempShell.Run strCmd,, True
+PASSFAIL "Copying File to HTTP Site: " & strCmd
+
+Set SetupTempIIS = Nothing
+Set SetupTempFS = Nothing
+Set SetupTempShell = Nothing
+PassFail "Setup"
+
+for index = 1 to iBTMStress
+	CreateBTMObjects
+	RemoveSample3ManagementObjects
+	ConfigureBTMObjects
+	DestroyBTMObjects
+	PassFail "----------------- BTM Iteration #" & index
+next
+
+PassFail "Management Objects"
+
+'-------------------------------------------------------------------------------------------
+' Submit the document
+'-------------------------------------------------------------------------------------------
+Dim Interchange, strFilePath, FSO
+Set Interchange = CreateObject("BizTalk.Interchange")
+
+'-------------------------------------------------------------------------------------------
+' Get the absolute path for the file being submitted
+'-------------------------------------------------------------------------------------------
+Set FSO = CreateObject("Scripting.FileSystemObject")
+strFilePath = FSO.GetAbsolutePathName(cFileToSubmit)
+Set FSO = Nothing
+
+'-------------------------------------------------------------------------------------------
+' Call the submit method
+'-------------------------------------------------------------------------------------------
+for index = 1 to iSubmitStress
+	DeleteFile cFileDIR & "\Sample3_DST.TXT"
+	DeleteFile cFileDIR & "\Sample3_SRCAPP.TXT"
+	PassFail "Delete target files"
+
+	gSubmissionGUID = Interchange.Submit (BIZTALK_OPENNESS_TYPE_NOTOPEN, , cPODocDef, cDefaultOrgQualifier, cSrcOrg, "Group", cDLPortGroup, , strFilePath, "")
+
+	PassFail "Submit() returned Submission GUID " & gSubmissionGUID
+
+	Set Interchange = Nothing
+
+	PassFail CDate(Now()) & " ... Please wait for 15 seconds ..."
+	WScript.Sleep 15000
+
+	Dim bPass, strTmp
+
+	bPass = True
+
+	' Verify that both files exist
+	If Not FileExists(cFileDIR & "\Sample3_DST.TXT") Then
+		Fail "File " & cFileDIR & "\Sample3_DST.TXT does not exist"	
+		bPass = False
+	End If
+
+	If Not FileExists(cFileDIR & "\Sample3_SRCAPP.TXT") Then
+		Fail "File " & cFileDIR & "\Sample3_SRCAPP.TXT does not exist"	
+		bPass = False
+	End If
+
+	strTmp = ReadWholeFile(cFileDIR & "\Sample3_DST.TXT", 0)
+	Dim xStr
+	xStr =  "<CommonPO>"
+	If (InStr(strTmp, xStr) < 100) Then
+		Fail cFileDIR & "\Sample3_DST.TXT does not contain " & xStr
+		bPass = False
+	End If
+	xStr =  "<eps:address xmlns:xsi=""http://www.w3.org/1999/XMLSchema-instance"" xsi:type=""biz:OrganizationName"">" & cDLPortGroup
+	If (InStr(strTmp, xStr) < 100) Then
+		Fail cFileDIR & "\Sample3_DST.TXT does not contain " & xStr
+		bPass = False
+	End If
+	xStr = "<eps:address xmlns:xsi=""http://www.w3.org/1999/XMLSchema-instance"" xsi:type=""biz:OrganizationName"">" & cSrcOrg
+	If (InStr(strTmp, xStr) < 100) Then
+		Fail cFileDIR & "\Sample3_DST.TXT does not contain " & xStr
+		bPass = False
+	End If
+
+	strTmp = ReadWholeFile(cFileDIR & "\Sample3_SRCAPP.TXT", 0)
+	xStr =  "<CommonPO>"
+	If (InStr(strTmp, xStr) < 100) Then
+		Fail cFileDIR & "\Sample3_SRCAPP.TXT does not contain " & xStr
+		bPass = False
+	End If
+	xStr =  "<eps:address xmlns:xsi=""http://www.w3.org/1999/XMLSchema-instance"" xsi:type=""biz:OrganizationName"">" & cDLPortGroup
+	If (InStr(strTmp, xStr) < 100) Then
+		Fail cFileDIR & "\Sample3_SRCAPP.TXT does not contain " & xStr
+		bPass = False
+	End If
+	xStr = "<eps:address xmlns:xsi=""http://www.w3.org/1999/XMLSchema-instance"" xsi:type=""biz:OrganizationName"">" & cSrcOrg
+	If (InStr(strTmp, xStr) < 100) Then
+		Fail cFileDIR & "\Sample3_SRCAPP.TXT does not contain " & xStr
+		bPass = False
+	End If
+
+
+	If bPass Then
+		Pass "Sample3.vbs Succeeded! " & cFileDIR & "\Sample3*.TXT Files Exist!"
+	End If
+	PassFail "----------------- Submit Iteration #" & index
+next
+
+
+'-------------------------------------------------------------------------------------------
+' Helper routines
+'-------------------------------------------------------------------------------------------
+
+' PassFail() will report pass or fail
+'----------------------------------------------------------------------------------------
+Sub PassFail(strScope)
+	If Err.Number <> 0 Then
+		Fail strScope & " Error: x" & Hex(Err.Number) & " Description: " & Err.Description & " Source: " & Err.Source
+		Err.Clear
+	Else
+		Pass strScope 
+	End If
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Fail() will always report a failure and exit the script
+'----------------------------------------------------------------------------------------
+Sub Fail(strScope)
+	WScript.Echo "[FAIL] " & SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False) & ":" & strScript & ": " & strScope
+	WScript.Quit
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Pass() will report a pass
+'----------------------------------------------------------------------------------------
+Sub Pass(strScope)
+	WScript.Echo "[PASS] " & SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False) & ":" & strScript & ": " & strScope
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' FailOnError() will call Fail() on Error
+'----------------------------------------------------------------------------------------
+Sub FailOnError(strScope)
+	On Error Resume Next
+	If Err.Number <> 0 Then
+		Fail strScope & " Error: x" & Hex(Err.Number) & " Description: " & Err.Description & " Source: " & Err.Source
+		Err.Clear
+	End If
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Set or get environment variables
+'----------------------------------------------------------------------------------------
+Function SetGetEnvVar(strType, strName, strDefaultValue, bSet)
+	On Error Resume Next
+	Dim wshShell, wshSysEnv
+	SetGetEnvVar = strDefaultValue
+	If (TypeName(strName) <> "String") Or IsEmpty(strName) Or Len(strName) = 0 Or (TypeName(strType) <> "String") Or IsEmpty(strType) Or Len(strType) = 0 Then
+		FailOnError "SetGetEnvVar().CheckParameters"
+		Exit Function
+	End If
+	Set wshShell = CreateObject("WScript.Shell")
+	Set wshSysEnv = wshShell.Environment(strType)
+	FailOnError "SetGetEnvVar().SetwshSysEnv"
+	If bSet Then
+		wshSysEnv(strName) = strDefaultValue
+		FailOnError "SetGetEnvVar().Set_wshSysEnv(" & strName & ")"
+	Else
+		SetGetEnvVar = wshSysEnv(strName)
+	End If
+	If SetGetEnvVar = "" Then
+		SetGetEnvVar = strDefaultValue
+	End If
+End Function
+
+'-------------------------------------------------------------------------------------------
+Sub AssureThePath(strPath)
+	Dim fso
+
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If not fso.FolderExists(strPath) Then
+		fso.CreateFolder strPath
+	End If
+	Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Sub AssureThePath(strPath)
+	Dim fso
+
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If not fso.FolderExists(strPath) Then
+		fso.CreateFolder strPath
+	End If
+	Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Function FileExists(filespec)
+	Dim fso
+
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If fso.FileExists(filespec) Then
+		FileExists = True
+	End If
+	Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------------------------------------
+Sub DeleteFile(strFile)
+	Dim fso
+
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If fso.FileExists(strFile) Then
+		fso.DeleteFile strFile, True
+	End If
+	Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Sub RemoveSample3ManagementObjects()
+    On Error Resume Next
+
+    ' first remove the Channel
+    Channel.LoadByName cDLChannel
+    If Err.Number = 0 Then
+        Channel.Remove
+'    ElseIf Err.Number <> clngErrNotFound Or InStr(Err.Description, cstrErrNotFound) < 1 Then
+    ElseIf Err.Number <> clngErrNotFound Then
+        FailOnError "RemoveSample3ManagementObjects() at Channel " & cDLChannel
+        Exit Sub
+    Else
+        ' Channel just does not exist, ignore the error
+        Err.Clear
+    End If
+	PassFail "Remove Channel " & cDLChannel
+
+    ' then remove DL
+    PortGroup.LoadByName cDLPortGroup
+    If Err.Number = 0 Then
+        PortGroup.Remove
+    ElseIf Err.Number <> clngErrNotFound Or InStr(Err.Description, cstrErrNotFound) <> 1 Then
+        FailOnError "RemoveSample3ManagementObjects() at PortGroup " & cDLPortGroup
+        Exit Sub
+    Else
+        ' PortGroup just does not exist, ignore the error
+        Err.Clear
+    End If
+	PassFail "Remove PortGroup " & cDLPortGroup
+      
+    Port.LoadByName cDSTPort
+    If Err.Number = 0 Then
+        Port.Remove
+    ElseIf Err.Number <> clngErrNotFound Or InStr(Err.Description, cstrErrNotFound) <> 1 Then
+        FailOnError "RemoveSample3ManagementObjects() at Port " & cDSTPort
+        Exit Sub
+    Else
+        ' Port just does not exist, ignore the error
+        Err.Clear
+    End If
+	PassFail "Remove Port " & cDSTPort
+    
+    Port.LoadByName cSRCAPPPort
+    If Err.Number = 0 Then
+        Port.Remove
+    ElseIf Err.Number <> clngErrNotFound Or InStr(Err.Description, cstrErrNotFound) <> 1 Then
+        FailOnError "RemoveSample3ManagementObjects() at Port " & cSRCAPPPort
+        Exit Sub
+    Else
+        ' Port just does not exist, ignore the error
+        Err.Clear
+    End If
+	PassFail "Remove Port " & cSRCAPPPort
+    
+    ' remove envelope
+    Envelope.LoadByName cEnvelope
+    If Err.Number = 0 Then
+        Envelope.Remove
+    ElseIf Err.Number <> clngErrNotFound Or InStr(Err.Description, cstrErrNotFound) <> 1 Then
+        FailOnError "RemoveSample3ManagementObjects() at Envelope " & cEnvelope
+        Exit Sub
+    Else
+        ' Envelope just does not exist, ignore the error
+        Err.Clear
+    End If
+	PassFail "Remove Envelope " & cEnvelope
+    
+    ' remove document definition
+    Document.LoadByName cPODocDef
+    If Err.Number = 0 Then
+        Document.Remove
+    ElseIf Err.Number <> clngErrNotFound Or InStr(Err.Description, cstrErrNotFound) <> 1 Then
+        FailOnError "RemoveSample3ManagementObjects() at Document " & cPODocDef
+        Exit Sub
+    Else
+        ' Document just does not exist, ignore the error
+        Err.Clear
+    End If
+	PassFail "Remove Document " & cPODocDef
+    
+    ' remove organizations
+    Organization.LoadByName cDstOrg
+    If Err.Number = 0 Then
+        Organization.Remove
+    ElseIf Err.Number <> clngErrNotFound Or InStr(Err.Description, cstrErrNotFound) <> 1 Then
+        FailOnError "RemoveSample3ManagementObjects() at Organization " & cDstOrg
+        Exit Sub
+    Else
+        ' Organization just does not exist, ignore the error
+        Err.Clear
+    End If
+	PassFail "Remove Organization " & cDstOrg
+    
+    Organization.LoadByName cSrcOrg
+    If Err.Number = 0 Then
+        Organization.Remove
+    ElseIf Err.Number <> clngErrNotFound Or InStr(Err.Description, cstrErrNotFound) <> 1 Then
+        FailOnError "RemoveSample3ManagementObjects() at Organization " & cSrcOrg
+        Exit Sub
+    Else
+        ' Organization just does not exist, ignore the error
+        Err.Clear
+    End If
+	PassFail "Remove Organization " & cSrcOrg
+	PassFail "RemoveSample3ManagementObjects()"
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Sub CreateBTMObjects()
+	On Error Resume Next
+	Set BTM = CreateObject("BizTalk.BizTalkConfig")
+	Set Organization = BTM.CreateOrganization
+	Set Document = BTM.CreateDocument
+	Set Envelope = BTM.CreateEnvelope
+	Set Port = BTM.CreatePort
+	Set PortGroup = BTM.CreatePortGroup
+	Set Channel = BTM.CreateChannel
+	PassFail "Create Management Objects"
+End Sub
+
+
+'-------------------------------------------------------------------------------------------
+Sub ConfigureBTMObjects()
+	On Error Resume Next
+	Organization.Clear
+	Organization.NAME = cSrcOrg
+	Organization.Comments = "This is " & cSrcOrg
+	Organization.CreateApplication cSRCAPP
+	gSrc = Organization.Create
+	gSrcAlias = Organization.GetDefaultAlias
+
+	'----------------------------------------------------------------------------------------
+	' Get the application 
+	'----------------------------------------------------------------------------------------
+	Set Apps = Organization.Applications
+	gSRCAPP = Apps.Fields("id")
+	Set Apps = Nothing
+	PassFail "Create """ & cSrcOrg & """ with  = " & gSrc
+
+	'-------------------------------------------------------------------------------------------
+	' Create the destination organization
+	'-------------------------------------------------------------------------------------------
+	Organization.Clear
+	Organization.NAME = cDstOrg
+	Organization.Comments = "This is " & cDstOrg
+	gDst = Organization.Create
+	gDstAlias = Organization.GetDefaultAlias
+	PassFail "Create """ & cDstOrg & """ with  = " & gDst
+
+	'-------------------------------------------------------------------------------------------
+	' Create the PO document definition
+	'-------------------------------------------------------------------------------------------
+	Document.Clear
+	Document.Name = cPODocDef
+	Document.Reference = strPOReference
+
+	'-------------------------------------------------------------------------------------------
+	' Set up the tracking fields for this document definition to be tracked in 
+	' the DTA database
+	'-------------------------------------------------------------------------------------------
+	Set Document.TrackFields = CreateObject("Commerce.Dictionary")
+	Document.TrackFields.d_value1 = "/CommonPO/POHeader/@CreationDate"
+	Document.TrackFields.d_value2 = "/CommonPO/DateReference/@Date"
+	
+	Document.TrackFields.r_value1 = "/CommonPO/Total/@POTotal"
+	Document.TrackFields.r_value2 = "/CommonPO/Total/@QuantityTotal"
+	
+	Document.TrackFields.s_value1 = "/CommonPO/POHeader/@Number"
+	Document.TrackFields.s_value2 = "/CommonPO/POHeader/@Purpose"
+	
+	Document.TrackFields.i_value1 = "/CommonPO/Total/@LineItemTotal"
+	Document.TrackFields.i_value2 = "/CommonPO/TermsOfSale/@NetDays"
+
+	'-------------------------------------------------------------------------------------------
+	' Set up the custom fields for this document definition to be tracked in the 
+	' DTA database
+	'-------------------------------------------------------------------------------------------
+	Set Document.TrackFields.x_custom_search = CreateObject("Commerce.SimpleList")
+	Document.TrackFields.x_custom_search.Add "/CommonPO/TermsOfSale/@DiscountPercent"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/DateReference/@Date"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/DateReference/@Description"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/BillTo/Address/@Name"
+	gPODocDef = Document.Create
+	PassFail "Create """ & cPODocDef & """ with  = " & gPODocDef
+
+	'-------------------------------------------------------------------------------------------
+	' create a custom envelope
+	'-------------------------------------------------------------------------------------------
+	Envelope.Clear
+	Envelope.Name = cEnvelope
+	Envelope.Format = "Custom XML"
+	gEnvelope = Envelope.Create
+	Set Envelope = Nothing
+	PassFail "Create """ & cEnvelope & """ with  = " & gEnvelope
+
+	'-------------------------------------------------------------------------------------------
+	' Create the source to source application outbound Port
+	'-------------------------------------------------------------------------------------------
+	Port.Clear
+	Port.Name = cSRCAPPPort
+	Port.Comments = "This is " & cSRCAPPPort
+	Port.DestinationEndPoint.Organization = gSrc
+	Port.DestinationEndPoint.Alias = gSrcAlias
+	Port.DestinationEndPoint.Application = gSRCAPP
+	Port.Envelope = gEnvelope
+	Port.PrimaryTransport.Type = cFileTransportType
+	Port.PrimaryTransport.Address = cFile & cFileDIR & "\" & cFileName
+	gSRCAPPPort = Port.Create
+	PassFail "Create """ & cSRCAPPPort & """ with  = " & gSRCAPPPort
+
+	'-------------------------------------------------------------------------------------------
+	' Create the source to destination outbound Port
+	'-------------------------------------------------------------------------------------------
+	Port.Clear
+	Port.Name = cDSTPort
+	Port.Comments = "This is " & cDSTPort
+	Port.DestinationEndPoint.Organization = gDst
+	Port.DestinationEndPoint.Alias = gDstAlias
+	Port.Envelope = gEnvelope
+	Port.PrimaryTransport.Type = cHTTPTransportType
+	Port.PrimaryTransport.Address = "http://" & strServerName & "/" & cReceivePage
+	gDSTPort = Port.Create
+	PassFail "Create """ & cDSTPort & """ with  = " & gDSTPort
+
+	'-------------------------------------------------------------------------------------------
+	' Create the distribution list  (Port group)
+	'-------------------------------------------------------------------------------------------
+	PortGroup.Clear
+	PortGroup.Name = cDLPortGroup
+	PortGroup.AddPort gSRCAPPPort
+	PortGroup.AddPort gDSTPort
+	gDLPortGroup = PortGroup.Create
+	PassFail "Create """ & cDLPortGroup & """ with  = " & gDLPortGroup
+
+	'-------------------------------------------------------------------------------------------
+	' Create the distribution list Channel
+	'-------------------------------------------------------------------------------------------
+	Channel.Clear
+	Channel.Name = cDLChannel
+	Channel.Comments = "This is " & cDLChannel
+	Channel.SourceEndPoint.Organization = gSrc
+	Channel.SourceEndPoint.Alias = gSrcAlias
+	Channel.SourceEndPoint.Application = gSRCAPP
+	Channel.InputDocument = gPODocDef
+	Channel.OutputDocument = gPODocDef
+	Channel.PortGroup = gDLPortGroup
+	Channel.LoggingInfo.LogNativeInputDocument = 1
+	Channel.LoggingInfo.LogNativeOutputDocument = 1
+	gDLChannel = Channel.Create
+	PassFail "Create """ & cDLChannel & """ with  = " & gDLChannel
+	Channel.Clear
+	Channel.Load gDLChannel
+	Channel.LoggingInfo.LogXMLInputDocument = 1
+	Channel.LoggingInfo.LogXMLOutputDocument = 1
+	Channel.Save
+	PassFail "Update """ & cDLChannel & """ with  = " & gDLChannel	
+	PassFail "ConfigureBTMObjects()"
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Sub DestroyBTMObjects()
+	On Error Resume Next
+	Set Channel = Nothing
+	Set PortGroup = Nothing
+	Set Port = Nothing
+	Set Envelope = Nothing
+	Set Document = Nothing
+	Set Organization = Nothing
+	Set BTM = Nothing
+	PassFail "Destroy all of the Sample3 Management Objects"
+	PassFail "ConfigureBTMObjects()"
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Sub DeleteFile(strFile)
+	Dim fso
+
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If fso.FileExists(strFile) Then
+		fso.DeleteFile strFile, True
+	End If
+	Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Function ReadWholeFile(strFileName, ts)
+	ReadWholeFile = ""
+	On Error Resume Next
+	Dim FileSys, File
+	Set FileSys = CreateObject("Scripting.FileSystemObject")
+
+	Set File = FileSys.OpenTextFile(strFileName, 1, False, ts)
+	if Err.Number = 0 then
+		ReadWholeFile = File.ReadAll()
+       	File.Close
+	end if
+	Err.Clear
+    set File = nothing
+    set FileSys = nothing
+	On Error Goto 0
+End Function
+

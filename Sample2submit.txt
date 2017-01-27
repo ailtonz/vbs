@@ -1,0 +1,830 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'-------------------------------------------------------------------------------------------
+'This sample shows how to set up a BizTalk Management database and explains one way of 
+'generating a "receipt". This is accomplished by mapping a received PO to a PO acknowledgment. 
+'
+'There are three parties involved in this sample: the source application, 
+'the source organization, and the destination organization. The PO originates 
+'from the source application and is passed to the source organization, and then 
+'from the source organization to the destination organization. The destination organization 
+'then sends the PO acknowledgment to the source organization. 
+'
+'The sample uses local file transport. There are two local file receive functions 
+'configured for this sample, which call the Submit method of the Interchange object.
+'
+'The setup section of the script creates three directories on the C:\ drive. 
+'They are C:\TEMP\SRC, C:\TEMP\DST, and C:\TEMP\ACK. This script places the original PO in 
+'C:\TEMP\SRC, and the SRC receive function is configured to pick up files there. 
+'The SRC receive function moves the original PO to C:\TEMP\DST, and the DST receive 
+'function places the PO acknowledgment to C:\TEMP\ACK directory.
+
+'A non-open agreement is used for the interchange between the source application 
+'and the source organization and for the interchange acknowledgment between the 
+'destination organization and the source organization. An open source agreement 
+'is used for the interchange between the source organization and the destination organization. 
+'The same agreement is used for ACK Channel, which is the example of VAN scenario.
+'
+'Channels created can be expressed as following:
+'SRC/APP->SRC ~ SRC->SRC/APP	(C:\TEMP\SRC, used Scriptor to drop a File)
+'OpenSrc->SRC ~ SRC->DST		(C:\TEMP\DST, used Receive Function to drop a File)
+'DST->SRC ~ DST->SRC			(C:\TEMP\ACK, used Receive Function to drop a File)
+'
+'File name: Sample2.vbs
+
+
+'-------------------------------------------------------------------------------------------
+Option Explicit
+On Error Resume Next
+
+Dim iBTMStress, iAICStress, strScript
+iBTMStress = 1
+iAICStress = 1
+strScript = "Sample2.vbs"
+
+'-------------------------------------------------------------------------------------------
+' Constants, which you can alter
+'-------------------------------------------------------------------------------------------
+Const cSrcOrg = "Sample2 Source Org"
+Const cSrcApp = "Sample2 Source Application - Sample2 VBScript"
+Const cDstOrg = "Sample2 Destination Org"
+
+Const cPODocDef = "Sample2 PO Document Definition"
+Const cACKDocDef = "Sample2 PO ACK Document Definition"
+Const cEnvelope = "CommonPOEnvelope"
+
+Const cSRCAPPPort = "Sample2 SRCAPP Port"
+Const cDSTPort = "Sample2 DST Port"
+Const cACKPort = "Sample2 ACK Port"
+
+Const cDefaultOrgQualifier = "OrganizationName"
+
+Const cTransportType = 256		' BIZTALK_TRANSPORT_TYPE_FILE
+Const cFile = "file://"
+Const cAny = "http://localhost/any.asp"
+Const cFileName = "%tracking_id%.XML"
+
+Const cTempDir = "C:\TEMP"
+Const cSRCAPPDIR = "C:\TEMP\SRC"
+Const cDSTDIR = "C:\TEMP\DST"
+Const cACKDIR = "C:\TEMP\ACK"
+Const cScriptorCLS = "{40FF663D-98D0-4083-98C3-A698ADD0D2AE}"
+
+Const cMAP = "CommonPOACKMAP.xml"
+
+Const cSRCAPPChannel = "Sample2 SRCAPP Channel"
+Const cOpenSrcChannel = "Sample2 Open Source Channel"
+Const cACKChannel = "Sample2 ACK Channel"
+Const cFileToSubmit = "Sample2.xml"
+
+Const BIZTALK_OPENNESS_TYPE_NOTOPEN = 1
+Const BIZTALK_OPENNESS_TYPE_SOURCE = 2
+Const BIZTALK_OPENNESS_TYPE_DESTINATION = 4
+Const BIZTALK_TRANSPORT_TYPE_APPINTEGRATION = 32
+Const BIZTALK_TRANSPORT_TYPE_HTTP = 4
+Const BIZTALK_TRANSPORT_TYPE_OPENDESTINATION = 2048
+
+Const ADMIN_DOCUMENT_FORMAT_CUSTOM = 1
+Const ADMIN_PROTOCOL_TYPE_FILE = 1
+
+Const BIZTALK_NAMESPACE = "root/MicrosoftBizTalkServer"
+Const RECVFUNC_NAMESPACE = "MicrosoftBizTalkServer_ReceiveFunction"
+
+Const GROUP_NAMESPACE = "MicrosoftBizTalkServer_Group"
+Const SERVER_NAMESPACE = "MicrosoftBizTalkServer_SERVER"
+
+Const clngErrNotFound = -1061154302
+Const cstrErrNotFound = "The object was not found"
+
+PassFail "Constants"
+
+'-------------------------------------------------------------------------------------------
+' Globals
+'-------------------------------------------------------------------------------------------
+Dim gSrcHandle
+Dim gSrcAppHandle
+Dim gDstHandle
+Dim gSrcAliasHandle
+Dim gDstAliasHandle
+Dim gPODocDef
+Dim gACKDocDef
+Dim gEnvelopeHandle
+Dim gSRCAPPPortHandle
+Dim gDSTPortHandle
+Dim gACKPortHandle
+Dim gSRCAPPChannelHandle
+Dim gOpenSrcChannelHandle
+Dim gACKChannelHandle
+Dim gSubmissionGUID
+Dim strServerName
+Dim SetupTempFS, SetupTempFile
+Dim BTM, Port, Document, Envelope, Organization, Channel
+Dim Apps, index
+Dim strPOReference 
+Dim strACKReference
+Dim strMAPReference
+
+PassFail "Globals"
+
+'-------------------------------------------------------------------------------------------
+' Setup Section
+' 	Copy the map from the current directory to the BizTalk Map Repository
+'-------------------------------------------------------------------------------------------
+
+strServerName = SetGetEnvVar("PROCESS", "COMPUTERNAME", "localhost", False)
+strPOReference = "http://" & strServerName & "/BizTalkServerRepository/DocSpecs/Microsoft/CommonPO.xml"
+strACKReference = "http://" & strServerName & "/BizTalkServerRepository/DocSpecs/Microsoft/CommonPOAcknowledgement.xml"
+strMAPReference = "http://" & strServerName & "/BizTalkServerRepository/Maps/Microsoft/CommonPOACKMAP.xml"
+
+Set SetupTempFS = CreateObject("Scripting.FileSystemObject")
+
+SetupTempFile = SetupTempFS.GetAbsolutePathName(cMAP)
+PassFail "Getting Absolute Path for MAP " & cMAP
+
+AddMaptoMicrosoftWebDAV  SetupTempFile
+PassFail "Adding MAP " & SetupTempFile & " to Microsoft"
+
+Set SetupTempFS = Nothing
+
+'-------------------------------------------------------------------------------------------
+' Create directories, if they do not exist
+'-------------------------------------------------------------------------------------------
+AssureThePath cTempDir
+AssureThePath cSRCAPPDIR
+AssureThePath cDSTDIR
+AssureThePath cACKDIR
+
+'-------------------------------------------------------------------------------------------
+' Setup the local file receive function, which will pick up the file from C:\TEMP\SRC and 
+' call the Submit method of the interchange object
+'-------------------------------------------------------------------------------------------
+CreateFileRcvFunc "SRC File Receive Function", strServerName, cSRCAPPDIR, cPODocDef, cSrcOrg, cDstOrg, BIZTALK_OPENNESS_TYPE_SOURCE
+
+'-------------------------------------------------------------------------------------------
+' Setup the local file receive function, which will pick up the file from C:\TEMP\DST and 
+' call the Submit method of the interchange object
+'-------------------------------------------------------------------------------------------
+CreateFileRcvFunc "DST File Receive Function", strServerName, cDSTDIR, cPODocDef, cDstOrg, cSrcOrg, BIZTALK_OPENNESS_TYPE_NOTOPEN
+
+PassFail "Setup"
+
+'-------------------------------------------------------------------------------------------
+' BizTalk Management objects
+'-------------------------------------------------------------------------------------------
+for index=1 to iBTMStress
+	PassFail "---------------- Iteration #" & index
+	CreateBTMObjects
+	RemoveBTMObjects
+	ConfigureBTMObjects
+	DestroyBTMObjects
+next
+PassFail "Management Objects"
+
+'-------------------------------------------------------------------------------------------
+' Submit the document
+'-------------------------------------------------------------------------------------------
+Dim Interchange, strFilePath, FSO, strResponse, suspendedHandleArray, i
+Dim strSourceName, strDestName, strDocName, strReasonCode, strItemData
+Set Interchange = CreateObject("BizTalk.Interchange")
+
+'-------------------------------------------------------------------------------------------
+' Get the absolute path for the file being submitted
+'-------------------------------------------------------------------------------------------
+Set FSO = CreateObject("Scripting.FileSystemObject")
+strFilePath = FSO.GetAbsolutePathName(cFileToSubmit)
+Set FSO = Nothing
+
+' make sure that Suspended Queue is empty
+suspendedHandleArray = Interchange.CheckSuspendedQueue
+PassFail "Interchange.CheckSuspendedQueue()"
+If TypeName(suspendedHandleArray) = "Variant()" Then
+	PassFail "Before SubmitSync() CheckSuspendedQueue() Returned " & CStr(UBound(suspendedHandleArray) + 1) & " suspended items"
+
+	For i = 0 to UBound(suspendedHandleArray)
+		Interchange.DeleteFromSuspendedQueue suspendedHandleArray(i)
+		PassFail "DeleteFromSuspendedQueue for Item #" & i
+	Next
+End If
+
+'-------------------------------------------------------------------------------------------
+' Call SubmitSync()
+'-------------------------------------------------------------------------------------------
+
+for index=1 to iAICStress
+	DeleteFile cACKDIR & "\Sample2ACK.xml"
+	Interchange.SubmitSync BIZTALK_OPENNESS_TYPE_NOTOPEN, , cPODocDef, cDefaultOrgQualifier, cSrcOrg, cDefaultOrgQualifier, cSrcOrg, , strFilePath, "", 0, gSubmissionGUID, strResponse
+
+	PassFail "SubmitSync() returned Submission GUID """ & gSubmissionGUID & """ and Response """ & strResponse & """"
+
+	If InStr(strResponse, "Scriptor successfully saved text file") <> 1 Then
+		Fail "Unexpected Response Document """ & strResponse & """"
+	End If
+
+	' Check that Submitted document did not go to the Suspended Queue after waiting for 1 minute
+	PassFail CDate(Now()) & " ... Please wait for 1 minute ..."
+	WSCript.Sleep 60000
+
+	'verify if ACK was sucessfully created
+	If Not FileExists( cACKDIR & "\Sample2ACK.xml") Then
+		Fail "File " & cACKDIR & "\Sample2ACK.xml does not exist"	
+		WScript.Quit
+	End If
+
+
+	suspendedHandleArray = Interchange.CheckSuspendedQueue    
+	If TypeName(suspendedHandleArray) = "Variant()" Then
+		PassFail "CheckSuspendedQueue() Returned " & CStr(UBound(suspendedHandleArray) + 1) & " suspended items"
+
+		For i = 0 to UBound(suspendedHandleArray)
+			Interchange.GetSuspendedQueueItemDetails suspendedHandleArray(i), strSourceName, strDestName, strDocName, strReasonCode, strItemData
+			PassFail "Getting Item Details for Suspended Queue Item #" & i+1
+
+			PassFail "Suspended Queue Item Found with "
+			PassFail "	Source Org - " & strSourceName 
+			PassFail "	Dest Org - " & strDestName 
+			PassFail "	Document Schema Name - " & strDocName 
+'			PassFail "	Item Data - " & strItemData
+			PassFail "	Failure Reason - " & strReasonCode
+		Next
+	Else
+		Pass "There is no Suspended Queue Items after SubmitSync()"
+	End If
+	PassFail "----------------- Sample2.vbs Submit Iteration #" & index
+next
+
+'-------------------------------------------------------------------------------------------
+' Helper routines
+'-------------------------------------------------------------------------------------------
+
+' PassFail() will report pass or fail
+'-------------------------------------------------------------------------------------------
+Sub PassFail(strScope)
+	If Err.Number <> 0 Then
+		Fail strScope & " Error: x" & Hex(Err.Number) & " Description: " & Err.Description & " Source: " & Err.Source
+		Err.Clear
+	Else
+		Pass strScope 
+	End If
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Fail() will always report a failure and exit the script
+'-------------------------------------------------------------------------------------------
+Sub Fail(strScope)
+	WScript.Echo "[FAIL] " & SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False) & ":" & strScript & ": " & strScope
+	WScript.Quit
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Pass() will report pass
+'-------------------------------------------------------------------------------------------
+Sub Pass(strScope)
+	WScript.Echo "[PASS] " & SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False) & ":" & strScript & ": " & strScope
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' FailOnError() will call Fail() on Error
+'-------------------------------------------------------------------------------------------
+Sub FailOnError(strScope)
+	If Err.Number <> 0 Then
+		Fail strScope & " Error: x" & Hex(Err.Number) & " Description: " & Err.Description & " Source: " & Err.Source
+		Err.Clear
+	End If
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Set or get environment variables
+'-------------------------------------------------------------------------------------------
+Function SetGetEnvVar(strType, strName, strDefaultValue, bSet)
+	On Error Resume Next
+	Dim wshShell, wshSysEnv
+	SetGetEnvVar = strDefaultValue
+	If (TypeName(strName) <> "String") Or IsEmpty(strName) Or Len(strName) = 0 Or (TypeName(strType) <> "String") Or IsEmpty(strType) Or Len(strType) = 0 Then
+		FailOnError "SetGetEnvVar().CheckParameters"
+		Exit Function
+	End If
+	Set wshShell = CreateObject("WScript.Shell")
+	Set wshSysEnv = wshShell.Environment(strType)
+	FailOnError "SetGetEnvVar().SetwshSysEnv"
+	If bSet Then
+		wshSysEnv(strName) = strDefaultValue
+		FailOnError "SetGetEnvVar().Set_wshSysEnv(" & strName & ")"
+	Else
+		SetGetEnvVar = wshSysEnv(strName)
+	End If
+	If SetGetEnvVar = "" Then
+		SetGetEnvVar = strDefaultValue
+	End If
+End Function
+
+'-------------------------------------------------------------------------------------------
+' Create a file receive function
+'-------------------------------------------------------------------------------------------
+Sub CreateFileRcvFunc(strName, ProcessingServer, PollingLocation, DOCName, SRCHandle, DSTHandle, nOpennessFlag)
+	On Error Resume Next
+
+	Dim WBEMLocator, WBEMService, strWMIQuery, RcvFuncSet, WBEMGroup
+	Dim objBTSRecvFunc, objBTSRecvFuncInstance, e, bExist
+
+	Set WBEMLocator = CreateObject("WbemScripting.SWbemLocator.1")
+	Set WBEMService = WBEMLocator.ConnectServer(, BIZTALK_NAMESPACE)
+    
+    Set objBTSRecvFunc = WBEMService.Get(RECVFUNC_NAMESPACE)
+    Set objBTSRecvFuncInstance = objBTSRecvFunc.SpawnInstance_
+ 
+    objBTSRecvFuncInstance.Name = strName
+	
+    set WBEMGroup = GetCurrentGroup(strServerName)
+    objBTSRecvFuncInstance.GroupName = WBEMGroup.Name
+	set WBEMGroup = Nothing
+
+    objBTSRecvFuncInstance.FilenameMask = "*.*"
+    objBTSRecvFuncInstance.ProcessingServer = ProcessingServer
+    objBTSRecvFuncInstance.ProtocolType = ADMIN_PROTOCOL_TYPE_FILE
+    objBTSRecvFuncInstance.PollingLocation = PollingLocation
+    objBTSRecvFuncInstance.DocumentName = DOCName
+	if nOpennessFlag = BIZTALK_OPENNESS_TYPE_SOURCE then
+		objBTSRecvFuncInstance.OpennessFlag = BIZTALK_OPENNESS_TYPE_SOURCE
+		objBTSRecvFuncInstance.DestinationID = DSTHandle
+		objBTSRecvFuncInstance.DestinationQualifier = cDefaultOrgQualifier
+	elseif nOpennessFlag = BIZTALK_OPENNESS_TYPE_DESTINATION then
+		objBTSRecvFuncInstance.OpennessFlag = BIZTALK_OPENNESS_TYPE_DESTINATION
+		objBTSRecvFuncInstance.SourceID = SRCHandle
+		objBTSRecvFuncInstance.SourceQualifier = cDefaultOrgQualifier
+	else
+		objBTSRecvFuncInstance.OpennessFlag = BIZTALK_OPENNESS_TYPE_NOTOPEN
+		objBTSRecvFuncInstance.SourceID = SRCHandle
+		objBTSRecvFuncInstance.SourceQualifier = cDefaultOrgQualifier
+		objBTSRecvFuncInstance.DestinationID = DSTHandle
+		objBTSRecvFuncInstance.DestinationQualifier = cDefaultOrgQualifier
+	end if
+
+    strWMIQuery = "select * from " & RECVFUNC_NAMESPACE & " where groupname= '" & objBTSRecvFuncInstance.GroupName & "'"
+    Set RcvFuncSet = WBEMService.ExecQuery(strWMIQuery)
+
+	PassFail "Execute WMI Query to get all the Receive Functions for a Group" & strName
+
+	for each e in RcvFuncSet
+		If e.Name = objBTSRecvFuncInstance.Name then
+			bExist = True
+			exit for
+		end if
+	next
+
+	if bExist then
+		objBTSRecvFuncInstance.Put_ (1)	' Update
+	else
+		objBTSRecvFuncInstance.Put_ (2)	' Create
+	end if
+	
+	if err <> 0 then
+		Dim wmierr
+		set wmierr = CreateObject("WbemScripting.SWbemLastError")
+		WSCript.Echo "[FAIL] CreateFileRcvFunc() with WMI Error """ & wmierr.description & """ x" & Hex(err.Number)
+		set wmierr = nothing
+	end if
+
+	PassFail "Create File Receive Function " & strName
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Sub AssureThePath(strPath)
+	Dim fso
+
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If not fso.FolderExists(strPath) Then
+		fso.CreateFolder strPath
+	End If
+	Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Function GetCurrentGroup(ByVal strServer)
+	On Error Resume Next
+    Dim objGroup
+    Dim objServer
+	Dim objLocator
+	Dim objService    
+    Set objLocator = CreateObject("WbemScripting.SWbemLocator")
+    Set objService = objLocator.ConnectServer(, BIZTALK_NAMESPACE)
+    Set objServer = GetServerByName(strServer)
+    Set objGroup = GetGroupByName(objServer.GroupName)
+    Set GetCurrentGroup = objGroup
+	Set objServer = Nothing
+	Set objLocator = Nothing
+	Set objService = Nothing
+End Function
+
+'-------------------------------------------------------------------------------------------
+Function GetServerByName(ByVal strServer )
+	On Error Resume Next
+	Dim objLocator
+	Dim objService
+    Set objLocator = CreateObject("WbemScripting.SWbemLocator")
+    Set objService = objLocator.ConnectServer(, BIZTALK_NAMESPACE)
+	Set GetServerByName = objService.Get(SERVER_NAMESPACE & ".NAME=""" & strServer & """")
+	Set objLocator = Nothing
+	Set objService = Nothing
+End Function
+
+'-------------------------------------------------------------------------------------------
+Function GetGroupByName(ByVal strGroupName )
+	On Error Resume Next
+	Dim objLocator
+	Dim objService
+    Set objLocator = CreateObject("WbemScripting.SWbemLocator")
+    Set objService = objLocator.ConnectServer(, BIZTALK_NAMESPACE)
+	Set GetGroupByName = objService.Get(GROUP_NAMESPACE & ".NAME=""" & strGroupName & """")
+	Set objLocator = Nothing
+	Set objService = Nothing
+End Function
+
+Sub AddMaptoMicrosoftWebDAV(strFilePath)
+	On Error Resume Next
+    Dim conn
+    Dim rec
+    Dim stm
+    Dim strFileName
+    
+	strFileName = Right(strFilePath, Len(strFilePath)-InStrRev(strFilePath,"\"))
+
+	' Get the Connection to WebDAV provider
+	Set conn = CreateObject("ADODB.Connection")
+    conn.Provider = "MSDAIPP.DSO"
+    conn.Properties("Protocol Provider").Value = "{9FECD570-B9D4-11d1-9C78-0000F875AC61}"
+
+    conn.Mode = 3
+    Call conn.Open("http://" & strServerName)
+
+    Set rec = CreateObject("ADODB.Record")
+    Set stm = CreateObject("ADODB.Stream")
+
+    Call rec.Open("http://" & strServerName & "/BizTalkServerRepository/Maps/Microsoft/" & strFileName, conn, 3, &H4000000, &H800000)
+    stm.Type = 1
+    Call stm.Open("URL=http://" & strServerName & "/BizTalkServerRepository/Maps/Microsoft/" & strFileName, 2, -1)
+    Call stm.LoadFromFile(strFilePath)
+    rec.Fields("IsReadOnly") = False
+    rec.Close
+    stm.Close
+    conn.Close
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Sub RemoveManagementObject(ByRef brObj, strName)
+    On Error Resume Next
+
+    ' first load the object
+	brObj.LoadByName strName
+    If Err.Number = 0 Then
+        brObj.Remove
+    ElseIf Err.Number <> clngErrNotFound Or InStr(Err.Description, cstrErrNotFound) < 1 Then
+        FailOnError "RemoveManagementObjects() " & strName
+        Exit Sub
+    Else
+        ' Object just does not exist, ignore the error
+        Err.Clear
+    End If
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Sub CreateBTMObjects()
+	On Error Resume Next
+	Set BTM = CreateObject("BizTalk.BizTalkConfig")
+	Set Channel = BTM.CreateChannel
+	Set Port = BTM.CreatePort
+	Set Envelope = BTM.CreateEnvelope
+	Set Document = BTM.CreateDocument
+	Set Organization = BTM.CreateOrganization
+	PassFail "CreateBTMObjects()"
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Sub RemoveBTMObjects()
+	On Error Resume Next
+	RemoveManagementObject Channel, cACKChannel
+	RemoveManagementObject Channel, cOpenSrcChannel
+	RemoveManagementObject Channel, cSRCAPPChannel
+
+	RemoveManagementObject Port, cACKPort
+	RemoveManagementObject Port, cDSTPort
+	RemoveManagementObject Port, cSRCAPPPort
+
+	RemoveManagementObject Envelope, cEnvelope
+
+	RemoveManagementObject Document, cPODocDef
+	RemoveManagementObject Document, cACKDocDef
+
+	RemoveManagementObject Organization, cSrcOrg
+	RemoveManagementObject Organization, cDstOrg
+	PassFail "RemoveBTMObjects()"
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Sub ConfigureBTMObjects()
+	On Error Resume Next
+	Organization.Clear
+	Organization.NAME = cSrcOrg
+	Organization.CreateApplication cSrcApp
+	Organization.Comments = "This is " & cSrcOrg
+	gSrcHandle = Organization.Create
+	gSrcAliasHandle = Organization.GetDefaultAlias
+
+	' Get the Application Handle
+	Set Apps = Organization.Applications
+	gSrcAppHandle = Apps.Fields("id")
+	Set Apps = Nothing
+	PassFail "Create """ & cSrcOrg & """ with  = " & gSrcHandle
+
+	'-------------------------------------------------------------------------------------------
+	' Create the destination organization
+	'-------------------------------------------------------------------------------------------
+	Organization.Clear
+	Organization.NAME = cDstOrg
+	Organization.Comments = "This is " & cDstOrg
+	gDstHandle = Organization.Create
+	gDstAliasHandle = Organization.GetDefaultAlias
+	PassFail "Create """ & cDstOrg & """ with  = " & gDstHandle
+
+	'-------------------------------------------------------------------------------------------
+	' Create the PO document definition
+	'-------------------------------------------------------------------------------------------
+	Document.Clear
+	Document.Name = cPODocDef
+	Document.Reference = strPOReference
+
+	'-------------------------------------------------------------------------------------------
+	' Set up the tracking fields for this document definition to be tracked in 
+	' the DTA database
+	'-------------------------------------------------------------------------------------------
+	Set Document.TrackFields = CreateObject("Commerce.Dictionary")
+	Document.TrackFields.d_value1 = "/CommonPO/POHeader/@CreationDate"
+	Document.TrackFields.d_value2 = "/CommonPO/DateReference/@Date"
+	
+	Document.TrackFields.r_value1 = "/CommonPO/TermsOfSale/@DiscountPercent"
+	Document.TrackFields.r_value2 = "/CommonPO/Currency/@ExchangeRate"
+	
+	Document.TrackFields.s_value1 = "/CommonPO/BillTo/Address/@Address1"
+	Document.TrackFields.s_value2 = "/CommonPO/BillTo/Address/@Address2"
+	
+	Document.TrackFields.i_value1 = "/CommonPO/Total/@LineItemTotal"
+	Document.TrackFields.i_value2 = "/CommonPO/TermsOfSale/@NetDays"
+
+	'-------------------------------------------------------------------------------------------
+	' Set up the custom fields for this document definition to be tracked in the 
+	' DTA database
+	'-------------------------------------------------------------------------------------------
+	Set Document.TrackFields.x_custom_search = CreateObject("Commerce.SimpleList")
+	Document.TrackFields.x_custom_search.Add "/CommonPO/DateReference/@Description"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/DateReference/@Date"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/Item/DateReference/@Description"
+	Document.TrackFields.x_custom_search.Add "/CommonPO/TaxReference/@Location"
+	gPODocDef = Document.Create
+	PassFail "Create """ & cPODocDef & """ with  = " & gPODocDef
+
+	'-------------------------------------------------------------------------------------------
+	' Create the PO acknowledgment document definition
+	'-------------------------------------------------------------------------------------------
+	Document.Clear
+	Document.Name = cACKDocDef
+	Document.Reference = strACKReference
+	gACKDocDef = Document.Create
+	PassFail "Create """ & cACKDocDef & """ with  = " & gACKDocDef
+
+	'-------------------------------------------------------------------------------------------
+	' Create a custom envelope, using the CommonPriceCatalog reference in the repository
+	'-------------------------------------------------------------------------------------------
+	Envelope.Clear
+	Envelope.Name = cEnvelope
+	Envelope.Format = "Custom XML"
+	gEnvelopeHandle = Envelope.Create
+	PassFail "Create """ & cEnvelope & """ with  = " & gEnvelopeHandle
+
+	'-------------------------------------------------------------------------------------------
+	' Create the source application port
+	'-------------------------------------------------------------------------------------------
+	Port.Clear
+	Port.Name = cSRCAPPPort
+	Port.Comments = "This is " & cSRCAPPPort
+	Port.DestinationEndPoint.Organization = gSrcHandle
+	Port.DestinationEndPoint.Alias = gSrcAliasHandle
+	Port.DestinationEndPoint.Application = gSrcAppHandle
+	Port.Envelope = gEnvelopeHandle
+	Port.PrimaryTransport.Type = BIZTALK_TRANSPORT_TYPE_APPINTEGRATION
+	Port.PrimaryTransport.Address = "{11111111-1111-1111-1111-111111111111}"
+	Port.PrimaryTransport.Address = cScriptorCLS
+	gSRCAPPPortHandle = Port.Create
+	PassFail "Create """ & cSRCAPPPort & """ with  = " & gSRCAPPPortHandle
+
+	Port.Load gSRCAPPPortHandle
+	Port.PrimaryTransport.Address = cScriptorCLS
+	Port.Save
+	PassFail "Update """ & cSRCAPPPort & """ with  = " & gSRCAPPPortHandle
+
+	'-------------------------------------------------------------------------------------------
+	' Create source application to source Channel
+	'-------------------------------------------------------------------------------------------
+	Channel.Clear
+	Channel.Name = cSRCAPPChannel
+	Channel.Comments = "This is " & cSRCAPPChannel
+	Channel.InputDocument = gPODocDef
+	Channel.OutputDocument = gPODocDef
+	Channel.Port = gSRCAPPPortHandle
+	Channel.SourceEndPoint.Organization = gSrcHandle
+	Channel.SourceEndPoint.Alias = gSrcAliasHandle
+	Channel.SourceEndPoint.Application = gSrcAppHandle
+
+	Channel.LoggingInfo.LogNativeInputDocument = 1
+	Channel.LoggingInfo.LogNativeOutputDocument = 1
+	Channel.LoggingInfo.LogXMLInputDocument = 1
+	Channel.LoggingInfo.LogXMLOutputDocument = 1
+
+	gSRCAPPChannelHandle = Channel.Create
+	Channel.Clear
+	PassFail "Create """ & cSRCAPPChannel & """ with  = " & gSRCAPPChannelHandle
+
+	Dim TransportType, ConfigData, strScript, a
+	Channel.Load gSRCAPPChannelHandle
+	set ConfigData = Channel.GetConfigData (0, gSRCAPPPortHandle, TransportType)
+	PassFail "GetConfigData for Port=" & gSRCAPPPortHandle & " Transport Type=" & TransportType
+	If TransportType <> 32 Then
+		Fail "GetConfigData() returned wrong data"
+	End If
+
+	'-------------------------------------------------------------------------------------------
+	' build up script, which dumps data to a file
+	'-------------------------------------------------------------------------------------------
+	strScript = ""
+	strScript = strScript & "function MSCSExecute(config, orderform, context, flags)" & vbCrLf
+	strScript = strScript & "   'On Error Resume Next" & vbCrLf
+	strScript = strScript & "   Dim FileSys, File, strTmp, stm, strD" & vbCrLf
+	strScript = strScript & "   strTmp = """ & cSRCAPPDIR & "\" & """ & CStr(CDbl(Now()))" & vbCrLf
+	strScript = strScript & "   Set FileSys = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf & vbCrLf
+	strScript = strScript & "   Set File = FileSys.OpenTextFile(strTmp, 2, True)" & vbCrLf
+	strScript = strScript & "   if Err.Number = 0 then" & vbCrLf
+	strScript = strScript & "      dim a, b,c" & vbCrLf
+	strScript = strScript & "      a = """"" & vbCrLf
+	strScript = strScript & "      for i=1 to Len(orderform.working_data)" & vbCrLf
+	strScript = strScript & "      	a = a & Chr(AscB(Mid(orderform.working_data,i,1)))" & vbCrLf
+	strScript = strScript & "      	c = CInt(AscW(Mid(orderform.working_data,i,1))/256)" & vbCrLf
+	strScript = strScript & "      	if c > 0 then a = a & Chr(c)" & vbCrLf
+	strScript = strScript & "      next" & vbCrLf
+	strScript = strScript & "      File.WriteLine a" & vbCrLf
+	strScript = strScript & "      File.Close" & vbCrLf
+	strScript = strScript & "      MSCSExecute = 1" & vbCrLf
+	strScript = strScript & "      orderform.ResponseField = ""Scriptor successfully saved text file "" & strTmp" & vbCrLf
+	strScript = strScript & "   else" & vbCrLf
+	strScript = strScript & "       MSCSExecute = 0" & vbCrLf
+	strScript = strScript & "       orderform.ResponseField = ""Scriptor could not open text file "" & strTmp" & vbCrLf
+	strScript = strScript & "   end if" & vbCrLf
+	strScript = strScript & "   Err.Clear" & vbCrLf
+	strScript = strScript & "   set File = nothing" & vbCrLf
+	strScript = strScript & "   set FileSys = nothing" & vbCrLf
+	strScript = strScript & "   On Error Goto 0" & vbCrLf
+	strScript = strScript & "end function" & vbCrLf & vbCrLf
+	strScript = strScript & "sub MSCSOpen(config)" & vbCrLf
+	strScript = strScript & "end sub" & vbCrLf & vbCrLf
+	strScript = strScript & "sub MSCSClose()" & vbCrLf
+	strScript = strScript & "end sub" & vbCrLf
+	'-------------------------------------------------------------------------------------------
+	ConfigData.script_text = strScript
+	ConfigData.engine_prog_id = "VBSCript"
+	ConfigData.script_type = "INTERNAL"
+
+	Channel.SetConfigData 0, gSRCAPPPortHandle, ConfigData
+	Channel.Save
+
+	' Debugging output - Uncomment following 8 lines to see the Scriptor Configuration Data
+	'Channel.Clear
+	'Channel.Load gSRCAPPChannelHandle
+	'Set ConfigData = Channel.GetConfigData(0, gSRCAPPPortHandle, TransportType)
+	'PassFail "GetConfigData for Port=" & gSRCAPPPortHandle & " Transport Type=" & TransportType
+	'
+	'for each a in ConfigData
+	'	WSCript.Echo a & " = " & ConfigData.Value(a)
+	'next
+
+	PassFail "Update """ & cSRCAPPChannel & """ with  = " & gSRCAPPChannelHandle & " to overwrite Port Defaults for Scriptor"
+
+	'-------------------------------------------------------------------------------------------
+	' Create destination port
+	'-------------------------------------------------------------------------------------------
+	Port.Clear
+	Port.Name = cDSTPort
+	Port.Comments = "This is " & cDSTPort
+	Port.DestinationEndPoint.Organization = gDstHandle
+	Port.DestinationEndPoint.Alias = gDstAliasHandle
+	Port.Envelope = gEnvelopeHandle
+	Port.PrimaryTransport.Type = cTransportType
+	Port.PrimaryTransport.Address = cFile & cDSTDIR & "\" & cFileName
+	gDSTPortHandle = Port.Create
+	PassFail "Create """ & cDSTPort & """ with  = " & gDSTPortHandle
+
+	'-------------------------------------------------------------------------------------------
+	' Create the open source Channel
+	'-------------------------------------------------------------------------------------------
+	Channel.Clear
+	Channel.Name = cOpenSrcChannel
+	Channel.Comments = "This is " & cOpenSrcChannel
+	Channel.InputDocument = gPODocDef
+	Channel.OutputDocument = gPODocDef
+	Channel.Port = gDSTPortHandle
+	Channel.SourceEndPoint.Openness = BIZTALK_OPENNESS_TYPE_SOURCE
+	Channel.LoggingInfo.LogNativeInputDocument = 1
+	Channel.LoggingInfo.LogNativeOutputDocument = 1
+	Channel.LoggingInfo.LogXMLInputDocument = 1
+	Channel.LoggingInfo.LogXMLOutputDocument = 1
+	gOpenSrcChannelHandle = Channel.Create
+	PassFail "Create """ & cOpenSrcChannel & """ with  = " & gOpenSrcChannelHandle
+
+	'-------------------------------------------------------------------------------------------
+	' Create the acknowledgment port
+	'-------------------------------------------------------------------------------------------
+	Port.Clear
+	Port.Name = cACKPort
+	Port.Comments = "This is " & cACKPort
+	Port.DestinationEndPoint.Organization = gSrcHandle
+	Port.DestinationEndPoint.Alias = gSrcAliasHandle
+	Port.Envelope = gEnvelopeHandle
+	Port.PrimaryTransport.Type = cTransportType
+	Port.PrimaryTransport.Address = cFile & cACKDIR & "\Sample2ACK.xml"
+	gACKPortHandle = Port.Create
+	PassFail "Create """ & cACKPort & """ with  = " & gACKPortHandle
+
+	'-------------------------------------------------------------------------------------------
+	' Create the acknowledgment channel
+	'-------------------------------------------------------------------------------------------
+	Channel.Clear
+	Channel.Name = cACKChannel
+	Channel.Comments = "This is " & cACKChannel
+	Channel.SourceEndPoint.Organization = gDstHandle
+	Channel.SourceEndPoint.Alias = gDstAliasHandle
+	Channel.InputDocument = gPODocDef
+	Channel.OutputDocument = gACKDocDef
+	Channel.Port = gACKPortHandle
+	Channel.MAPReference = strMAPReference
+	Channel.LoggingInfo.LogNativeInputDocument = 1
+	Channel.LoggingInfo.LogNativeOutputDocument = 1
+	Channel.LoggingInfo.LogXMLInputDocument = 1
+	Channel.LoggingInfo.LogXMLOutputDocument = 1
+	gACKChannelHandle = Channel.Create
+	PassFail "Create """ & cACKChannel & """ with  = " & gACKChannelHandle
+
+	Channel.Clear
+	Channel.LoadByName cACKChannel
+
+	set ConfigData = Channel.GetConfigData (0, gACKPortHandle, TransportType)
+	PassFail "GetConfigData for Port=" & gACKPortHandle & " Transport Type=" & TransportType
+	If TransportType <> cTransportType Then
+		Fail "GetConfigData() for ACK Channel returned wrong data"
+	End If
+
+	ConfigData.CopyMode = 0		' set file to be overwritten
+	Channel.SetConfigData 0, gACKPortHandle, ConfigData
+	Channel.Save
+	PassFail "Update """ & cACKChannel & """ with  = " & gACKChannelHandle & " to overwrite Port Defaults for SendLocalFile"
+
+	PassFail "ConfigureBTMObjects()"
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Sub DestroyBTMObjects()
+	On Error Resume Next
+	Set Channel = Nothing
+	Set Port = Nothing
+	Set Envelope = Nothing
+	Set Document = Nothing
+	Set Organization = Nothing
+	Set BTM = Nothing
+	PassFail "DestroyBTMObjects()"
+End Sub
+
+'-------------------------------------------------------------------------------------------
+Function FileExists(filespec)
+	Dim fso
+
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If fso.FileExists(filespec) Then
+		FileExists = True
+	End If
+	Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------------------------------------
+Sub DeleteFile(strFile)
+	Dim fso
+
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If fso.FileExists(strFile) Then
+		fso.DeleteFile strFile, True
+	End If
+	Set fso = Nothing
+End Sub
+

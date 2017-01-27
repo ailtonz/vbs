@@ -1,0 +1,138 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+set wshshell = wscript.createobject("wscript.shell")
+set fso = createobject("scripting.filesystemobject")
+wshshell.run "c:\moc\setup\reg export HKLM\system\currentcontrolset\services\tcpip\parameters\interfaces c:\tools\start.reg /nt4", 6, true
+wscript.sleep 2000
+set fla = fso.opentextfile("c:\tools\start.reg", 8)
+fla.writeline "end"
+fla.close
+set fla = fso.opentextfile("c:\tools\start.reg")
+fso.createfolder("c:\tools\ip")
+x=0
+set nw = fso.createtextfile("c:\tools\ip\part" & x & ".txt")
+nw.close
+done=0
+Do while Done=0
+	
+	ln = fla.readline
+	if ln <> "" then
+		set ct = fso.opentextfile("c:\tools\ip\part" & x & ".txt", 8)
+		ct.writeline ln
+		ct.close
+	end if		
+	if ln = "end" then
+		done=1
+	end if
+	if ln = "" then		
+		x=x+1
+		set nw = fso.createtextfile("c:\tools\ip\part" & x & ".txt")
+		nw.close
+	end if
+loop
+
+set fldr = fso.GetFolder("c:\tools\ip")
+set fc = fldr.files
+For each fl in fc
+	set fdr = fso.opentextfile(fl)
+	src = fdr.readall
+	txt = chr(34) & "EnableDHCP" & chr(34) & "=dword:00000001"
+	a = instr(src,txt)
+	if a <> "0" then
+		flx = fso.getfile(fl)
+		set fly = fso.createtextfile("c:\tools\ip\file.txt")
+		fly.writeline flx
+		fly.close
+	end if
+next
+
+set srca = fso.opentextfile("c:\tools\ip\file.txt")
+lnx = srca.readline
+set nic = fso.opentextfile(lnx)
+lny = nic.readline
+lg = len(lny)
+f = instrrev(lny,"\")
+d = left(lny,lg-1)
+e = right(d,lg-f-1)
+
+set objnet = wscript.CreateObject("wscript.network")
+dname = objnet.userdomain
+cname = objnet.ComputerName
+
+if dname = "NAMERICA1" then
+	clsrm = 1
+end if
+
+if dname = "SPACIFIC1" then
+	clsrm = 3
+end if
+
+if dname = "EUROPE1" then
+	clsrm = 5
+end if
+
+if dname = "SAMERICA1" then
+	clsrm = 7
+end if
+
+if dname = "ASIA1" then
+	clsrm = 9
+end if
+
+if dname = "AFRICA1" then
+	clsrm = 11
+end if
+
+if dname = "NAMERICA2" then
+	clsrm = 13
+end if
+
+if dname = "SPACIFIC2" then
+	clsrm = 15
+end if
+
+if dname = "EUROPE2" then
+	clsrm = 17
+end if
+
+if dname = "SAMERICA2" then
+	clsrm = 19
+end if
+
+if dname = "ASIA2" then
+	clsrm = 21
+end if
+
+if dname = "AFRICA2" then
+	clsrm = 23
+end if
+
+odd = array("VANCOUVER","PERTH","LISBON","LIMA","BANGALORE","CASABLANCA","ACAPULCO","AUCKLAND","STOCKHOLM","CARACAS","MANILA","KHARTOUM")
+even = array("DENVER","BRISBANE","BONN","SANTIAGO","SINGAPORE","TUNIS","MIAMI","SUVA","MOSCOW","MONTEVIDEO","TOKYO","NAIROBI")
+
+For each i in odd
+	if cname = i then
+		node = 1
+	end if
+next
+
+For each i in even
+	if cname = i then
+		node=2
+	end if
+next
+
+wshshell.run "c:\moc\setup\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & e & " /v EnableDHCP /t REG_DWORD /d 0 /f"
+wshshell.run "c:\moc\setup\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & e & " /v SubnetMask /t REG_MULTI_SZ /d 255.255.255.0 /f"
+wshshell.run "c:\moc\setup\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & e & " /v IPAddress /t REG_MULTI_SZ /d 10.1." & clsrm & "." & node & " /f"
+wshshell.run "c:\moc\setup\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & e & " /v NameServer /t REG_SZ /d 10.1." & clsrm & ".1 /f"
+

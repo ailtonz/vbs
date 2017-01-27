@@ -1,0 +1,94 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' ********************************************************************************
+' * MOC Win1558A Setup Script
+' * 	
+' *  Creates the following OUs:
+' * 	Sales1
+' * 	  Telemarketing
+' * 	  Retail
+' * 	Sales2
+' * 	  Telemarketing
+' * 	  Retail
+' *	West
+' *	East
+' *
+' *  Creates the following users:
+' * 	Sales User 1
+' * 	Telemarketing User 1
+' * 	Retail User 1
+' * 	Sales User 2
+' * 	Telemarketing User 2
+' * 	Retail User 2
+' * 	
+' ********************************************************************************
+
+' ********************************************************************************
+' * Prepare the environment for this script
+' ********************************************************************************
+' Determine the LDAP path for your domain
+Set Root = GetObject("LDAP://RootDSE")
+DomainPath = Root.Get("DefaultNamingContext")
+Set Domain = GetObject("LDAP://" & DomainPath)
+
+Set WshShell = Wscript.CreateObject("Wscript.Shell")
+Set WshSysEnv = WshShell.Environment("Process")
+upnDomain = WshSysEnv("USERDOMAIN")
+
+'Disable error messages
+On Error Resume Next
+
+' ********************************************************************************
+' * Create Top Level OUs
+' ********************************************************************************
+Set ouSales1 = Domain.Create("organizationalUnit", "OU=Sales")
+ouSales1.Put "Description", "Sales"
+ouSales1.SetInfo
+
+
+' ********************************************************************************
+' * Create Subordinate OUs
+' ********************************************************************************
+Set ouTM1 = ouSales1.Create("organizationalUnit", "OU=Telemarketing")
+ouTM1.Put "Description", "Telemarketing OU"
+ouTM1.SetInfo
+
+Set ouRetail1 = ouSales1.Create("organizationalUnit", "OU=Retail")
+ouRetail1.Put "Description", "Retail OU"
+ouRetail1.SetInfo
+
+
+
+' ********************************************************************************
+' * Create Users
+' ********************************************************************************
+Set usr = ouSales1.Create("user", "CN=Sales User")
+usr.Put "samAccountName", "SalesUser"
+usr.Put "userPrincipalName", "SalesUser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = ouTM1.Create("user", "CN=Telemarketing User")
+usr.Put "samAccountName", "TMUser"
+usr.Put "userPrincipalName", "TMUser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = ouRetail1.Create("user", "CN=Retail User")
+usr.Put "samAccountName", "RetailUser"
+usr.Put "userPrincipalName", "RetailUser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+

@@ -1,0 +1,508 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set net=wscript.createobject("wscript.network")
+set shell=wscript.createobject("wscript.shell")
+Set fs = CreateObject("Scripting.FileSystemObject")
+Shell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "c:\tools\removexb.vbs" ,"REG_SZ"
+Shell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultPassword", "password" ,"REG_SZ"
+Shell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultUserName", "Administrator" ,"REG_SZ"
+Shell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Shell.Regdelete "HKCU\software\Microsoft\Windows\CurrentVersion\Run\"
+
+if net.computername="VANCOUVER" then
+	set ou = GetObject("LDAP://ou=vancouverou,dc=namerica,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=denverou,dc=namerica,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=acapulcoou,dc=namerica,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=miamiou,dc=namerica,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	shell.run "net share moc=c:\moc", 1, true
+	fs.createfolder("c:\moc\adprepdone")
+	x=0
+	do while x=0
+		msg = "Waiting for Exchange to be removed from Member Servers in NAmerica Domain THE SCRIPT WILL CONTINUE TO RUN IN THE BACKGROUND"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Denver\moc\exundone")) then
+    			If (fs.FolderExists("\\Miami\moc\exundone")) then
+				If (fs.FolderExists("\\Acapulco\moc\exundone")) then
+					x=1
+				End if
+			End if
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+end if
+		
+if net.computername="LISBON" then
+	set ou = GetObject("LDAP://ou=lisbonou,dc=europe,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=bonnou,dc=europe,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=stockholmou,dc=europe,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=moscowou,dc=europe,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	shell.run "net share moc=c:\moc", 1, true
+	fs.createfolder("c:\moc\adprepdone")
+	x=0
+	do while x=0
+		msg = "Waiting for Exchange to be removed from Member Servers in Europe Domain"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Bonn\moc\exundone")) then
+    			If (fs.FolderExists("\\Stockholm\moc\exundone")) then
+				If (fs.FolderExists("\\Moscow\moc\exundone")) then
+					x=1
+				End if
+			End if
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+end if
+
+if net.computername="BANGALORE" then
+	set ou = GetObject("LDAP://ou=bangaloreou,dc=asia,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=singaporeou,dc=asia,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=manilaou,dc=asia,dc=mwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=Tokyoou,dc=asia,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	shell.run "net share moc=c:\moc", 1, true
+	fs.createfolder("c:\moc\adprepdone")
+	x=0
+	do while x=0
+		msg = "Waiting for Exchange to be removed from Member Servers in Asia Domain"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Singapore\moc\exundone")) then
+    			If (fs.FolderExists("\\tokyo\moc\exundone")) then
+				If (fs.FolderExists("\\manila\moc\exundone")) then
+					x=1
+				End if
+			End if
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+end if
+
+if net.computername="LIMA" then
+	set ou = GetObject("LDAP://ou=limaou,dc=samerica,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=santiagoou,dc=samerica,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=caracasou,dc=samerica,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=montevideoou,dc=samerica,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	shell.run "net share moc=c:\moc", 1, true
+	fs.createfolder("c:\moc\adprepdone")
+	x=0
+	do while x=0
+		msg = "Waiting for Exchange to be removed from Member Servers in SAmerica Domain"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\santiago\moc\exundone")) then
+    			If (fs.FolderExists("\\Caracas\moc\exundone")) then
+				If (fs.FolderExists("\\montevideo\moc\exundone")) then
+					x=1
+				End if
+			End if
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+end if
+
+if net.computername="CASABLANCA" then
+	set ou = GetObject("LDAP://ou=casablancaou,dc=africa,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=tunisou,dc=africa,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=khartoumou,dc=africa,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=nairobiou,dc=africa,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	shell.run "net share moc=c:\moc", 1, true
+	fs.createfolder("c:\moc\adprepdone")
+	x=0
+	do while x=0
+		msg = "Waiting for Exchange to be removed from Member Servers in Africa Domain"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Tunis\moc\exundone")) then
+    			If (fs.FolderExists("\\Khartoum\moc\exundone")) then
+				If (fs.FolderExists("\\nairobi\moc\exundone")) then
+					x=1
+				End if
+			End if
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+end if
+
+if net.computername="PERTH" then
+	set ou = GetObject("LDAP://ou=perthou,dc=spacific,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=brisbaneou,dc=spacific,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=aucklandou,dc=spacific,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	set ou = GetObject("LDAP://ou=suvaou,dc=spacific,dc=nwtraders,dc=msft")
+	ou.deleteobject(0)
+	shell.run "net share moc=c:\moc", 1, true
+	fs.createfolder("c:\moc\adprepdone")
+	x=0
+	do while x=0
+		msg = "Waiting for Exchange to be removed from Member Servers in SPacific Domain"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Brisbane\moc\exundone")) then
+    			If (fs.FolderExists("\\Auckland\moc\exundone")) then
+				If (fs.FolderExists("\\Suva\moc\exundone")) then
+					x=1
+				End if
+			End if
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+end if
+
+if net.userdomain="DENVER" then
+	x=0
+	do while x=0
+		msg = "Waiting for the NAmerica Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Vancouver\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+	
+End if
+
+if net.userdomain="MIAMI" then
+	x=0
+	do while x=0
+		msg = "Waiting for the NAmerica Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Vancouver\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+	
+End if
+
+if net.userdomain="ACAPULCO" then
+	x=0
+	do while x=0
+		msg = "Waiting for the NAmerica Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Vancouver\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+	
+End if
+
+if net.computername="BONN" then
+	x=0
+	do while x=0
+		msg = "Waiting for the Europe Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Lisbon\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+end if
+
+if net.computername="STOCKHOLM" then
+	x=0
+	do while x=0
+		msg = "Waiting for the Europe Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Lisbon\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+end if
+
+if net.computername="MOSCOW" then
+	x=0
+	do while x=0
+		msg = "Waiting for the Europe Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Lisbon\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+end if
+
+if net.computername="SINGAPORE" then
+	x=0
+	do while x=0
+		msg = "Waiting for the Asia Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Bangalore\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+end if
+
+if net.computername="MANILA" then
+	x=0
+	do while x=0
+		msg = "Waiting for the Asia Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Bangalore\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+end if
+
+if net.computername="TOKYO" then
+	x=0
+	do while x=0
+		msg = "Waiting for the Asia Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\Bangalore\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+end if
+
+if net.computername="SANTIAGO" then
+	x=0
+	do while x=0
+		msg = "Waiting for the SAmerica Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\lima\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+End if
+
+if net.computername="CARACAS" then
+	x=0
+	do while x=0
+		msg = "Waiting for the SAmerica Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\lima\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+End if
+
+if net.computername="MONTEVIDEO" then
+	x=0
+	do while x=0
+		msg = "Waiting for the SAmerica Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\lima\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+End if
+
+if net.computername="TUNIS" then
+	x=0
+	do while x=0
+		msg = "Waiting for the Africa Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\casablanca\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+End if
+
+if net.computername="KHARTOUM" then
+	x=0
+	do while x=0
+		msg = "Waiting for the Africa Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\casablanca\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+End if
+
+if net.computername="NAIROBI" then
+	x=0
+	do while x=0
+		msg = "Waiting for the Africa Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\casablanca\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+End if
+
+if net.computername="BRISBANE" then
+	x=0
+	do while x=0
+		msg = "Waiting for the SPacific Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\perth\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+End if
+
+if net.computername="AUCKLAND" then
+	x=0
+	do while x=0
+		msg = "Waiting for the SPacific Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\perth\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+End if
+
+if net.computername="SUVA" then
+	x=0
+	do while x=0
+		msg = "Waiting for the SPacific Domain to be configured"
+		msg2 = "Remove Exchange"
+		Set WshShell = WScript.CreateObject("WScript.Shell")
+		bob = WshShell.Popup(msg,5,msg2,64)
+		If (fs.FolderExists("\\perth\moc\adprepdone")) Then
+    			x=1
+		End If
+		if x=0 then
+			wscript.sleep 10000
+		end if
+	Loop
+End if
+
+if (fs.folderexists("c:\program files\exchsrvr")) then
+	if (fs.fileexists("c:\program files\exchsrvr\bin\msimsrv.dll")) then
+		shell.run "d:\exchange\setup\i386\setup /unattendfile c:\tools\uneximc.ini", 1, true
+	Else
+		shell.run "d:\exchange\setup\i386\setup /unattendfile c:\tools\unexchc.ini", 1, true
+	end if
+end if
+
+if (fs.folderexists("d:\program files\exchsrvr")) then
+	if (fs.fileexists("d:\program files\exchsrvr\bin\msimsrv.dll")) then
+		shell.run "d:\exchange\setup\i386\setup /unattendfile c:\tools\uneximd.ini", 1, true
+	else
+		shell.run "d:\exchange\setup\i386\setup /unattendfile c:\tools\unexchd.ini", 1, true
+	end if
+end if
+
+shell.run "c:\tools\reboot.cmd", 1, true
+

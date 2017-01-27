@@ -1,0 +1,24 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'on error resume next
+set wshshell = wscript.createobject("wscript.shell")
+Set IPConfigSet = GetObject("winmgmts:").ExecQuery ("select NameServer,SettingID from Win32_NetworkAdapterConfiguration where DHCPEnabled=FALSE")
+for each j in IpConfigSet
+	if Not IsNull(j.NameServer) then
+		x = j.NameServer(i)
+		if right(x,3) = "200" then
+			exit for
+		end if
+	end if
+next
+y=j.settingid(i)
+wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v NameServer /t REG_SZ /d 192.168.222.200 /f" 'reg entry to set DNS
+

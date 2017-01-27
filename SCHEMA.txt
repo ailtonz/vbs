@@ -1,0 +1,39 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim system(5)
+system(0) = "localhost"
+system(1) = "London"
+system(2) = "Denver"
+system(3) = "Lima"
+system(4) = "Perth"
+
+On Error resume Next
+For i = 0 to ubound(system)
+	If system(i) <> "" Then
+		Set objCardSetting = GetObject("WinMgmts:\\" & system(i) &_
+							 "\root\cimv2:win32_NetworkAdapterConfiguration.index='0'")
+		If Err<>0 Then
+			wscript.echo hex(Err.number), err.description
+			err.clear
+		End If
+		strResult = strResult & _
+					"-----------------" & vbcrlf & _
+					system(i) & vbcrlf & _
+					"-----------------" & vbcrlf & _
+					space(10) & " MAC: " & objCardSetting.macAddress & vbcrlf & _
+					space(10) & " DHCP Enabled: " & objCardSetting.dhcpenabled & vbcrlf
+	End If
+Next
+Wscript.Echo strResult
+
+
+
+

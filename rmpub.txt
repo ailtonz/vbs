@@ -1,0 +1,56 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Sub DelGPC(oObject)
+Dim oGPC
+Dim oLeaf
+Dim oFldr
+Dim strSysroot
+
+strSysroot = WshSysEnv("SYSTEMROOT")
+
+For Each oGPC in oObject
+	If Left(oGPC.displayName, 7) <> "Default" Then
+	Set oLeaf = GetObject("LDAP://" & oGPC.distinguishedName)
+	DelGPCSubs(oLeaf)
+	strLongName = oGPC.Name
+	strShortName = Right(strLongName,Len(strLongName) -3)
+	strLongOne = oObject.canonicalName
+	strShortOne = Left(strLongOne,Len(strLongOne) -16)
+	strFldrName = strSysroot & "\SYSVOL\sysvol\" & strShortOne & "\Policies\" & strShortName
+	FileSystem.DeleteFolder(strFldrName)
+	oObject.Delete "groupPolicyContainer", oGPC.Name
+End if
+Next
+End Sub
+
+Sub DelGPCSubs(oThing)
+Dim oWhatever
+For Each oWhatever in oThing
+	oThing.Delete "container", oWhatever.Name
+Next
+End Sub
+
+Dim oDomain
+Dim OutPutFile
+Set Root = GetObject("LDAP://RootDSE")
+DomainPath = Root.Get("DefaultNamingContext")
+Set oDomain = GetObject("LDAP://CN=Policies,CN=System," & DomainPath)
+oDomain.GetInfoEx Array("canonicalName"), 0
+Set WshShell = Wscript.CreateObject("Wscript.Shell")
+Set WshSysEnv = WshShell.Environment("Process")
+Dim FileSystem
+Set FileSystem = WScript.CreateObject("Scripting.FileSystemObject")
+DelGPC(oDomain)
+Set FileSystem = Nothing
+Set oDomain = Nothing
+MsgBox "Finished"
+WScript.Quit
+

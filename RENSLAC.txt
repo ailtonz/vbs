@@ -1,0 +1,64 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' RENLLAC2.VBS
+'
+' Renames the Local Area Connection 2 on London to "Instructor Net"
+' and sets the TCP/IP parameters
+
+sFind = "Conexão local 2"
+sNewName = "Rede do instrutor"
+sComputer = "."   ' use "." for local computer
+
+'Constants for WMI StdRegProv
+'Const HKCR = &H80000000
+'Const HKCU = &H80000001
+Const HKLM = &H80000002
+
+Const NetBase = "SYSTEM\CurrentControlSet\Control\Network\"
+
+
+On Error Resume Next
+
+Set oReg=GetObject("winmgmts:{impersonationLevel=impersonate}!\\" _
+  & sComputer & "\root\default:StdRegProv")
+
+' Get adapter collection
+Set oAdapters = GetObject("winmgmts:").ExecQuery( _
+  "SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True and DHCPEnabled=True")
+
+' Get all subkeys under NetBase in an array
+iRC = oReg.EnumKey(HKLM, NetBase, aRegKeys)
+
+' Finding adapter(s) with connection name "Local Area Connection"
+If (Err.Number = 0) And (iRC = 0) Then
+  On Error Goto 0
+  For Each oAdapter In oAdapters
+    sSettingID = oAdapter.SettingID
+    ' Loop through all registry keys
+    For i = 0 To Ubound(aRegKeys)
+      sKeyName = NetBase & aRegKeys(i) & "\" _
+                 & sSettingID & "\Connection"
+      oReg.GetStringValue HKLM, sKeyName, "Name", sValue
+      ' Was a name found?
+    If Instr(LCase(sValue), "conexão local") Then
+	oReg.SetStringValue HKLM, sKeyName, "Name", sNewName
+	set wshshell = wscript.createobject("wscript.shell")
+	wshshell.run "c:\tools\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & sSettingID & " /v EnableDHCP /t REG_DWORD /d 0 /f"
+	wshshell.run "c:\tools\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & sSettingID & " /v IPAddress /t REG_MULTI_SZ /d 10.0.0.1 /f"
+	wshshell.run "c:\tools\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\interfaces\" & sSettingID & " /v SubNetMask /t REG_MULTI_SZ /d 255.255.255.0 /f"
+	wshshell.run "c:\tools\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & sSettingID & " /v NameServer /t REG_SZ /d 10.0.0.2 /f" 'reg entry to set DNS
+	wshshell.run "c:\tools\reg add HKLM\System\CurrentControlSet\Services\NetBT\Parameters\Interfaces\Tcpip_" & sSettingID & " /v NameServerList /t REG_MULTI_SZ /d 10.0.0.2 /f" 'reg entry to set DNS
+        Exit For
+      End If
+    Next
+  Next
+End If
+

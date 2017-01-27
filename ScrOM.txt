@@ -1,0 +1,576 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Const ID_BUTTON_DOC_LEFT		= "btDocLeft"
+Const ID_BUTTON_DOC_RIGHT		= "btDocRight"
+Const ID_BUTTON_INT_LEFT		= "btIntLeft"
+Const ID_BUTTON_INT_RIGHT		= "btIntRight"
+
+' these elements are never made visible
+Const ID_DOCKEYBG				= "Bound_DocumentKeyBg"
+Const ID_INTKEYBG				= "Bound_InterchangeKeyBg1"
+Const ID_DOCRECEIPTINTERCHANGE = "Bound_DocumentReceiptInterchange"
+
+Const ID_CONTAINER_DOC_CAPTION	= "CaptionDocument"
+Const ID_CONTAINER_INT_CAPTION	= "CaptionInterchange"
+Const ID_CONTAINER_INT_HEADER	= "HeaderInterChange"
+Const ID_CONTAINER_NAVIGATION	= "NavigationSectionInterChange"
+Const ID_EXPAND					= "dta_ui_get_interchangeExpand"
+Const ID_NAVIGATION				= "dta_ui_get_interchangeNavigation"
+Const LEFT_THRESHOLD		= 20
+Const RIGHT_THRESHOLD		= 770
+Const STANDARD_LEFT			= 20 'this is based on the width of the left arrow
+Const STANDARD_RIGHT		= 760 'The left position of right button is 760px.
+'Const STANDARD_DOC_LEFT			= 0 'this is based on the width of the left arrow
+'Const STANDARD_DOC_RIGHT		= 740 'The left position of right button is 760px.
+'Const STANDARD_INT_LEFT			= 20 'this is based on the width of the left arrow
+'Const STANDARD_INT_RIGHT		= 760 'The left position of right button is 760px.
+Const COLUMN_AND_GAP_WIDTH	= 25
+Const DOC_SHIFT_INCREMENT   = 500
+Const INT_SHIFT_INCREMENT   = 500
+Const PAGE_TYPE_DOC = "Doc"
+Const PAGE_TYPE_INT = "Int"
+Const NAV_DIRECTION_NEXT = "Next"
+Const NAV_DIRECTION_PREV = "Prev"
+
+Dim g_intLastLeftPosition 'left position of the left-most element on last page
+Dim g_sNavDirection 'this indicates the direction
+Dim g_bIsFromLastPage
+Dim g_bIsEnteringLastPage
+Dim g_bIsAtLastPage
+
+'// Routine to shift every child of a given container over a given amount
+'//			and hide the elements out of range
+'// Container should be a something like a DIV
+'// sglIncr is the number of units to move the child elements.
+'// USE a negative number to shift the elements to the left		
+Private Sub ShiftHideSectionElements(Container, sglIncr, bUpdateVisibilityStatus)
+	Dim o		'// As Object
+	Dim id
+	Dim posLeft, posWidth
+	
+	For Each o In Container.children
+		id = o.id
+		posLeft = o.style.posLeft
+		posWidth = o.style.posWidth
+		If id <> ID_BUTTON_DOC_LEFT And id <> ID_BUTTON_DOC_RIGHT And _
+			id <> ID_BUTTON_INT_LEFT And id <> ID_BUTTON_INT_RIGHT And _
+			id <> ID_EXPAND Then
+			o.style.posLeft = posLeft + sglIncr
+			If bUpdateVisibilityStatus = True Then
+				posLeft = o.style.posLeft
+				If posLeft < LEFT_THRESHOLD Or posLeft > RIGHT_THRESHOLD or posLeft = RIGHT_THRESHOLD Then
+					o.style.visibility = "hidden"
+				Else
+					If id = ID_DOCKEYBG or id = ID_INTKEYBG or id = ID_DOCRECEIPTINTERCHANGE Then
+						o.style.visibility = "hidden"
+					Else
+						o.style.visibility = "visible"
+					End If					
+				End If
+			End If
+		End If
+	Next
+End Sub	
+
+'Shift and/or hide elements in a data page
+'sPageType: either PAGE_TYPE_DOC or PAGE_TYPE_INT
+'sglIncr: increment
+'bUpdateVisibilityStatus: whether tp change the visibility status
+Private Sub ShiftHidePageElements(sPageType, sglIncr, bUpdateVisibilityStatus)	
+	Dim sect
+	Set sect = MSODSC.CurrentSection.DataPage.FirstSection
+	Do While sect Is Nothing = False
+		If sPageType = PAGE_TYPE_DOC Then
+			If sect.HTMLContainer.id <> ID_CONTAINER_NAVIGATION Then
+				Call ShiftHideSectionElements(sect.HTMLContainer, sglIncr, bUpdateVisibilityStatus)
+			End If
+		ElseIf sPageType = PAGE_TYPE_INT Then
+			If sect.HTMLContainer.id = ID_CONTAINER_INT_CAPTION or _
+				sect.HTMLContainer.id = ID_CONTAINER_INT_HEADER Then
+				Call ShiftHideSectionElements(sect.HTMLContainer, sglIncr, bUpdateVisibilityStatus)
+			End If	
+		End If
+		Set sect = sect.NextSibling
+	Loop	
+End Sub	
+
+'Get the Left position of the element inside the container 
+'that is the furthest to the left 
+Function GetSectionLeftMostPosition(Container)
+	Dim o			'// As Object
+	Dim lngLeft		'// As Long
+	Dim id, posLeft
+	Dim strid
+
+	lngLeft = 999999
+	For Each o In Container.children
+		id = o.id
+		posLeft = o.style.posLeft
+
+		If Trim(id & "") <> "" AND id <> ID_BUTTON_DOC_LEFT And _
+			id <> ID_BUTTON_DOC_RIGHT And id <> ID_CONTAINER_DOC_CAPTION And _
+			id <> ID_BUTTON_INT_LEFT And id <> ID_BUTTON_INT_RIGHT And _
+			id <> ID_CONTAINER_DOC_CAPTION AND id <> ID_EXPAND AND _
+			id <> ID_NAVIGATION	AND LCase(Left(id,3)) <> "img" Then
+			If posLeft < lngLeft Then
+				lngLeft = posLeft
+				strid = id
+			End If	
+		End If
+	Next		
+	GetSectionLeftMostPosition = lngLeft
+End Function
+
+'Get the Right position of the element inside the container 
+'that is the furthest to the right.
+Private Function GetSectionRightMostPosition(Container)
+	Dim o			'// As Object
+	Dim lngRight	'// As Long
+	Dim lngTemp
+	Dim strid
+		
+	lngRight = -999999
+
+	For Each o In Container.children
+		id = o.id
+		lngTemp = o.style.posLeft + o.style.posWidth
+
+		If Trim(id & "") <> "" AND id <> ID_BUTTON_DOC_LEFT And _
+			id <> ID_BUTTON_DOC_RIGHT And id <> ID_CONTAINER_DOC_CAPTION And _
+			id <> ID_BUTTON_INT_LEFT And id <> ID_BUTTON_INT_RIGHT And _
+			id <> ID_CONTAINER_DOC_CAPTION AND id <> ID_EXPAND AND _
+			id <> ID_NAVIGATION	Then
+			lngTemp = o.style.posLeft + o.style.posWidth
+			If lngTemp > lngRight Then
+				lngRight = lngTemp
+				strid = id
+			End If	
+		End If
+	Next
+
+	GetSectionRightMostPosition = lngRight
+End Function
+
+'Get the Left position of the visible element inside the container 
+'that is the furthest to the left 
+Function GetSectionLeftMostVisiblePosition(Container)
+	Dim o			'// As Object
+	Dim lngLeft		'// As Long
+	Dim id, posLeft
+		
+	lngLeft = 999999
+	For Each o In Container.children
+		id = o.id
+		posLeft = o.style.posLeft
+		If o.style.visibility <> "hidden" And id <> ID_BUTTON_DOC_LEFT And id <> ID_BUTTON_DOC_RIGHT And _
+			id <> ID_CONTAINER_DOC_CAPTION And id <> ID_BUTTON_INT_LEFT _
+			And id <> ID_BUTTON_INT_RIGHT And id <> ID_CONTAINER_DOC_CAPTION _
+			AND id <> ID_EXPAND AND id <> ID_NAVIGATION	_
+			AND LCase(Left(id,3)) <> "img" Then
+			If posLeft < lngLeft Then
+				lngLeft = posLeft
+			End If	
+		End If
+	Next
+		
+	GetSectionLeftMostVisiblePosition = lngLeft
+	
+End Function
+
+'Get the Right position of the visible element inside the container 
+'that is the furthest to the right.
+Function GetSectionRightMostVisiblePosition(Container)
+	Dim o			'// As Object
+	Dim lngRight		'// As Long
+	Dim lngTemp
+	Dim id
+		
+	lngRight = -999999
+	For Each o In Container.children
+		id = o.id
+		If o.style.visibility <> "hidden" And id <> ID_BUTTON_DOC_LEFT And id <> ID_BUTTON_DOC_RIGHT And _
+			id <> ID_CONTAINER_DOC_CAPTION And id <> ID_BUTTON_INT_LEFT _
+			And id <> ID_BUTTON_INT_RIGHT And id <> ID_CONTAINER_DOC_CAPTION _
+			AND id <> ID_EXPAND AND id <> ID_NAVIGATION	_
+			AND LCase(Left(id,3)) <> "img" Then
+			lngTemp = o.style.posLeft + o.style.posWidth
+			If lngTemp > lngRight Then
+				lngRight = lngTemp
+			End If	
+		End If
+	Next
+	GetSectionRightMostVisiblePosition = lngRight	
+End Function
+
+Private Function GetDocPageLeftMostPosition()
+	Dim lngLeft
+	Dim lngTemp
+	Dim sect
+	
+	lngLeft = 99999	
+	Set sect = MSODSC.CurrentSection.DataPage.FirstSection
+	Do While Sect Is Nothing = False
+		If sect.HTMLContainer.id <> ID_CONTAINER_NAVIGATION Then	
+			lngTemp = GetSectionLeftMostPosition(sect.HTMLContainer)
+			If lngTemp < lngLeft Then
+				lngLeft = lngTemp
+			End If
+		End If
+		Set sect = sect.NextSibling
+	Loop	
+	GetDocPageLeftMostPosition = lngLeft
+End Function
+
+Private Function GetIntPageLeftMostPosition()
+	Dim lngLeft
+	Dim lngTemp
+	Dim sect
+	Dim id
+	
+	lngLeft = 99999	
+	Set sect = MSODSC.CurrentSection.DataPage.FirstSection
+	Do While Sect Is Nothing = False
+		id = sect.HTMLContainer.id
+		If id = ID_CONTAINER_INT_CAPTION or id = ID_CONTAINER_INT_HEADER Then	
+			lngTemp = GetSectionLeftMostPosition(sect.HTMLContainer)
+			If lngTemp < lngLeft Then
+				lngLeft = lngTemp
+			End If
+		End If
+		Set sect = sect.NextSibling
+	Loop	
+	GetIntPageLeftMostPosition = lngLeft
+End Function
+
+Private Function GetDocPageRightMostPosition()
+	Dim lngRight
+	Dim lngTemp
+	Dim sect
+	
+	lngRight = -99999	
+	Set sect = MSODSC.CurrentSection.DataPage.FirstSection
+	Do While Sect Is Nothing = False
+		If sect.HTMLContainer.id <> ID_CONTAINER_NAVIGATION Then
+			lngTemp = GetSectionRightMostPosition(sect.HTMLContainer)
+			If lngTemp > lngRight Then
+				lngRight = lngTemp
+			End If
+		End If
+		Set sect = sect.NextSibling
+			
+	Loop
+	
+	GetDocPageRightMostPosition = lngRight	
+End Function
+
+Private Function GetIntPageRightMostPosition()
+	Dim lngRight
+	Dim lngTemp
+	Dim sect, id
+	
+	lngRight = -99999	
+	Set sect = MSODSC.CurrentSection.DataPage.FirstSection
+	Do While Sect Is Nothing = False
+		id = sect.HTMLContainer.id
+		If id = ID_CONTAINER_INT_CAPTION or id = ID_CONTAINER_INT_HEADER Then	
+			lngTemp = GetSectionRightMostPosition(sect.HTMLContainer)
+			If lngTemp > lngRight Then
+				lngRight = lngTemp
+			End If
+		End If
+		Set sect = sect.NextSibling		
+	Loop
+	GetIntPageRightMostPosition = lngRight	
+End Function
+
+Private Function GetDocPageLeftMostVisiblePosition()
+	Dim lngLeft
+	Dim lngTemp
+	Dim sect
+	
+	lngLeft = 99999	
+	Set sect = MSODSC.CurrentSection.DataPage.FirstSection
+	Do While Sect Is Nothing = False
+		If sect.HTMLContainer.id <> ID_CONTAINER_NAVIGATION Then
+			lngTemp = GetSectionLeftMostVisiblePosition(sect.HTMLContainer)
+			If lngTemp < lngLeft Then
+				lngLeft = lngTemp
+			End If
+		End If
+		Set sect = sect.NextSibling
+	Loop	
+	GetDocPageLeftMostVisiblePosition = lngLeft
+End Function
+
+Private Function GetIntPageLeftMostVisiblePosition()
+	Dim lngLeft
+	Dim lngTemp
+	Dim sect, id
+	
+	lngLeft = 99999	
+	Set sect = MSODSC.CurrentSection.DataPage.FirstSection
+	Do While Sect Is Nothing = False
+		id = sect.HTMLContainer.id
+		If id = ID_CONTAINER_INT_CAPTION or id = ID_CONTAINER_INT_HEADER Then	
+			lngTemp = GetSectionLeftMostVisiblePosition(sect.HTMLContainer)
+			If lngTemp < lngLeft Then
+				lngLeft = lngTemp
+			End If
+		End If
+		Set sect = sect.NextSibling
+	Loop	
+	GetIntPageLeftMostVisiblePosition = lngLeft
+End Function
+
+Private Function GetDocPageRightMostVisiblePosition()
+	Dim lngRight
+	Dim lngTemp
+	Dim sect
+	
+	lngRight = -99999	
+	Set sect = MSODSC.CurrentSection.DataPage.FirstSection
+	Do While Sect Is Nothing = False
+		If sect.HTMLContainer.id <> ID_CONTAINER_NAVIGATION Then
+			lngTemp = GetSectionRightMostVisiblePosition(sect.HTMLContainer)
+			If lngTemp > lngRight Then
+				lngRight = lngTemp
+			End If
+		End If
+		Set sect = sect.NextSibling
+	Loop
+	
+	GetDocPageRightMostVisiblePosition = lngRight	
+End Function
+
+Private Function GetIntPageRightMostVisiblePosition()
+	Dim lngRight
+	Dim lngTemp
+	Dim sect, id
+	
+	lngRight = -99999	
+	Set sect = MSODSC.CurrentSection.DataPage.FirstSection
+	Do While Sect Is Nothing = False
+		id = sect.HTMLContainer.id
+		If id = ID_CONTAINER_INT_CAPTION or id = ID_CONTAINER_INT_HEADER Then	
+			lngTemp = GetSectionRightMostVisiblePosition(sect.HTMLContainer)
+			If lngTemp > lngRight Then
+				lngRight = lngTemp
+			End If
+		End If
+		Set sect = sect.NextSibling
+	Loop
+	
+	GetIntPageRightMostVisiblePosition = lngRight	
+End Function
+	
+Private Sub ResultsScrolling(id)
+	Dim lngLeft
+	Dim lngRight
+	Dim lngGap
+
+	If id = ID_BUTTON_DOC_LEFT Then
+		lngLeft = GetDocPageLeftMostPosition
+		If lngLeft < LEFT_THRESHOLD Then
+			'Shift the elements
+			lngGap = LEFT_THRESHOLD - lngLeft
+			If lngGap > DOC_SHIFT_INCREMENT Then
+				Call ShiftHidePageElements(PAGE_TYPE_DOC, DOC_SHIFT_INCREMENT, True)
+			Else
+				Call ShiftHidePageElements(PAGE_TYPE_DOC,lngGap, True)
+			End If
+			'Check the position of the left most visible element	
+			lngLeft = GetDocPageLeftMostVisiblePosition
+			'shift the positions so the left most visible elements starts at
+			'LEFT_THRESHOLD
+			Call ShiftHidePageElements(PAGE_TYPE_DOC, LEFT_THRESHOLD - lngleft, False)
+			'Since we have shifted the positions, update the visibility status again
+			Call ShiftHidePageElements(PAGE_TYPE_DOC, 0, True)
+		End If
+		'Dim the left button if this is the leftmost position
+		If GetDocPageLeftMostPosition >= LEFT_THRESHOLD Then
+			ModifyDocArrow ID_BUTTON_DOC_LEFT, True
+		End If
+		ModifyDocArrow ID_BUTTON_DOC_RIGHT, False
+	ElseIf id = ID_BUTTON_DOC_RIGHT Then
+		lngRight = GetDocPageRightMostPosition
+		If lngRight > RIGHT_THRESHOLD Then
+			lngGap = lngRight - RIGHT_THRESHOLD
+			If lngGap > DOC_SHIFT_INCREMENT Then
+				Call ShiftHidePageElements(PAGE_TYPE_DOC, -DOC_SHIFT_INCREMENT, True)
+			Else
+				Call ShiftHidePageElements(PAGE_TYPE_DOC, -lngGap, True)
+			End If
+			'Check the position of the left most visible element
+			lngLeft = GetDocPageLeftMostVisiblePosition
+			Call ShiftHidePageElements(PAGE_TYPE_DOC, LEFT_THRESHOLD - lngleft, False)		
+			Call ShiftHidePageElements(PAGE_TYPE_DOC, 0, True)
+		End If
+		'Dim the right button if this is the rightmost position
+		If GetDocPageRightMostPosition <= RIGHT_THRESHOLD Then
+			ModifyDocArrow ID_BUTTON_DOC_RIGHT, True
+		End If
+		ModifyDocArrow ID_BUTTON_DOC_LEFT, False
+	ElseIf id = ID_BUTTON_INT_LEFT Then
+		lngLeft = GetIntPageLeftMostPosition
+		If lngLeft < LEFT_THRESHOLD Then
+			'Shift the elements
+			lngGap = LEFT_THRESHOLD - lngLeft
+			If lngGap > INT_SHIFT_INCREMENT Then
+				Call ShiftHidePageElements(PAGE_TYPE_INT, DOC_SHIFT_INCREMENT, True)
+			Else
+				Call ShiftHidePageElements(PAGE_TYPE_INT, lngGap, True)
+			End If
+			'Check the position of the left most visible element
+			lngLeft = GetIntPageLeftMostVisiblePosition
+			Call ShiftHidePageElements(PAGE_TYPE_INT, LEFT_THRESHOLD - lngleft, False)		
+			Call ShiftHidePageElements(PAGE_TYPE_INT, 0, True)
+		End If
+		'Dim the left button if this is the leftmost position
+		If GetIntPageLeftMostPosition >= LEFT_THRESTHOLD Then
+			document.all.item(ID_BUTTON_INT_LEFT).disabled = True
+		End If
+		document.all.item(ID_BUTTON_INT_RIGHT).disabled = False
+	ElseIf id = ID_BUTTON_INT_RIGHT Then
+		lngRight = GetIntPageRightMostPosition
+		If lngRight > RIGHT_THRESHOLD Then
+			lngGap = lngRight - RIGHT_THRESHOLD
+			If lngGap > INT_SHIFT_INCREMENT Then
+				Call ShiftHidePageElements(PAGE_TYPE_INT, -DOC_SHIFT_INCREMENT, True)
+			Else
+				Call ShiftHidePageElements(PAGE_TYPE_INT, -lngGap, True)
+			End If
+			'Check the position of the left most visible element
+			lngLeft = GetIntPageLeftMostVisiblePosition
+			Call ShiftHidePageElements(PAGE_TYPE_INT, LEFT_THRESHOLD - lngleft, False)		
+			Call ShiftHidePageElements(PAGE_TYPE_INT, 0, True)
+		End If
+		'Dim the right button if this is the rightmost position
+		If GetIntPageRightMostPosition <= RIGHT_THRESHOLD Then
+			document.all.item(ID_BUTTON_INT_RIGHT).disabled = True
+		End If
+		document.all.item(ID_BUTTON_INT_LEFT).disabled = False
+	End If				
+End Sub
+
+
+
+Private Sub ReInitializeScrollPosition()
+	Dim lngLeft, lngGap
+	lngLeft = GetIntPageLeftMostPosition
+	'lngLeft = g_intLastLeftPosition
+	'reset the position so that the left most element is first visible 
+	'element, i.e. reset to positions at design mode
+	lngGap = LEFT_THRESHOLD - lngLeft
+	Call ShiftHidePageElements(PAGE_TYPE_INT, lngGap, True)
+End Sub
+
+' This routine resets the positions to the stored 
+' value (g_intLastLeftPosition)
+Private Sub ReApplyPosition()
+	Dim lngLeft
+	Dim lngGap
+
+	lngLeft = g_intLastLeftPosition
+	lngGap = lngLeft - LEFT_THRESHOLD
+	Call ShiftHidePageElements(PAGE_TYPE_INT, lngGap, True)	
+End Sub	
+	
+'call by MSODSC_DataPageComplete		 
+Private Sub Scroll_DataPageComplete()	
+
+'	MsgBox "g_bIsFromLastPage: " & g_bIsFromLastPage
+'	'Three possibilities:
+'	'(1) first enter the results page: g_sNavDirection is not set yet
+'	'(2) movenext
+'	'(3) moveprevious	
+'	'(4) movefirst
+'	'(5) movelast
+	
+'	If g_bIsFromLastPage = True Then
+'		Call ReApplyPosition
+'		g_bIsFromLastPage = False
+'		g_bIsEnteringLastPage = False
+'		g_bIsAtLastPage = False
+'	Else
+'		If g_bIsEnteringLastPage = True Then
+'			g_bIsAtLastPage = True
+'			g_bIsEnteringLastPage = False
+'			g_bIsFromLastPage = False
+'		End If
+'	End If
+End Sub
+
+Private Sub Scroll_BeforeLastPage()
+	ReInitializeScrollPosition
+'	MsgBox "Before Last page"
+'	g_bIsEnteringLastPage = True
+'	g_bIsAtLastPage = False
+'	g_bIsFromLastPage = False
+End Sub
+
+Private Sub Scroll_BeforeFirstPage()
+	ReInitializeScrollPosition
+'	MsgBox "Before first page"
+'	If g_bIsAtLastPage = True Then
+'		g_intLastLeftPosition = GetIntPageLeftMostPosition
+'		ReinitializeScrollPosition
+'		g_bIsFromLastPage = True
+'		g_bIsEnteringLastPage = False
+'	Else
+'		g_bIsFromLastPage = False		
+'	End If
+End Sub
+
+Private Sub Scroll_BeforeNextPage()
+	ReInitializeScrollPosition
+	'	MsgBox "Before Next Page"
+End Sub
+
+'This routine is called by the MSODSC_BeforePreviousPage event
+Private Sub Scroll_BeforePreviousPage()
+	ReInitializeScrollPosition
+'	MsgBox "Before Previous page"
+'	If g_bIsAtLastPage = True Then
+'		g_intLastLeftPosition = GetIntPageLeftMostPosition
+'		ReInitializeScrollPosition
+'		g_bIsFromLastPage = True
+'		g_bIsEnteringLastPage = False
+'	Else
+'		g_bIsFromLastPage = False
+'	End If
+End Sub	
+
+'This procedure disables or enables the current section's right
+'or left navigation arrow as specified by the input parameters
+Private Sub ModifyDocArrow(strID, blnDisable)
+	Dim Sect
+	Dim o		'As Object
+
+	'Get the current section
+	Set Sect = MSODSC.CurrentSection.DataPage.FirstSection
+	Do Until Sect Is Nothing
+		If sect.HTMLContainer.id <> ID_CONTAINER_NAVIGATION Then
+			'Loop through all the items in the container to find
+			'the object we're looking for (strID)
+			For Each o In Sect.HTMLContainer.children
+				If o.id = strID Then
+					If blnDisable Then
+						o.disabled = True
+					Else
+						o.disabled = False
+					End If
+				End If
+			Next
+		End If
+		Set Sect = Sect.NextSibling
+	Loop
+End Sub
+

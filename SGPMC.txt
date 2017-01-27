@@ -1,0 +1,564 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'--------------------------------------------------------------------------
+'
+' This script file creates all additional attributes required for out-of-box
+' profiles installed with Commerce Server 4.0.
+'
+'--------------------------------------------------------------------------
+
+Dim iDex
+Dim oArgs
+Dim oDSE
+Dim oNewAttribute
+Dim oProvider
+Dim oSchema
+Dim sNC
+Dim sAttributeOID
+Dim rgsArrtibutes
+
+Dim oClass
+Dim oContact
+Dim oOrganization
+Dim oUser
+Dim oMSCommerceBase
+Dim oMSCommerceContact
+Dim oMSCommerceOU
+Dim oMSCommerceUser
+Dim oNewClass
+
+'--------------------------------------------------------------------------
+'
+' Global constants
+'
+'--------------------------------------------------------------------------
+
+' MS-Commerce specific OIDs.
+Public Const sCommerceAttributeOID		= "1.2.840.113556.1.4.7000.300."
+Public Const sCommerceClassOID			= "1.2.840.113556.1.4.7000.136."
+
+' ADSI constants.
+Public Const STRUCTURAL_CLASS			= 1
+Public Const AUXILIARY_CLASS			= 3
+
+Public Const ADS_SECURE_AUTHENTICATION	= 1
+
+Public Const ADS_PROPERTY_APPEND		= 3
+
+' MS-Commerce specific auxiliary classes.
+Public Const iMSCommerceBase					= 1
+Public Const sMSCommerceBase					= "MS-Commerce-Base"
+Public Const iMSCommerceContact					= 2
+Public Const sMSCommerceContact					= "MS-Commerce-Contact"
+Public Const iMSCommerceOU						= 3
+Public Const sMSCommerceOU						= "MS-Commerce-Organizational-Unit"
+Public Const iMSCommerceUser					= 4
+Public Const sMSCommerceUser					= "MS-Commerce-User"
+										
+' MS-Commerce specific structural classes.
+Public Const iMSCommerceAccountNumberClass		= 5
+Public Const sMSCommerceAccountNumberClass		= "MS-Commerce-Account-Number-Class"
+Public Const iMSCommerceAccountNumberCostCenter	= 6
+Public Const sMSCommerceAccountNumberCostCenter	= "MS-Commerce-Account-Number-Cost-Center"
+Public Const iMSCommerceBlanketPO				= 7
+Public Const sMSCommerceBlanketPO				= "MS-Commerce-Blanket-PO"
+Public Const iMSCommerceCostCenter				= 8
+Public Const sMSCommerceCostCenter				= "MS-Commerce-Cost-Center-Class"
+Public Const iMSCommerceLocation				= 9
+Public Const sMSCommerceLocation				= "MS-Commerce-Location"
+Public Const iMSCommerceRequisitionClass		= 10
+Public Const sMSCommerceRequisitionClass		= "MS-Commerce-Requisition-Class"
+
+' oMSyntax constants
+Public Const oMSyntaxInteger				= 2
+Public Const oMSyntaxStringOctet			= 4
+Public Const oMSyntaxGeneralizedTime		= 24
+Public Const oMSyntaxStringUnicode			= 64
+Public Const oMSyntaxLargeInteger			= 65
+
+' attributeSyntax constants
+Public Const attributeSyntaxInteger			= "2.5.5.9"
+Public Const attributeSyntaxStringOctet		= "2.5.5.10"
+Public Const attributeSyntaxStringGeneralizedTime = "2.5.5.11"
+Public Const attributeSyntaxStringUnicode	= "2.5.5.12"
+Public Const attributeSyntaxLargeInteger	= "2.5.5.16"
+
+' Stop
+
+Set oArgs = WScript.Arguments
+If (oArgs.Count <> 3) Then
+  WScript.Echo "Usage: setupCommerceADObjects <ServerName> <Admin> <Password> "
+  ' Example: setupCommerceADObjects jayaram2-ps "jayaram2-ps\administrator" ""
+  WScript.Quit(-1)
+End If
+
+' Get the LDAP provider object.
+Set oProvider = GetObject("LDAP:")
+
+' Get the RootDSE object.
+Set oDSE = oProvider.OpenDSObject("LDAP://" & oArgs(0) & "/RootDSE", oArgs(1), oArgs(2), ADS_SECURE_AUTHENTICATION)
+
+' Get the schemaNamingContext.
+sNC = oDSE.Get("schemaNamingContext")
+Set oSchema = oProvider.OpenDSObject("LDAP://" & oArgs(0) & "/" & sNC, oArgs(1), oArgs(2), ADS_SECURE_AUTHENTICATION)
+
+' Disable error trapping.
+On Error Resume Next
+
+' Check to see if MS-Commerce specific entities have already been installed. This is done
+' by looking up to see if the very last entity created by this script exists or not.
+Set oClass = oSchema.GetObject("classSchema", "cn=" & sMSCommerceRequisitionClass)
+If (Err.Number = 0) Then
+  Wscript.Echo "MS-Commerce specific entities have already been installed. Therefore, the current setup is being terminated."
+  Wscript.Quit(-1)
+End If
+
+' Enable error trapping.
+On Error Goto 0
+
+' Stop
+
+'--------------------------------------------------------------------------
+'
+' Store name and type of all additional attributes.
+' 
+' Notes: All attributes are described in alphabetical order.
+'
+'--------------------------------------------------------------------------
+
+rgsAttributes = _
+  Array( _
+    Array("MS-Commerce-Account-Class",					attributeSyntaxInteger),  _
+	Array("MS-Commerce-Account-Number", 				attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Account-Status",					attributeSyntaxInteger),  _
+	Array("MS-Commerce-Address-ID",						attributeSyntaxInteger),  _
+	Array("MS-Commerce-Address-Type",					attributeSyntaxInteger),  _
+	Array("MS-Commerce-Approval-Email-Options",			attributeSyntaxInteger),  _
+	Array("MS-Commerce-Approval-Limit",					attributeSyntaxInteger),  _
+	Array("MS-Commerce-Approval-Limit-Currency",		attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Approving-Manager-ID",			attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Biz-Desk-Role-Flags",			attributeSyntaxInteger),  _
+	Array("MS-Commerce-Biz-Desk-State",					attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Catalog-Name",					attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Category-Name",					attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-City",							attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Country-Code",					attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Default-Account-Number",			attributeSyntaxStringUnicode),  _	
+	Array("MS-Commerce-Default-Account-Profile-ID",		attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Default-Blanket-PO-Number",		attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Default-Blanket-PO-Profile-ID",	attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Default-Cost-Center-Number",		attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Default-Cost-Center-Profile-ID",	attributeSyntaxInteger),  _
+	Array("MS-Commerce-Default-Ship-To-Address-ID",		attributeSyntaxInteger),  _
+	Array("MS-Commerce-Default-Ship-To-Location-ID",	attributeSyntaxInteger),  _
+	Array("MS-Commerce-Directions-1",					attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Directions-2",					attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Employee-Class-ID",				attributeSyntaxInteger),  _
+	Array("MS-Commerce-HTML-Corp-Help-Text",			attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-ID-Code",						attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-ID-Code-Qualifier",				attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Location-ID",					attributeSyntaxInteger),  _
+	Array("MS-Commerce-OBI-Catalog-URL",				attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-OBI-Receive-Doc-Type",			attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-OBI-Send-Doc-Type",				attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-OBI-Status-URL",					attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Order-Send-Doc-Type",			attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Org-ID",							attributeSyntaxStringUnicode),  _		
+	Array("MS-Commerce-Org-Type",						attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Partner-Desk-Role-Flags",		attributeSyntaxInteger),  _
+	Array("MS-Commerce-Payment-Change-Options",			attributeSyntaxInteger),  _
+	Array("MS-Commerce-Payment-Types-Accepted",			attributeSyntaxInteger),  _
+	Array("MS-Commerce-Profile-ID",						attributeSyntaxStringUnicode),  _	
+	Array("MS-Commerce-Ship-To-ChangeOptions",			attributeSyntaxInteger),  _
+	Array("MS-Commerce-Ship-To-ID",						attributeSyntaxInteger),  _
+	Array("MS-Commerce-Ship-To-LevelOptions",			attributeSyntaxInteger),  _
+	Array("MS-Commerce-Ship-To-MethodCode",				attributeSyntaxInteger),  _
+	Array("MS-Commerce-Signup-Discount-Expires",		attributeSyntaxStringGeneralizedTime),  _
+	Array("MS-Commerce-Signup-Discount-Percentage",		attributeSyntaxInteger),  _
+	Array("MS-Commerce-SMTP-Server",					attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-State",							attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Telephone-Extension",			attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Trading-Partner-Number",			attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-User-Auth-Type",					attributeSyntaxInteger),  _
+	Array("MS-Commerce-User-ID-Admin-Contact",			attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-User-ID-Changed-By",				attributeSyntaxStringUnicode),  _		
+	Array("MS-Commerce-User-ID-Purchasing-Manager",		attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-User-ID-Receiver",				attributeSyntaxStringUnicode),  _
+	Array("MS-Commerce-Vendor-ID",						attributeSyntaxStringUnicode))
+											
+' Stop
+
+' Now, create all the above attributes
+For iDex = 0 to UBound(rgsAttributes)
+  
+  ' Fetch iDexth element.
+  sElem = rgsAttributes(iDex)
+
+  ' Get Name and Type of this element
+  sName = sElem(0)
+  sType = sElem(1)
+
+  ' Generate an OID for this attribute
+  sAttributeOID = sCommerceAttributeOID & CStr(iDex)
+
+  ' Create the new attribute object
+  Set oNewAttribute = oSchema.Create("attributeSchema", "cn=" & sName)
+
+  ' Set parameters on the new attribute object
+  oNewAttribute.Put "cn", sName
+  oNewAttribute.Put "attributeID", sAttributeOID
+
+  ' Set attributeSyntax and oMSyntax values.
+  Select Case sType
+  
+    ' Unicode String
+    Case attributeSyntaxInteger
+    oNewAttribute.Put "oMSyntax", oMSyntaxInteger
+    oNewAttribute.Put "attributeSyntax", attributeSyntaxInteger
+
+    Case attributeSyntaxStringUnicode
+    oNewAttribute.Put "oMSyntax", oMSyntaxStringUnicode
+    oNewAttribute.Put "attributeSyntax", attributeSyntaxStringUnicode
+
+	Case attributeSyntaxStringGeneralizedTime
+    oNewAttribute.Put "oMSyntax", oMSyntaxGeneralizedTime
+    oNewAttribute.Put "attributeSyntax", attributeSyntaxStringGeneralizedTime
+
+  End Select
+
+  ' Is this a SV/MV property? 
+  ' NOTE: For now, assume that all properties are single-valued.
+  oNewAttribute.Put "isSingleValued", True
+  
+  ' Write this back to DS.
+  oNewAttribute.SetInfo
+Next
+
+' Commit RootDSE object.
+oDSE.Put "schemaUpdateNow", 1
+oDSE.SetInfo
+
+' Stop
+
+'--------------------------------------------------------------------------
+'
+' Create MS-Commerce-Base auxiliary class.
+'
+'--------------------------------------------------------------------------
+
+Set oMSCommerceBase = oSchema.Create("classSchema", "cn=" & sMSCommerceBase)
+
+' Set parameters on this new class object
+oMSCommerceBase.Put "cn", sMSCommerceBase
+oMSCommerceBase.Put "governsId", sCommerceClassOID & CStr(iMSCommerceBase)
+oMSCommerceBase.Put "objectClassCategory", AUXILIARY_CLASS
+oMSCommerceBase.Put "subClassOf", "top"
+oMSCommerceBase.Put "possSuperiors", "container"
+
+' Add some attributes to this auxillary class.
+oMSCommerceBase.Put "mayContain", Array("mSCommerceOrgID", "mSCommerceProfileID", "mSCommerceUserIDChangedBy")
+
+' Commit this class.
+oMSCommerceBase.SetInfo
+' oDSE.Put "schemaUpdateNow", 1
+
+'--------------------------------------------------------------------------
+'
+' Create MS-Commerce-Contact auxiliary class.
+'
+'--------------------------------------------------------------------------
+
+Set oMSCommerceContact = oSchema.Create("classSchema", "cn=" & sMSCommerceContact)
+
+' Set parameters on this new class object
+oMSCommerceContact.Put "cn", sMSCommerceContact
+oMSCommerceContact.Put "governsId", sCommerceClassOID & CStr(iMSCommerceContact)
+oMSCommerceContact.Put "objectClassCategory", AUXILIARY_CLASS
+oMSCommerceContact.Put "subClassOf", "top"
+oMSCommerceContact.Put "possSuperiors", "container"
+
+' Add some attributes to this auxillary class.
+oMSCommerceContact.Put "mayContain", Array("msCommerceAddressType", "msCommerceCity", "msCommerceCountryCode", "msCommerceState")
+
+' Commit this class.
+oMSCommerceContact.SetInfo
+' oDSE.Put "schemaUpdateNow", 1
+
+'--------------------------------------------------------------------------
+'
+' Create MS-Commerce-Organizational-Unit auxiliary class.
+'
+'--------------------------------------------------------------------------
+
+Set oMSCommerceOU = oSchema.Create("classSchema", "cn=" & sMSCommerceOU)
+
+' Set parameters on this new class object
+oMSCommerceOU.Put "cn", sMSCommerceOU
+oMSCommerceOU.Put "governsId", sCommerceClassOID & CStr(iMSCommerceOU)
+oMSCommerceOU.Put "objectClassCategory", AUXILIARY_CLASS
+oMSCommerceOU.Put "subClassOf", "top"
+oMSCommerceOU.Put "possSuperiors", "container"
+
+' Add some attributes to this auxillary class.
+oMSCommerceOU.Put "mayContain", _
+  Array( _
+	"mSCommerceApprovalEmailOptions", _
+	"mSCommerceDefaultAccountNumber", _
+	"mSCommerceDefaultAccountProfileID", _
+	"mSCommerceDefaultBlanketPONumber", _
+	"mSCommerceDefaultBlanketPOProfileID", _
+	"mSCommerceDefaultShipToAddressID", _
+	"mSCommerceDefaultShipToLocationID", _
+	"mSCommerceHTMLCorpHelpText", _
+	"mSCommerceOBICatalogURL", _
+	"mSCommerceOBIReceiveDocType", _
+	"mSCommerceOBISendDocType", _
+	"mSCommerceOBIStatusURL", _
+	"mSCommerceOrderSendDocType", _
+	"mSCommerceOrgType", _
+	"mSCommercePaymentTypesAccepted", _
+	"mSCommercePaymentChangeOptions", _
+	"mSCommerceShipToChangeOptions", _
+	"mSCommerceShipToLevelOptions", _
+	"mSCommerceSignupDiscountExpires", _
+	"mSCommerceSignupDiscountPercentage", _
+	"mSCommerceSMTPServer", _
+	"mSCommerceTradingPartnerNumber", _
+	"mSCommerceUserIDAdminContact", _
+	"mSCommerceUserIDPurchasingManager", _
+	"mSCommerceUserIDReceiver")
+
+' Commit this class.
+oMSCommerceOU.SetInfo
+' oDSE.Put "schemaUpdateNow", 1
+
+'--------------------------------------------------------------------------
+'
+' Create MS-Commerce-User auxiliary class.
+'
+'--------------------------------------------------------------------------
+
+Set oMSCommerceUser = oSchema.Create("classSchema", "cn=" & sMSCommerceUser)
+
+' Set parameters on this new class object
+oMSCommerceUser.Put "cn", sMSCommerceUser
+oMSCommerceUser.Put "governsId", sCommerceClassOID & CStr(iMSCommerceUser)
+oMSCommerceUser.Put "objectClassCategory", AUXILIARY_CLASS
+oMSCommerceUser.Put "subClassOf", "top"
+oMSCommerceUser.Put "possSuperiors", "container"
+
+' Add some attributes to this auxillary class.
+oMSCommerceUser.Put "mayContain", _
+  Array( _
+	"mSCommerceAccountClass", _
+	"mSCommerceAccountStatus", _
+	"mSCommerceApprovalLimit", _
+	"mSCommerceApprovalLimitCurrency", _
+	"mSCommerceApprovingManagerID", _
+	"mSCommerceBizDeskRoleFlags", _
+	"mSCommerceBizDeskState", _
+	"mSCommerceDefaultBlanketPONumber", _
+	"mSCommerceDefaultBlanketPOProfileID", _
+	"mSCommerceDefaultCostCenterNumber", _
+	"mSCommerceDefaultCostCenterProfileID", _
+	"mSCommerceEmployeeClassID", _
+	"mSCommerceIDCode", _
+	"mSCommerceIDCodeQualifier", _
+	"mSCommerceLocationID", _
+	"mSCommercePartnerDeskRoleFlags", _
+	"mSCommerceShipToID", _
+	"mSCommerceShipToMethodCode", _
+	"mSCommerceTelephoneExtension", _
+	"mSCommerceUserAuthType")
+
+' Commit this class.
+oMSCommerceUser.SetInfo
+
+' Commit RootDSE object.
+oDSE.Put "schemaUpdateNow", 1
+oDSE.SetInfo
+
+' Stop
+
+'--------------------------------------------------------------------------
+'
+' Add auxiliary classes to 'contact' class in AD.
+'
+'--------------------------------------------------------------------------
+Set oContact = oSchema.GetObject("classSchema", "cn=contact")
+oContact.PutEx ADS_PROPERTY_APPEND, "auxiliaryClass", Array("mSCommerceBase", "mSCommerceContact")
+
+' Commit changes.
+oContact.SetInfo
+' oDSE.Put "schemaUpdateNow", 1
+
+'--------------------------------------------------------------------------
+'
+' Add auxiliary classes to 'organizationalUnit' class in AD.
+'
+'--------------------------------------------------------------------------
+Set oOrganization = oSchema.GetObject("classSchema", "cn=organizational-Unit")
+oOrganization.PutEx ADS_PROPERTY_APPEND, "auxiliaryClass", Array("mSCommerceBase", "mSCommerceOrganizationalUnit")
+
+' Commit changes.
+oOrganization.SetInfo
+' oDSE.Put "schemaUpdateNow", 1
+
+'--------------------------------------------------------------------------
+'
+' Add auxiliary classes to 'user' class in AD.
+'
+'--------------------------------------------------------------------------
+Set oUser = oSchema.GetObject("classSchema", "cn=user")
+oUser.PutEx ADS_PROPERTY_APPEND, "auxiliaryClass", Array("mSCommerceBase", "mSCommerceUser")
+
+' Commit changes.
+oUser.SetInfo
+
+' Commit RootDSE object.
+oDSE.Put "schemaUpdateNow", 1
+oDSE.SetInfo
+
+'--------------------------------------------------------------------------
+'
+' Create 'MS-Commerce-Account-Number-Class' structural class.
+'
+'--------------------------------------------------------------------------
+Set oNewClass = oSchema.Create("classSchema","cn=" & sMSCommerceAccountNumberClass)
+
+' Set the parameters of this new class object.
+oNewClass.Put "cn", sMSCommerceAccountNumberClass
+oNewClass.Put "governsId", sCommerceClassOID & CStr(iMSCommerceAccountNumberClass)
+oNewClass.Put "objectClassCategory", STRUCTURAL_CLASS
+oNewClass.Put "subClassOf", "top"
+oNewClass.PutEx ADS_PROPERTY_APPEND, "possSuperiors", Array("container", "organizationalUnit")
+
+' Add mSCommerceBase class as an auxiliary class to this class.
+oNewClass.PutEx ADS_PROPERTY_APPEND, "auxiliaryClass", Array("mSCommerceBase")
+
+' Commit this class.
+oNewClass.SetInfo 
+'oDSE.Put "schemaUpdateNow",1 
+
+'--------------------------------------------------------------------------
+'
+' Create 'MS-Commerce-Account-Number-Cost-Center' structural class.
+'
+'--------------------------------------------------------------------------
+Set oNewClass = oSchema.Create("classSchema","cn=" & sMSCommerceAccountNumberCostCenter)
+
+' Set the parameters of this new class object.
+oNewClass.Put "cn", sMSCommerceAccountNumberCostCenter
+oNewClass.Put "governsId", sCommerceClassOID & CStr(iMSCommerceAccountNumberCostCenter)
+oNewClass.Put "objectClassCategory", STRUCTURAL_CLASS
+oNewClass.Put "subClassOf", "top"
+oNewClass.PutEx ADS_PROPERTY_APPEND, "possSuperiors", Array("container", "organizationalUnit")
+
+oNewClass.Put "mayContain", Array("mSCommerceAccountNumber")
+
+' Add mSCommerceBase class as an auxiliary class to this class.
+oNewClass.PutEx ADS_PROPERTY_APPEND, "auxiliaryClass", Array("mSCommerceBase")
+
+' Commit this class.
+oNewClass.SetInfo 
+' oDSE.Put "schemaUpdateNow",1 
+
+'--------------------------------------------------------------------------
+'
+' Create 'MS-Commerce-Blanket-PO' structural class.
+'
+'--------------------------------------------------------------------------
+Set oNewClass = oSchema.Create("classSchema","cn=" & sMSCommerceBlanketPO)
+
+' Set the parameters of this new class object.
+oNewClass.Put "cn", sMSCommerceBlanketPO
+oNewClass.Put "governsId", sCommerceClassOID & CStr(iMSCommerceBlanketPO)
+oNewClass.Put "objectClassCategory", STRUCTURAL_CLASS
+oNewClass.Put "subClassOf", "top"
+oNewClass.PutEx ADS_PROPERTY_APPEND, "possSuperiors", Array("container", "organizationalUnit")
+
+' Add mSCommerceBase class as an auxiliary class to this class.
+oNewClass.PutEx ADS_PROPERTY_APPEND, "auxiliaryClass", Array("mSCommerceBase")
+
+' Commit this class.
+oNewClass.SetInfo 
+'oDSE.Put "schemaUpdateNow",1 
+
+'--------------------------------------------------------------------------
+'
+' Create 'MS-Commerce-Cost-Center-Class' structural class.
+'
+'--------------------------------------------------------------------------
+Set oNewClass = oSchema.Create("classSchema","cn=" & sMSCommerceCostCenter)
+
+' Set the parameters of this new class object.
+oNewClass.Put "cn", sMSCommerceCostCenter
+oNewClass.Put "governsId", sCommerceClassOID & CStr(iMSCommerceCostCenter)
+oNewClass.Put "objectClassCategory", STRUCTURAL_CLASS
+oNewClass.Put "subClassOf", "top"
+oNewClass.PutEx ADS_PROPERTY_APPEND, "possSuperiors", Array("container", "organizationalUnit")
+
+' Add mSCommerceBase class as an auxiliary class to this class.
+oNewClass.PutEx ADS_PROPERTY_APPEND, "auxiliaryClass", Array("mSCommerceBase")
+
+' Commit this class.
+oNewClass.SetInfo 
+' oDSE.Put "schemaUpdateNow",1 
+
+'--------------------------------------------------------------------------
+'
+' Create 'MS-Commerce-Location' structural class.
+'
+'--------------------------------------------------------------------------
+Set oNewClass = oSchema.Create("classSchema","cn=" & sMSCommerceLocation)
+
+' Set the parameters of this new class object.
+oNewClass.Put "cn", sMSCommerceLocation
+oNewClass.Put "governsId", sCommerceClassOID & CStr(iMSCommerceLocation)
+oNewClass.Put "objectClassCategory", STRUCTURAL_CLASS
+oNewClass.Put "subClassOf", "top"
+oNewClass.PutEx ADS_PROPERTY_APPEND, "possSuperiors", Array("container", "organizationalUnit")
+
+oNewClass.Put "mayContain", Array("mSCommerceAddressID", "mSCommerceLocationID", "mSCommerceDirections1", "mSCommerceDirections2")
+
+' Add mSCommerceBase class as an auxiliary class to this class.
+oNewClass.PutEx ADS_PROPERTY_APPEND, "auxiliaryClass", Array("mSCommerceBase")
+
+' Commit this class.
+oNewClass.SetInfo 
+' oDSE.Put "schemaUpdateNow",1 
+
+'--------------------------------------------------------------------------
+'
+' Create 'MS-Commerce-Requisition-Class' structural class.
+'
+'--------------------------------------------------------------------------
+Set oNewClass = oSchema.Create("classSchema","cn=" & sMSCommerceRequisitionClass)
+
+' Set the parameters of this new class object.
+oNewClass.Put "cn", sMSCommerceRequisitionClass
+oNewClass.Put "governsId", sCommerceClassOID & CStr(iMSCommerceRequisitionClass)
+oNewClass.Put "objectClassCategory", STRUCTURAL_CLASS
+oNewClass.Put "subClassOf", "top"
+oNewClass.PutEx ADS_PROPERTY_APPEND, "possSuperiors", Array("container", "organizationalUnit")
+
+oNewClass.Put "mayContain", Array("mSCommerceCatalogName", "mSCommerceCategoryName", "mSCommerceDefaultAccountNumber", "mSCommerceDefaultAccountProfileID", "mSCommerceVendorID")
+
+' Add mSCommerceBase class as an auxiliary class to this class.
+oNewClass.PutEx ADS_PROPERTY_APPEND, "auxiliaryClass", Array("mSCommerceBase")
+
+' Commit this class.
+oNewClass.SetInfo 
+
+' Commit RootDSE object.
+oDSE.Put "schemaUpdateNow", 1
+oDSE.SetInfo
+

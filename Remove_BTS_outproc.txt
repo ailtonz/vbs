@@ -1,0 +1,62 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'#######################################################################
+'# Remove_BTS_inproc.vbs
+'# Copyright (C) 2000 Microsoft Corporation
+'# a-aluty, 31-Jan-2000
+'# Removes "BizTalk Server In-Process Package" COM+ Application.
+'#######################################################################
+
+Dim cat  'COMAdminCatalog
+Dim apps 'COMAdminCatalogCollection
+
+'-----------------------------------------------------------------------
+'Sets the application properties as read/write
+'
+Private Sub UnlockApp(apps, app)
+
+    '### Advanced Properties
+    app.Value("Deleteable") = True
+    app.Value("Changeable") = True
+
+    apps.SaveChanges
+End Sub
+
+
+'-----------------------------------------------------------------------
+'Deletes specified COMAdminCatalogObject from COMAdminCatalog
+'
+Private Sub DeleteApp(apps, strAppID)
+    Dim index 'Integer
+    Dim app   'COMAdminCatalogObject
+    
+    apps.Populate
+    For index = 0 To apps.Count - 1
+        Set app = apps.Item(index)
+        If app.Value("ID") = strAppID Then
+            UnlockApp apps, app
+            apps.Remove (index)
+            apps.SaveChanges
+            Exit For
+        End If
+    Next
+End Sub
+
+'-----------------------------------------------------------------------
+
+Const strAppID = "{6ECD95AC-3C06-4A9B-9D43-4565C1BD3319}"
+
+Set cat = CreateObject("COMAdmin.COMAdminCatalog")
+Set apps = cat.GetCollection("Applications")
+DeleteApp apps, strAppID
+
+'-----------------------------------------------------------------------
+

@@ -1,0 +1,34 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+
+Set WshShell = WScript.CreateObject("WScript.Shell")                                                    
+
+'change service to DHCP
+WshShell.RegWrite "HKLM\SYSTEM\CurrentControlSet\Services\DHCP\Start", 2 ,"REG_DWORD"
+
+'get GUID
+GUID = WshShell.RegRead ("HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkCards\1\ServiceName")
+
+'enable DHCP
+wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & GUID & " /v EnableDHCP /t REG_DWORD /d 1 /f"
+
+'NOTE: It is necessary to fill in the IPAddress and SubnetMask with 0.0.0.0. 
+'Blanking out or deleting the values will not work. 
+wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & GUID & " /v IPAddress /t REG_MULTI_SZ /d 0.0.0.0 /f"
+wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & GUID & " /v SubnetMask /t REG_MULTI_SZ /d 0.0.0.0 /f"
+
+'Set to obtain DNS server automatically
+wshshell.RegWrite "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & GUID & "\NameServer", "", "REG_SZ"
+
+'The workstation must be restarted for these changes to take effect
+'NOTE: Data values are 0 = Boot, 1 = System, 2 = Automatic, 3 = Manual, 4 = Disabled 
+

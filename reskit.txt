@@ -1,0 +1,39 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set WshShell = WScript.CreateObject("WScript.Shell")
+Set objNet = WScript.CreateObject("WScript.Network")
+
+CompName = objNet.ComputerName 
+CompName = lcase(CompName)
+NameArr = Split(CompName, "-")
+
+'Set domain controllers to log into nwtraders domain
+if NameArr(1) = "pf1" then
+	if NameArr(0) = "van" then
+		WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "namerica" ,"REG_SZ"
+	end if
+	if NameArr(0) = "can" then
+		WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "spacific" ,"REG_SZ"
+	end if
+	if NameArr(0) = "cap" then
+		WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "africa" ,"REG_SZ"
+	end if
+	if NameArr(0) = "lim" then
+		WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "samerica" ,"REG_SZ"
+	end if
+	if NameArr(0) = "mos" then
+		WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "asia" ,"REG_SZ"
+	end if
+	if NameArr(0) = "par" then
+		WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "europe" ,"REG_SZ"
+	end if
+end if
+

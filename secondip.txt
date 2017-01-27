@@ -1,0 +1,31 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim oFSO, oFolder
+
+	'TODO Instantiate a FileSystemObject
+	Set oFSO = CreateObject("Scripting.FileSystemObject")
+	
+	'TODO Instantiate a Folder object
+	Set oFolder = oFSO.GetFolder("C:\WINNT") 
+
+	WScript.Echo "The Folder C:\WINNT has the following details"
+	
+	'TODO Retrieve the Drive property of the Folder object
+	WScript.Echo "The Folder's Drive is: " & oFolder.Drive
+	
+	'TODO Retrieve the Path property of the Folder object
+	WScript.Echo "The Folder's Path is: " & oFolder.Path
+	
+	'TODO Retrieve the Count property of the Folder object's SubFolders collection
+	Wscript.Echo "The Folder has " & oFolder.subFolders.Count & " subfolders"
+
+
+

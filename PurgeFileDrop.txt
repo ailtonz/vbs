@@ -1,0 +1,106 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'***********************************************************************
+'**  PurgeBizTalkSuspendedQueue
+'**  
+'**  Purpose: Sample demonstrating use of Admin SDK to Purge Suspended 
+'**           Documents.  for a Selected Group
+'**  
+'**  Command Line Parameters:
+'**            1 - Name of BizTalk Administration Group (Required)
+'**            2 - Server Where Purge Will Be Called (Optional) Defaults 
+'**                to Local Server
+'**
+'***********************************************************************
+
+Option Explicit
+
+Dim ServerName, GroupName
+
+Dim wbemLocator          ' Object used to connect to WMI
+Dim wbemNamespace        ' Holds Specific Namespace Reference in WMI
+Dim wbemGroupEnum        ' Holds Requested Admin Group Enumeration From Query
+Dim wbemGroupInstance    ' Holds Actual Group
+
+'*******************************************************
+'***  Get Server Name and Group Name locations for purge
+
+if Wscript.Arguments.Count < 1 Then
+	Show_Usage
+	wscript.quit
+end if
+
+GroupName = Wscript.Arguments(0)
+
+if Wscript.Arguments.Count > 1 then
+	ServerName = WScript.Arguments(1)
+else
+	ServerName = "."
+end if
+
+
+'************************************************
+'***  Connect to WMI and Query for Selected Group
+
+On Error Resume Next
+Set wbemLocator = CreateObject("WbemScripting.SWbemLocator")
+if err.number <> 0 then
+	Wscript.Echo "Could Not Connect to WMI Object From Error : " + vbCrLF + err.description
+	Wscript.Quit
+end if
+
+Set wbemNamespace = wbemLocator.ConnectServer(ServerName, "root/MicrosoftBizTalkServer")   
+if err.number <> 0 then
+	Wscript.Echo "Could Not Connect to WMI Repository From Error : " + vbCrLF + err.description
+	Wscript.Quit
+end if
+
+Set wbemGroupEnum = wbemNameSpace.ExecQuery("Select * from MicrosoftBizTalkServer_Group where Name=""" + GroupName + """")
+if err.number <> 0 then
+	Wscript.Echo "WMI Query for specified Group Failed With Error : " + vbCrLF + err.description
+	Wscript.Quit
+end if
+
+
+for each wbemGroupInstance in wbemGroupEnum 'Collects first instance
+	if err.number <> 0 then
+		Wscript.Echo "Could Not Find Instance of Specified Group  : " + GroupName
+		Wscript.Quit
+	end if
+	exit for
+next
+
+
+'************************************************
+'***  Execute Purge Method to clear Queue
+
+wbemGroupInstance.PurgeSuspendedQueue()
+if err.number <> 0 then
+	Wscript.Echo "Could Not Purge Suspended Queue From Group : """ + GroupName + """"
+	Wscript.Quit
+end if
+
+wscript.echo "Purge Complete"
+
+
+Sub Show_Usage()
+	dim strUsage
+	strUsage = "Usage:" + vbcrlf + vbCrlf
+	strUsage = strUsage + "PurgeBizTalkSuspendedQueue BizTalkGroupName [ServerName]" + vbCrLf + vbCrLf
+        strUsage = strUsage + "BizTalkGroupName = Name of the Biztalk Server Group which " 
+	strUsage = strUsage + "contains the Suspended Queue you Wish To Purge. Required" + vbCrLF
+	strUsage = strUsage + "ServerName = Computer name the purge process will be triggered from. " 
+	strUsage = strUsage + "Defaults to Local Machine if Not Specified.  Optional" + vbCrlf + vbCrlf
+	strUsage = strUsage + "Example:" + vbCrlf 
+	strUsage = strUsage + "PurgeBizTalkSuspendedQueue ""BizTalk Server Group"""
+	Wscript.Echo strUsage 
+End Sub
+

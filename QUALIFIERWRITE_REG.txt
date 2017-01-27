@@ -1,0 +1,51 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+On Error Resume Next
+
+Set fso = CreateObject("Scripting.FileSystemObject")
+
+Dim index
+index = 14
+
+Dim s(14),i
+
+s(0) = "C:\Labs\Work\FileDrop\Contoso\Customers\Northwind\Ack"
+s(1) = "C:\Labs\Work\FileDrop\Contoso\Customers\Northwind\Nak"
+s(2) = "C:\Labs\Work\FileDrop\Messaging\NeedsApproval"
+s(3) = "C:\Labs\Work\FileDrop\Messaging\Receive"
+s(4) = "C:\Labs\Work\FileDrop\Messaging\SendOrder"
+s(5) = "C:\Labs\Work\FileDrop\Messaging\OrchOutbound"
+s(6) = "C:\Labs\Work\FileDrop\Northwind\DistRecind"
+s(7) = "C:\Labs\Work\FileDrop\Northwind\Error"
+s(8) = "C:\Labs\Work\FileDrop\Northwind\Fulfillment"
+s(9) = "C:\Labs\Work\FileDrop\Northwind\Input"
+s(10) = "C:\Labs\Work\FileDrop\Northwind\LOB Output"
+s(11) = "C:\Labs\Work\FileDrop\Northwind\Planning"
+s(12) = "C:\Labs\Work\FileDrop\Northwind\Publish"
+s(13) = "C:\Labs\Work\FileDrop\Northwind\Response"
+s(14) = "C:\Labs\Work\FileDrop\Northwind\SupplierLOB"
+
+i=0
+
+While i  <= 14
+Set f = fso.GetFolder(s(i))
+
+	For Each file In f.Files
+		file.delete
+	Next
+i = i +1
+Wend
+
+
+If Err <> 0 Then
+Msgbox Err.Desc
+End If
+

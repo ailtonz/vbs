@@ -1,0 +1,50 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+set WshShell = wscript.CreateObject("wscript.shell")
+set IPConfigSet = GetObject("winmgmts:").ExecQuery _
+		("select IPAddress from Win32_NetworkAdapterConfiguration where IPEnabled=TRUE")
+
+for each IPConfig in IPConfigSet
+	if Not IsNull(IPConfig.IPAddress) then 
+		for i=LBound(IPConfig.IPAddress) to UBound(IPConfig.IPAddress)
+						IP = IPConfig.IPAddress(i)
+		
+		next
+	end if
+next
+ipsub = left(ip,9)
+clsrm = right(ipsub,1)
+
+cmd = "c:\setup\dnscmd.exe London /ZoneAdd " & clsrm & ".168.192.in-addr.arpa /Primary /file " & clsrm & ".168.192.in-addr.arpa.dns"
+wshshell.Run cmd, 6, true
+cmd = "c:\setup\dnscmd.exe London /config nwtraders.msft /AllowUpdate 0x0"
+wshshell.run cmd, 6, true
+cmd = "c:\setup\dnscmd.exe London /zoneresettype nwtraders.msft /primary /file nwtraders.msft.dns"
+wshshell.Run cmd, 6, true
+cmd = "c:\setup\dnscmd.exe London /RecordDelete nwtraders.msft @ A 10.0." & clsrm & "200 /f"
+wshshell.Run cmd, 6, true
+cmd = "c:\setup\dnscmd.exe London /RecordDelete nwtraders.msft London A 10.0." & clsrm & "200 /f"
+wshshell.Run cmd, 6, true
+cmd = "c:\setup\dnscmd.exe London /RecordDelete nwtraders.msft gc._msdcs.nwtraders.msft A 10.0." & clsrm & "200 /f"
+wshshell.Run cmd, 6, true
+cmd = "c:\setup\dnscmd.exe London /ResetListenAddresses 192.168." & clsrm & "200 /f"
+wshshell.Run cmd, 6, true
+cmd = "c:\setup\dnscmd.exe London /Config " & clsrm & ".168.192.in-addr.arpa /AllowUpdate 0x1"
+wshshell.Run cmd, 6, true
+cmd = "c:\setup\dnscmd.exe London /ZoneAdd contoso /Primary /file contoso.msft.dns"
+wshshell.Run cmd, 6, true
+cmd = "c:\setup\dnscmd.exe London /RecordAdd contoso.msft www cname london.nwtraders.msft"
+wshshell.Run cmd, 6, true
+wshshell.RegWrite "HKLM\System\ControlSet001\Services\DNS\Parameters\ListenAddresses", "192.168." & clsrm & "200", "REG_SZ"
+wshshell.RegWrite "HKLM\System\ControlSet002\Services\DNS\Parameters\ListenAddresses", "192.168." & clsrm & "200", "REG_SZ"
+wshshell.RegWrite "HKLM\System\CurrentControlSet\Services\DNS\Parameters\ListenAddresses", "192.168." & clsrm & "200", "REG_SZ"
+
