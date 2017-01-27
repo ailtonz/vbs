@@ -1,0 +1,27 @@
+###
+###
+###
+### Category1 : Security
+### Category2 : Script Signing
+### Category3 : 
+### Description : Verifies that all the scripts in the C:\Scripts folder have been digitally signed.
+###
+###
+###
+blnShowGUI = False
+
+set objSigner = WScript.CreateObject("Scripting.Signer")
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set objFolder = objFSO.GetFolder("C:\Scripts\")
+Set colListOfFiles = objFolder.Files
+
+For Each objFile in colListOfFiles
+    If Right(objFile.Name, 3) = "vbs" Then
+        blnIsSigned = objSigner.VerifyFile(objFile.Path, blnShowGUI)
+        If blnIsSigned then
+            WScript.Echo objFile.Name & " has been signed."
+        Else
+            WScript.Echo objFile.Name & " has not been signed."
+        End If
+    End If
+Next

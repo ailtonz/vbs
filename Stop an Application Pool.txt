@@ -1,0 +1,37 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 6.0
+### Category3 : Applications and Application Pools
+### Description : Demonstration script that stops the MSSharePointAppPool application pool.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject _
+    ("winmgmts:{authenticationLevel=pktPrivacy}\\" _
+        & strComputer & "\root\microsoftiisv2")
+
+Set colItems = objWMIService.ExecQuery _
+    ("Select * From IIsApplicationPool Where Name = " & _
+        "'W3SVC/AppPools/MSSharePointAppPool'")
+
+For Each objItem in colItems
+    objItem.Stop
+Next
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 5.x
+### Category3 : Applications and Application Pools
+### Description : Stops the MSSharePointAppPool application pool.
+###
+###
+###
+strComputer = "LocalHost"
+Set objIIS = GetObject _
+    ("IIS://" & strComputer & "/W3SVC/AppPools/MSSharePointAppPool")
+
+objIIS.Stop

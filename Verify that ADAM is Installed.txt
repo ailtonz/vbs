@@ -1,0 +1,26 @@
+###
+###
+###
+### Category1 : Other Directory Services
+### Category2 : ADAM
+### Category3 : Retrieving Information
+### Description : Verifies that ADAM is installed on a computer.
+###
+###
+###
+On Error Resume Next
+
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+Set colServices = objWMIService.ExecQuery _
+    ("Select * from Win32_Service where Name Like '%ADAM_%'")
+
+If colServices.Count = 0 Then
+    Wscript.Echo "ADAM is not installed."
+Else
+    For Each objService in colServices
+        Wscript.Echo objService.Name & " -- " & objService.State
+    Next
+End If

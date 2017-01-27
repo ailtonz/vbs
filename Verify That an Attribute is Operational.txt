@@ -1,0 +1,25 @@
+###
+###
+###
+### Category1 : Scripting Techniques
+### Category2 : ADSI
+### Category3 : 
+### Description : Determines whether or not a specified attribute (Canonical-Name) is operational within Active Directory.
+###
+###
+###
+Const ADS_SYSTEMFLAG_ATTR_IS_CONSTRUCTED = &h00000004
+ 
+strAttributeName = "cn=Canonical-Name"
+ 
+Set objSchemaAttribute = GetObject _
+    ("LDAP://" & strAttributeName & _
+        ",cn=schema,cn=configuration,dc=fabrikam,dc=com")
+ 
+intSystemFlags = objSchemaAttribute.Get("systemFlags")
+ 
+If intSystemFlags AND ADS_SYSTEMFLAG_ATTR_IS_CONSTRUCTED Then
+    WScript.Echo strAttributeName & " is operational."
+Else
+    WScript.Echo strAttributeName & " is not operational."
+End If
