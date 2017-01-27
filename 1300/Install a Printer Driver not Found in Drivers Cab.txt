@@ -1,0 +1,23 @@
+###
+###
+###
+### Category1 : Printing
+### Category2 : Printer Ports and Drivers
+### Category3 : 
+### Description : Installs a hypothetical printer using a print driver not found in Drivers.cab.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+objWMIService.Security_.Privileges.AddAsString "SeLoadDriverPrivilege", True
+
+Set objDriver = objWMIService.Get("Win32_PrinterDriver")
+
+objDriver.Name = "NewPrinter Model 2900"
+objDriver.SupportedPlatform = "Windows NT x86"
+objDriver.Version = "3"
+objDriverPath = "C:\Scripts\NewPrinter.dll"
+objInfname = "C:\Scripts\NewPrinter.inf"
+intResult = objDriver.AddPrinterDriver(objDriver)

@@ -1,0 +1,23 @@
+###
+###
+###
+### Category1 : Terminal Services
+### Category2 : Configuring Terminal Service Properties
+### Category3 : 
+### Description : Enables Terminal Services Active Desktop on a computer. To disable Active Desktop, set the value of the ActiveDesktop property to 0 instead of 1.
+###
+###
+###
+Const ENABLED = 1
+ 
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}\\" & strComputer & "\root\cimv2")
+
+Set colItems = objWMIService.ExecQuery _
+    ("Select * from Win32_TerminalServiceSetting")
+
+For Each objItem in colItems
+    objItem.ActiveDesktop = ENABLED
+    objItem.Put_
+Next

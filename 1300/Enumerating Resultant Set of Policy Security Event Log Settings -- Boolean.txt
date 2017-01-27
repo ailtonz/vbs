@@ -1,0 +1,24 @@
+###
+###
+###
+### Category1 : Group Policy
+### Category2 : 
+### Category3 : 
+### Description : Returns information about access to event logs assigned by using Group Policy.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject _
+    ("winmgmts:\\" & strComputer & "\root\rsop\computer")
+
+Set colItems = objWMIService.ExecQuery _
+    ("Select * from RSOP_SecurityEventLogSettingBoolean")
+
+For Each objItem in colItems
+    Wscript.Echo "Key Name: " & objItem.KeyName
+    Wscript.Echo "Precedence: " & objItem.Precedence
+    Wscript.Echo "Setting: " & objItem.Setting
+    Wscript.Echo "Type: " & objItem.Type
+    Wscript.Echo
+Next

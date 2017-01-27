@@ -1,0 +1,21 @@
+###
+###
+###
+### Category1 : Printing
+### Category2 : Printer Ports and Drivers
+### Category3 : 
+### Description : Installs a TCP/IP printer port on a computer.
+###
+###
+###
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+Set objNewPort = objWMIService.Get _
+    ("Win32_TCPIPPrinterPort").SpawnInstance_
+
+objNewPort.Name = "IP_169.254.110.14"
+objNewPort.Protocol = 1
+objNewPort.HostAddress = "169.254.110.14"
+objNewPort.PortNumber = "9999"
+objNewPort.SNMPEnabled = False
+objNewPort.Put_

@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : Terminal Services
+### Category2 : Configuring Terminal Service Properties
+### Category3 : 
+### Description : Enables Terminal Services connections on a computer running Terminal Services. To disable connections, pass the value 0 (rather than 1) to the SetAllowTSConnections method.
+###
+###
+###
+Const ENABLE_CONNECTIONS = 1
+ 
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}\\" & strComputer & "\root\cimv2")
+
+Set colItems = objWMIService.ExecQuery _
+    ("Select * from Win32_TerminalServiceSetting")
+
+For Each objItem in colItems
+    errResult = objItem.SetAllowTSConnections(ENABLE_CONNECTIONS)
+Next

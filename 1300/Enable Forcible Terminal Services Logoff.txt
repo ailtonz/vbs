@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : Terminal Services
+### Category2 : Configuring Terminal Service Properties
+### Category3 : 
+### Description : Enables the ability to forcibly logoff an administrator connected to Terminal Services. To disable forcible logoff, pass the value 1 (rather than 0) to the SetDisableForcibleLogoff method.
+###
+###
+###
+Const ENABLE_LOGOFF = 0
+ 
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}\\" & strComputer & "\root\cimv2")
+
+Set colItems = objWMIService.ExecQuery _
+    ("Select * from Win32_TerminalServiceSetting")
+
+For Each objItem in colItems
+    errResult = objItem.SetDisableForcibleLogoff(ENABLE_LOGOFF)
+Next

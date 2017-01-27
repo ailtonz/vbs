@@ -1,0 +1,36 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 5.x
+### Category3 : Basic Administration
+### Description : Returns information about all the IIS backup files on a computer.
+###
+###
+###
+On Error Resume Next
+
+Const MD_BACKUP_NO_MORE_BACKUPS = &H80070103
+ 
+strComputer = "LocalHost"
+Set objIIS = GetObject("IIS://" & strComputer & "")
+intIndex = 0
+
+Do While True
+    strName = ""
+    objIIS.EnumBackups strName, intIndex, strVersion, _
+        strLocation, strDateTime
+    If (Err.Number <> 0) Then
+        If (Err.Number = MD_BACKUP_NO_MORE_BACKUPS) Then
+            Exit Do
+        End If
+    End If       
+       
+    WScript.Echo "Name: " & strName
+    Wscript.Echo "Version Number: " & strVersion 
+    Wscript.Echo "Backup Location: " & strLocation
+    Wscript.Echo "Backup Date: " & strDateTime
+    Wscript.Echo
+        
+    intIndex = intIndex + 1
+Loop

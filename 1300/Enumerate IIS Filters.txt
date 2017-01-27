@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 5.x
+### Category3 : Basic Administration
+### Description : Returns information about all the IIS filters on a computer.
+###
+###
+###
+strComputer = "LocalHost"
+Set colFilters = GetObject("IIS://" & strComputer & "/W3SVC/Filters")
+ 
+For Each objFilter in colFilters
+    Wscript.Echo "Name: " & objFilter.Name
+    Wscript.Echo "Filter Description: " & objFilter.FilterDescription
+    Wscript.Echo "Filter Path: " & objFilter.FilterPath
+    Wscript.Echo "Filter Enabled: " & objFilter.FilterEnabled
+    Wscript.Echo "Filter State: " & objFilter.FilterState
+    Wscript.Echo "Filter Flags: " & objFilter.FilterFlags
+    Wscript.Echo
+Next

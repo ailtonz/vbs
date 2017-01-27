@@ -1,0 +1,12 @@
+###
+###
+###
+### Category1 : Other Directory Services
+### Category2 : Local Computer and NT 4 Accounts
+### Category3 : User Accounts
+### Description : Uses the Shell object to enable the Guest account on the local computer.
+###
+###
+###
+Set objComputer = CreateObject("Shell.LocalMachine")
+objComputer.EnableGuest(1)
