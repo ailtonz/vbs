@@ -1,0 +1,30 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Start by taking responsibilty for error handling
+On Error Resume Next
+Set objTest = GetObject("WinMgmts:Win32_Share")
+'Check the vbScript ERR Object
+if Err = 0  Then
+	WScript.Echo "Everything is OK!"
+Else
+	'Ok there must have been an error.  Launch the SWbemLastError object
+	set errorObject = CreateObject("WbemScripting.SWbemLastError")
+	Set oPropSet = errorObject.properties_
+	For Each oProp in oPropset
+		strLastError = strLastError & oProp.name & ": " & oProp.value & vbcrlf
+	Next
+	strErr = "Source: " & Err.Source & vbcrlf
+	strErr = strErr & "Description: "& Err.Description & vbcrlf
+	strErr = strErr & "Number: 0x" & Hex(Err.Number) & vbcrlf
+	MsgBox strErr,vbInformation,"From Err Object"
+	MsgBox strLastError,vbcritical,"From LastError Object"
+End If
+

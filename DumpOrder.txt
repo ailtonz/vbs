@@ -1,0 +1,102 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'---------------------------------------------------------------------------------------------
+
+'This script outputs all the tracked and logged data for the input submission ID.
+'
+'File name: DTA.vbs
+'
+'To run the sample scripts, type the following at the command prompt: 
+'
+'CSCRIPT DTA.VBS <Submission ID>
+'
+' NOTE: 
+'
+'The submission ID returned by the Interchange.Submit method is a GUID and should start with 
+'an opening bracket and quotes, ("{"), and end with a closing bracket and quotes, ("}"). 
+'If the submission ID is not in this format, the script exits. 
+'Browse to \Program Files\Microsoft BizTalk Server\Samples on the installation drive to 
+'find DTA.vbs.
+'-----------------------------------------------------------------------------------------------
+
+'------------------------------------------------------------------------------------------
+Dim DTARead, strGUID, Interchanges, ActivityLogs, InDocDetails, OutDocDetails
+
+'------------------------------------------------------------------------------------------
+' Process command line parameters and verify the format of the Submission ID
+'------------------------------------------------------------------------------------------
+strGUID = GetCmdLineArg(1)
+If InStr(strGUID, "{") <> 1 OR InStr(strGUID, "}") <> 38 OR Len (strGUID) <> 38 OR InStr(strGUID,"-") <> 10 Then
+	WScript.Echo "Error: Invalid Submission GUID Entered..."
+	WScript.Echo ""
+	WScript.Echo "USAGE:   CSCRIPT DTA.VBS <Submission GUID>"
+	WScript.Echo "EXAMPLE: CSCRIPT DTA.VBS {D3FE8CFB-EE92-46BF-AFF6-72A651235D73}"
+	WScript.Quit
+End If
+
+
+Set DTARead = CreateObject("BizTalk.DTA")
+
+Set Interchanges = DTARead.GetInterchanges(strGUID)
+Set InDocDetails = DTARead.GetInDocDetails(strGUID)
+Set OutDocDetails = DTARead.GetOutDocDetails(strGUID)
+
+    If TypeName(Interchanges) = "Recordset" Then
+        DumpRecordSet "Interchanges", Interchanges
+    End If
+    If TypeName(InDocDetails) = "Recordset" Then
+        DumpRecordSet "InDocDetails", InDocDetails
+    End If
+    If TypeName(OutDocDetails) = "Recordset" Then
+        DumpRecordSet "OutDocDetails", OutDocDetails
+    End If
+
+Set OutDocDetails = Nothing
+Set InDocDetails = Nothing
+Set Interchanges = Nothing
+Set DTARead = Nothing
+WScript.Echo "DTA.VBS Done"
+
+'------------------------------------------------------------------------------------------
+' Helper functions
+'------------------------------------------------------------------------------------------
+'	GetCmdLineArg(iArgIndex) As String (iArgIndex starts 
+'			from 1, empty string is returned if failed)
+Function GetCmdLineArg(iArgIndex)
+	GetCmdLineArg = ""
+
+	If iArgIndex > 0 Then
+		If WScript.Arguments.Count >= iArgIndex Then
+			GetCmdLineArg = CStr(WScript.Arguments(iArgIndex-1))
+		End If
+	End If
+End Function
+
+
+'------------------------------------------------------------------------------------------
+Sub DumpRecordSet(strName, RS)
+    Dim i, k
+    k = RS.Fields.Count - 1
+    If RS.EOF And RS.BOF Then
+        Exit Sub
+    End If
+WScript.Echo "-START-FIELD-VALUES-----------------------" & strName & "----------------------"
+    RS.MoveFirst
+    While Not RS.EOF
+        For i = 0 To k
+            WScript.Echo RS.Fields(i).Name & " = " & RS.Fields(RS.Fields(i).Name) & " (" & RS.Fields(i).Type & ")"
+        Next
+        RS.MoveNext
+    Wend
+WScript.Echo "-END-FIELD-VALUES-------------------------" & strName & "----------------------"
+End Sub
+
+

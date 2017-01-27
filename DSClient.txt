@@ -1,0 +1,74 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim oFS, oDrive, oFileTS, sOutPut
+Set oFS = CreateObject("Scripting.FileSystemObject")
+Set oFileTS = oFS.CreateTextFile("c:\driveData.txt")
+For Each oDrive In oFS.Drives
+    With oDrive
+     	sOutput = "Drive:" & .DriveLetter 
+		sOutput = sOutput & " Type:" _
+			&  GetDriveString(.DriveType)
+    	If .IsReady Then
+		sOutput = sOutput & "  Format:" &  .FileSystem 
+		sOutput = sOutput & "  Label:" & .VolumeName 
+		If .DriveType <>3 Then
+			oFileTS.WriteLine sOutput
+			WriteFolder oDrive.RootFolder, " "
+		End If 
+	Else
+		oFileTS.WriteLine sOutput & " not ready"
+        End If
+    End With
+Next
+WScript.Echo "All Done!!"
+oFileTS.Close
+WScript.Quit
+
+Function GetDriveString(iDriveType)
+Const CDRom = 4
+Const Fixed = 2
+Const RamDisk = 5
+Const Remote = 3
+Const Removable = 1
+Const Unknown = 0
+Const CDRomString = "CDROM"
+Const FixedString = "Fixed"
+Const RamDiskString = "RamDisk"
+Const RemoteString = "Remote"
+Const RemovableString = "Removable"
+Const UnknownString = "Unknown"
+Select Case iDriveType
+Case CDROM
+	GetDriveString = CDRomString
+Case Fixed
+	GetDriveString = FixedString
+Case RamDisk
+	GetDriveString = RamDiskString
+Case Remote
+	GetDriveString = RemoteString
+Case Removable 
+	GetDriveString = RemovableString
+Case Else
+	GetDriveString = UnknownString
+	End Select
+End Function
+
+Sub WriteFolder(ByRef oFol, ByVal sSpaces)
+Dim oFolder
+On Error Resume Next
+For Each oFolder in oFol.SubFolders
+	sOutPut = sSpaces & "-" & oFolder.Name
+	If Err.Number = 0 Then oFileTS.WriteLine sOutput
+	Err.Clear 
+	WriteFolder oFolder, sSpaces & " "
+Next
+End Sub
+

@@ -1,0 +1,74 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'  File:      DeleteDetailedData.vbs
+'
+'  Summary:   This is an example of deleting all detailed data about user.
+'
+'  Sample:    Privacy Samples
+'
+'---------------------------------------------------------------------
+'  This file is part of the Microsoft Commerce Server 2000 SDK
+'
+'  Copyright (C) 2000 Microsoft Corporation.  All rights reserved.
+'
+' This source code is intended only as a supplement to Microsoft
+' Commerce Server 2000 and/or on-line documentation.  See these other
+' materials for detailed information regarding Microsoft code samples.
+'
+' THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+' KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+' IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+' PARTICULAR PURPOSE.
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+DeleteSingleUserData
+
+Sub DeleteSingleUserData()
+
+ Dim strServer
+ Dim strDbName
+ Dim strSqlUser
+ Dim strSqlPwd
+ Dim strSqlQry
+ Dim strDwConn
+ Dim cnnDw
+ Dim rstUser
+ Dim cmdChange
+
+
+ 'Change these values to fit your environment
+ strServer   = <server-name>
+ strDbName   = <dw-db-name>
+ strSqlUser  = <sql-user-name>
+ strSqlPwd   = <sql-user-pwd>
+ strUserGuid = <user-guid-to-delete>  'example =  "'{FE07A960-7DB2-39F6-E1EA-B492285C1AC8}'"
+
+ strSqlQry = "DELETE FROM RegisteredUser WHERE UserId = " & strUserGuid
+ strDwConn = "URL=MSCOP://INPROCCONNECT/SERVER=" & strServer & ":DATABASE=" & strDbName & ":USER=" & strSqlUser & ":PASSWORD=" & strSqlPwd & ":CATALOG=dwschema:fastload=true:"
+
+ Set cnnDw = WScript.CreateObject("ADODB.Connection")
+ Set rs = WScript.CreateObject("ADODB.Recordset")
+ Set cmdChange = WScript.CreateObject("ADODB.Command")
+
+ Call cnnDw.Open(strDwConn)
+ Set cmdChange.ActiveConnection = cnnDw
+ cmdChange.CommandText = strSqlQry
+ Set rstUser = cmdChange.Execute()
+
+ 'Clean up
+ cnnDw.Close
+ Set cnnDw = Nothing
+ Set cmdChange = Nothing
+ Set rstUser = Nothing
+
+End Sub
+

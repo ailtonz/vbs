@@ -1,0 +1,57 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set fso = createobject("scripting.filesystemobject")
+Set WshShell = WScript.CreateObject("WScript.Shell")
+Set objNet = WScript.CreateObject("WScript.Network")
+CompName = objNet.ComputerName
+CompName = lcase(CompName)
+
+if compname = "van-pf1" THEN
+	Set fldr = fso.GetFile("\\van-gc\status\namerica.txt")
+	fldr.name = "namerica.done"
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "namerica" ,"REG_SZ"
+end if
+
+
+if compname = "lim-pf1" THEN
+	Set fldr = fso.GetFile("\\van-gc\status\samerica.txt")
+	fldr.name = "samerica.done"
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "samerica" ,"REG_SZ"
+end if
+
+
+if compname = "par-pf1" THEN
+	Set fldr = fso.GetFile("\\van-gc\status\europe.txt")
+	fldr.name = "europe.done"
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "europe" ,"REG_SZ"
+end if
+
+
+if compname = "cap-pf1" THEN
+	Set fldr = fso.GetFile("\\van-gc\status\africa.txt")
+	fldr.name = "africa.done"
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "africa" ,"REG_SZ"
+end if
+
+
+if compname = "mos-pf1" THEN
+	Set fldr = fso.GetFile("\\van-gc\status\asia.txt")
+	fldr.name = "asia.done"
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "asia" ,"REG_SZ"
+end if
+
+
+if compname = "can-pf1" THEN
+	Set fldr = fso.GetFile("\\van-gc\status\spacific.txt")
+	fldr.name = "spacific.done"
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "spacific" ,"REG_SZ"
+end if
+

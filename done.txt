@@ -1,0 +1,530 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set WshShell = WScript.CreateObject("WScript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
+ 
+wscript.Sleep 5000
+
+Set objNet = WScript.CreateObject("WScript.Network")
+CompName = objNet.ComputerName 
+CompName = lcase(CompName)
+
+
+' ** set default domain to log on to **
+If CompName = "van-pf1" or CompName = "van-mbx1" or CompName = "van-fe1" or CompName = "van-fe2" then
+   Set WshShell = WScript.CreateObject("WScript.Shell")
+   WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "namerica" ,"REG_SZ"
+End if
+
+
+If CompName = "lim-pf1" or CompName = "lim-mbx1" or CompName = "lim-fe1" or CompName = "lim-fe2" then
+   Set WshShell = WScript.CreateObject("WScript.Shell")
+   WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "samerica" ,"REG_SZ"
+End if
+
+
+If CompName = "par-pf1" or CompName = "par-mbx1" or CompName = "par-fe1" or CompName = "par-fe2" then
+   Set WshShell = WScript.CreateObject("WScript.Shell")
+   WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "europe" ,"REG_SZ"
+End if
+
+
+If CompName = "cap-pf1" or CompName = "cap-mbx1" or CompName = "cap-fe1" or CompName = "cap-fe2" then
+   Set WshShell = WScript.CreateObject("WScript.Shell")
+   WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "africa" ,"REG_SZ"
+End if
+
+
+If CompName = "mos-pf1" or CompName = "mos-mbx1" or CompName = "mos-fe1" or CompName = "mos-fe2" then
+   Set WshShell = WScript.CreateObject("WScript.Shell")
+   WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "asia" ,"REG_SZ"
+End if
+
+
+If CompName = "can-pf1" or CompName = "can-mbx1" or CompName = "can-fe1" or CompName = "can-fe2" then
+   Set WshShell = WScript.CreateObject("WScript.Shell")
+   WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "spacific" ,"REG_SZ"
+End if
+
+
+
+
+CompDomain = objNet.UserDomain
+CompDomain = lcase(CompDomain)
+
+If CompName = "van-pf1" then
+   If CompDomain = "namerica" then
+      'This student computer has already joined the " & CompDomain & " domain."
+      Wscript.quit
+   else
+      Set MyFile = fso.CreateTextFile("\\van-gc\status\namerica.txt", True)
+      MyFile.WriteLine("Namerica.")
+      MyFile.Close
+      WshShell.run "dcpromo /answer:c:\tools\multimax\van.txt", 6, true
+   end if
+End if
+
+
+If CompName = "lim-pf1" then
+   If CompDomain = "samerica" then
+      'This student computer has already joined the " & CompDomain & " domain."
+      Wscript.quit
+   else
+      Set MyFile = fso.CreateTextFile("\\van-gc\status\samerica.txt", True)
+      MyFile.WriteLine("Samerica.")
+      MyFile.Close
+      WshShell.run "dcpromo /answer:c:\tools\multimax\lim.txt", 6, true
+   end if
+End if
+
+
+If CompName = "par-pf1" then
+   If CompDomain = "europe" then
+      'This student computer has already joined the " & CompDomain & " domain."
+      Wscript.quit
+   else
+      Set MyFile = fso.CreateTextFile("\\van-gc\status\europe.txt", True)
+      MyFile.WriteLine("Europe.")
+      MyFile.Close
+      WshShell.run "dcpromo /answer:c:\tools\multimax\par.txt", 6, true
+   end if
+End if
+
+
+If CompName = "cap-pf1" then
+   If CompDomain = "africa" then
+      'This student computer has already joined the " & CompDomain & " domain."
+      Wscript.quit
+   else
+      Set MyFile = fso.CreateTextFile("\\van-gc\status\africa.txt", True)
+      MyFile.WriteLine("Africa.")
+      MyFile.Close
+      WshShell.run "dcpromo /answer:c:\tools\multimax\cap.txt", 6, true
+   end if
+End if
+
+
+If CompName = "mos-pf1" then
+   If CompDomain = "asia" then
+      'This student computer has already joined the " & CompDomain & " domain."
+      Wscript.quit
+   else
+      Set MyFile = fso.CreateTextFile("\\van-gc\status\asia.txt", True)
+      MyFile.WriteLine("asia.")
+      MyFile.Close
+      WshShell.run "dcpromo /answer:c:\tools\multimax\mos.txt", 6, true
+   end if
+End if
+
+
+If CompName = "can-pf1" then
+   If CompDomain = "spacific" then
+      'This student computer has already joined the " & CompDomain & " domain."
+      Wscript.quit
+   else
+      Set MyFile = fso.CreateTextFile("\\van-gc\status\spacific.txt", True)
+      MyFile.WriteLine("Spacific.")
+      MyFile.Close
+      WshShell.run "dcpromo /answer:c:\tools\multimax\can.txt", 6, true
+   end if
+End if
+
+
+
+' Join student computers to their respective domains
+
+If CompName = "van-mbx1" then
+   If CompDomain = "namerica" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Namerica domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\namerica.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\van-mbx1.cmd", 6, true
+   end if
+End if
+
+If CompName = "van-fe1" then
+   If CompDomain = "namerica" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Namerica domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\namerica.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\van-fe1.cmd", 6, true
+   end if
+End if
+
+If CompName = "van-fe2" then
+   If CompDomain = "namerica" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Namerica domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\namerica.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\van-fe2.cmd", 6, true
+   end if
+End if
+
+
+
+If CompName = "lim-mbx1" then
+   If CompDomain = "samerica" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Samerica domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\samerica.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\lim-mbx1.cmd", 6, true
+   end if
+End if
+
+If CompName = "lim-fe1" then
+   If CompDomain = "samerica" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Samerica domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\samerica.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\lim-fe1.cmd", 6, true
+   end if
+End if
+
+If CompName = "lim-fe2" then
+   If CompDomain = "samerica" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Samerica domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\samerica.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\lim-fe2.cmd", 6, true
+   end if
+End if
+
+
+If CompName = "par-mbx1" then
+   If CompDomain = "europe" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Europe domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\europe.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\par-mbx1.cmd", 6, true
+   end if
+End if
+
+If CompName = "par-fe1" then
+   If CompDomain = "europe" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Europe domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\europe.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\par-fe1.cmd", 6, true
+   end if
+End if
+
+If CompName = "par-fe2" then
+   If CompDomain = "europe" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Europe domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\europe.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\par-fe2.cmd", 6, true
+   end if
+End if
+
+
+If CompName = "cap-mbx1" then
+   If CompDomain = "africa" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Africa domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\africa.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\cap-mbx1.cmd", 6, true
+   end if
+End if
+
+If CompName = "cap-fe1" then
+   If CompDomain = "africa" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Africa domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\africa.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\cap-fe1.cmd", 6, true
+   end if
+End if
+
+If CompName = "cap-fe2" then
+   If CompDomain = "africa" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Africa domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\africa.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\cap-fe2.cmd", 6, true
+   end if
+End if
+
+
+If CompName = "mos-mbx1" then
+   If CompDomain = "asia" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Asia domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\asia.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\mos-mbx1.cmd", 6, true
+   end if
+End if
+
+
+If CompName = "mos-fe1" then
+   If CompDomain = "asia" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Asia domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\asia.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\mos-fe1.cmd", 6, true
+   end if
+End if
+
+
+If CompName = "mos-fe2" then
+   If CompDomain = "asia" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Asia domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\asia.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\mos-fe2.cmd", 6, true
+   end if
+End if
+
+
+
+If CompName = "can-mbx1" then
+   If CompDomain = "spacific" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Spacific domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\spacific.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\can-mbx1.cmd", 1, true
+   end if
+End if
+
+If CompName = "can-fe1" then
+   If CompDomain = "spacific" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Spacific domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\spacific.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\can-fe1.cmd", 6, true
+   end if
+End if
+
+If CompName = "can-fe2" then
+   If CompDomain = "spacific" then
+      'This student computer has already joined the Domain
+      Wscript.quit
+   else
+      x=0
+      do while x=0
+         msg = "Checking for the Spacific domain ... "
+	 msg2 = "Changing Domain Model"
+	 bob = WshShell.Popup(msg,5,msg2,64)
+	 If (fso.FileExists("\\van-gc\status\spacific.done")) Then
+    	    x=1
+	 End If
+	 if x=0 then
+	    wscript.sleep 60000
+	 end if
+      Loop
+      WshShell.run "c:\tools\join\can-fe2.cmd", 6, true
+   end if
+End if
+

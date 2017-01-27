@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+dim fso
+dim wshShell
+
+Set fso = CreateObject("Scripting.FileSystemObject")
+fso.CreateFolder "c:\deploy"
+
+set wshShell = Wscript.CreateObject("WScript.Shell")
+wshShell.run "expand C:\reskit\DEPLOY.CAB -F:* c:\deploy", 0, True
+
+
+

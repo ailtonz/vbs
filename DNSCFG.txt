@@ -1,0 +1,242 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set IPConfigSet = GetObject("winmgmts:").ExecQuery _
+		("select IPAddress from Win32_NetworkAdapterConfiguration where IPEnabled=TRUE")
+
+for each IPConfig in IPConfigSet
+	if Not IsNull(IPConfig.IPAddress) then 
+		for i=LBound(IPConfig.IPAddress) to UBound(IPConfig.IPAddress)
+						
+	if left(IPConfig.IPAddress(i),3) = "192" then
+bob = IPConfig.IPAddress(i)
+		end if
+next
+	end if
+next
+
+
+
+mantis = left(bob,9)
+classroom = right(mantis,1)
+
+
+
+bob = "c:\tools\dnscmd /zoneadd " & classroom & ".168.192.in-addr.arpa /primary /file " & classroom & ".168.192.in-addr.arpa "
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft im A 192.168." & classroom & ".200"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft vancouver.namerica A 192.168." & classroom & ".1"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft namerica MX 10 vancouver.namerica.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft denver.namerica A 192.168." & classroom & ".2"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft namerica MX 10 denver.namerica.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft perth.spacific A 192.168." & classroom & ".3"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft spacific MX 10 perth.spacific.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft brisbane.spacific A 192.168." & classroom & ".4"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft spacific MX 10 brisbane.spacific.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft lisbon.europe A 192.168." & classroom & ".5"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft europe MX 10 lisbon.europe.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft bonn.europe A 192.168." & classroom & ".6"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft europe MX 10 bonn.europe.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft lima.samerica A 192.168." & classroom & ".7"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft samerica MX 10 lima.samerica.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft santiago.samerica A 192.168." & classroom & ".8"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft samerica MX 10 santiago.samerica.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft bangalore.asia A 192.168." & classroom & ".9"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft asia MX 10 bangalore.asia.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft singapore.asia A 192.168." & classroom & ".10"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft asia MX 10 singapore.asia.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft casablanca.africa A 192.168." & classroom & ".11"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft africa MX 10 casablanca.africa.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft tunis.africa A 192.168." & classroom & ".12"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft africa MX 10 tunis.africa.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft acapulco.namerica A 192.168." & classroom & ".13"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft namerica MX 10 acapulco.namerica.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft miami.namerica A 192.168." & classroom & ".14"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft namerica MX 10 miami.namerica.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft auckland.spacific A 192.168." & classroom & ".15"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft spacific MX 10 auckland.spacific.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft suva.spacific A 192.168." & classroom & ".16"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft spacific MX 10 suva.spacific.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft stockholm.europe A 192.168." & classroom & ".17"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft europe MX 10 stockholm.europe.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft moscow.europe A 192.168." & classroom & ".18"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft europe MX 10 moscow.europe.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft caracas.samerica A 192.168." & classroom & ".19"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft samerica MX 10 caracas.samerica.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft montevideo.samerica A 192.168." & classroom & ".20"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft samerica MX 10 montevideo.samerica.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft manila.asia A 192.168." & classroom & ".21"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft asia MX 10 manila.asia.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft tokyo.asia A 192.168." & classroom & ".22"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft asia MX 10 tokyo.asia.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft khartoum.africa A 192.168." & classroom & ".23"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft africa MX 10 khartoum.africa.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft nairobi.africa A 192.168." & classroom & ".24"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft africa MX 10 nairobi.africa.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+
+
+bob = "c:\tools\dnscmd /recordadd nwtraders.msft @ MX 10 london.nwtraders.msft"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+
+
+bob = "c:\tools\dnscmd /config ..AllZones AllowUpdate 1"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run bob, 6, true
+

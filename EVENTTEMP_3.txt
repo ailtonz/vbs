@@ -1,0 +1,64 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim objSvc, objEventSource, objEvent, strProcess
+Const wbemErrTimedout = -2147209215		'the standard error number when an event times out
+On Error Resume Next
+Set objSvc = GetOBject("WinMgmts:")
+Set objEventSource = objSvc.ExecNotificationQuery _
+	("Select * from __instanceCreationEvent" &_
+	" Within 1 Where targetInstance ISA 'Win32_Process'" &_
+	" AND targetInstance.name = 'calc.exe'")
+wscript.Echo "Ready to go......"
+DO 
+Set ObjEvent = objEventSource.NextEvent(30000)  
+If Err <> 0 Then
+    If Err.Number = wbemErrTimedout Then     
+        MsgBox ("There were no events")
+        Exit DO
+    Else
+         MsgBox (Err.Number & " " & Err.Description)
+         Exit DO
+    End If
+Else
+	startTime = convertDT(objEvent.targetInstance.creationDate)
+	retVal = objEvent.TargetInstance.getOwner(user,domain)
+	If retVal <> 0 Then
+		Wscript.Echo " Can't get owner"
+	End If
+	strProcess = objEvent.targetInstance.name & " was started by " &_
+	domain & "\" & user & " at " & startTime & " on " & objEvent.TargetInstance.CSname 
+	Call writeToFile(strProcess)
+End If
+LOOP
+wscript.quit
+
+'	DMTF Date Time format converter
+Function convertDT(vdateTime)
+vYear = Mid(vDateTime,1,4)
+vMonth = Mid(vDateTime,5,2)
+vDay = Mid(vDateTime,7,2)
+vHour = Mid(vDateTime,9,2)
+vMin = Mid(vDateTime,11,2)
+vSec = Mid(vDateTime,13,2)
+vMsec = Mid(vDateTime,15,6)
+vOffset = Mid(vDateTime,23,3)
+convertDT = vDay &"/"& vMonth &"/"&  vYear &" : "& vHour &":"& vMin &":"& vSec 
+End Function 
+
+Sub writeToFile(strProcess)
+	Dim fso, ts
+	Const ForAppending = 8
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	Set ts = fso.OpenTextFile("c:\temp\script.txt", ForAppending, True)
+	ts.WriteLine(strProcess)
+	ts.close
+End Sub
+

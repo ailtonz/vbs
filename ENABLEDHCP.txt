@@ -1,0 +1,100 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' enablestudentaccount.vbs
+'
+' This enable user accounts in Active Directory on the instructor's machine.
+
+Option Explicit
+
+' Define a userAccountControl flag masks constants:
+'
+Const UF_ACCOUNTDISABLE                  = &h2
+Const UF_ENABLE_ACCOUNT_MASK             = &hfffd
+
+Const ForReading = 1                 
+
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Dim WSHShell, oNet, fso, Myfile
+
+Set WSHShell = WScript.CreateObject("wscript.shell")
+Set oNet = CreateObject("wscript.network")
+Set fso = CreateObject("Scripting.FileSystemObject")
+
+' Read and process users in .csv file(s).
+'
+Call ProcessUsers("C:\MOC\2277\Labfiles\Setup\Students.csv")
+'Call ProcessUsers("C:\MOC\2277\Labfiles\Setup\Users.csv")
+
+WScript.Quit 0
+
+'=======================================================================
+' Sub to read file, find user's names, and to enable the user's account.
+' Comments in the subroutine explain how it works
+'
+Sub ProcessUsers(filespec)
+   Dim fso, CSVFile, Record, UserDN, regEx, Matches, Match, QuotedName, UserName, FirstQuotePos, LastQuotePos
+   Set fso = CreateObject("Scripting.FileSystemObject")
+
+   ' Open CSV file containing user names.
+   Set CSVFile = fso.OpenTextFile(filespec, ForReading, False)
+
+   ' Set up a regular expression to search for user name.
+   Set regEx = New RegExp  ' Create regular expression.
+   '                 "  ...      (OU    =    it users    ,    OU    =    it admin|CN    =    users)    ,    DC    =    nw...      "            ,    user    ,
+   regEx.Pattern = CHR(34) & ".*?(OU\s*?=\s*?it users\s*?,\s*?OU\s*?=\s*?it admin|CN\s*?=\s*?users)\s*?,\s*?DC\s*?=\s*?nw.*?" & CHR(34) & "\s*?,\s*?user\s*?," ' Look for quoted user name followed by the "user" type.
+   regEx.IgnoreCase = True ' Set case insensitivity.
+   regEx.Global = False    ' Find only first occurrence.
+
+
+   ' Loop through records in file looking for and processing user names.
+   Do While CSVFile.AtEndOfStream <> True
+      ' Read line of file.
+      Record = CSVFile.ReadLine
+
+      ' Scan for user name and process it.
+      Set Matches = regEx.Execute(Record)
+
+      ' Iterate Matches collection -- should only be zero or one occurrence.
+      For Each Match in Matches
+         ' Strip quotes off user name. 
+         QuotedName = Match.Value
+         FirstQuotePos = InStr(1, QuotedName, CHR(34), 1)
+         LastQuotePos = InStr(FirstQuotePos + 1, QuotedName, CHR(34), 1)
+         UserName = Mid(QuotedName, FirstQuotePos + 1, LastQuotePos - FirstQuotePos - 1)
+
+         ' Enable user account.
+         Call EnableAcct(UserName)
+      Next
+   Loop
+   CSVFile.Close
+End Sub
+
+
+'==========================================================
+' Sub to enable a user account that was previously created.
+'
+Sub EnableAcct(UserName)
+   Dim oADO, UAC
+
+'   WScript.Echo("User:  " & UserName)
+
+   Set oADO = GetObject("LDAP://" & UserName)
+
+   ' Retrieve the user account control info and turn off the disabled bit.
+   UAC = oADO.userAccountControl
+   oADO.userAccountControl = UAC And UF_ENABLE_ACCOUNT_MASK
+   
+   oADO.SetInfo 
+
+   Set oADO = Nothing
+End Sub
+

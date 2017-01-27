@@ -1,0 +1,111 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+set wshshell = wscript.createobject("wscript.shell")
+set objnet = wscript.CreateObject("wscript.network")
+compname = objnet.ComputerName
+
+if compname = "VANCOUVER" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "namerica1", "REG_SZ"
+end if
+
+if compname = "DENVER" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "namerica1", "REG_SZ"
+end if
+
+if compname = "PERTH" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "spacific1", "REG_SZ"
+end if
+
+if compname = "BRISBANE" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "spacific1", "REG_SZ"
+end if
+
+if compname = "LISBON" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "europe1", "REG_SZ"
+end if
+
+if compname = "BONN" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "europe1", "REG_SZ"
+end if
+
+if compname = "LIMA" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "samerica1", "REG_SZ"
+end if
+
+if compname = "SANTIAGO" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "samerica1", "REG_SZ"
+end if
+
+if compname = "BANGALORE" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "asia1", "REG_SZ"
+end if
+
+if compname = "SINGAPORE" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "asia1", "REG_SZ"
+end if
+
+if compname = "CASABLANCA" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "africa1", "REG_SZ"
+end if
+
+if compname = "TUNIS" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "africa1", "REG_SZ"
+end if
+
+if compname = "ACAPULCO" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "namerica2", "REG_SZ"
+end if
+
+if compname = "MIAMI" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "namerica2", "REG_SZ"
+end if
+
+if compname = "AUCKLAND" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "spacific2", "REG_SZ"
+end if
+
+if compname = "SUVA" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "spacific2", "REG_SZ"
+end if
+
+if compname = "STOCKHOLM" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "europe2", "REG_SZ"
+end if
+
+if compname = "MOSCOW" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "europe2", "REG_SZ"
+end if
+
+if compname = "CARACAS" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "samerica2", "REG_SZ"
+end if
+
+if compname = "MONTEVIDEO" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "samerica2", "REG_SZ"
+end if
+
+if compname = "MANILA" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "asia2", "REG_SZ"
+end if
+
+if compname = "TOKYO" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "asia2", "REG_SZ"
+end if
+
+if compname = "KHARTOUM" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "africa2", "REG_SZ"
+end if
+
+if compname = "NAIROBI" then
+	wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "africa2", "REG_SZ"
+end if
+

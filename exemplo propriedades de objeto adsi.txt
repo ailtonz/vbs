@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'conectar com obj usuário
+'OBS: Para efetivar as alterações é necessário executar o método setinfo dop objeto
+'pq as alterações só ficam no cache local.
+
+Set objUser = GetObject("LDAP://cn=admin25,OU=wst,dc=nwtraders,dc=msft")
+	wscript.Echo "E-mail atual: " & objuser.mail
+	objuser.put "mail", "ciclano@ig.com.br"
+	objuser.put "description", "lab de sala de aula3."
+	objUser.SetInfo
+	wscript.Echo "Novo e-mail: " & objuser.mail
+	
+

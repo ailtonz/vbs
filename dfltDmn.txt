@@ -1,0 +1,69 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Copy appropriate wallpaper to the Windows directory and
+'set relevent registry settings.
+
+Dim objNet, WshShell, FSO
+
+Set objNet = WScript.CreateObject("WScript.Network")
+Set FSO = CreateObject("Scripting.FileSystemObject")
+Set WshShell = WScript.CreateObject("WScript.Shell")
+
+sWinDir = FSO.GetSpecialFolder(0) +"\"
+sImageDir = "\\london\setup\images\"
+sWallpaper = left( objNet.ComputerName, 3 ) + ".BMP"
+
+
+'Change to local image directory if present
+If FSO.FileExists("c:\setup\images\desktop.vbs") Then
+  sImageDir = "c:\setup\images\"
+ End If
+
+
+'Insure that wallpaper is in the Windows directory
+If not FSO.FileExists(sWinDir+sWallpaper) Then
+  FSO.CopyFile sImageDir+sWallpaper, sWinDir+sWallpaper, TRUE
+ End If
+
+
+'Insure that desktop.vbs is in the Windows directory
+If not FSO.FileExists(sWinDir+"desktop.vbs") Then
+  FSO.CopyFile sImageDir+"desktop.vbs", sWinDir+"desktop.vbs", TRUE
+ End If
+
+
+'Apply registry settings if both files are present
+If (FSO.FileExists(sWinDir+sWallpaper) and FSO.FileExists(sWinDir+"desktop.vbs")) Then
+
+    'Set desktop wallpaper settings
+    WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", sWinDir+sWallpaper,"REG_SZ"
+    WshShell.RegWrite "HKCU\Control Panel\Desktop\WallpaperStyle", "2","REG_SZ"
+    WshShell.RegWrite "HKCU\Control Panel\Desktop\FontSmoothing", "2","REG_SZ"
+
+    'Do this only if logged on as Administrator
+    if objNet.UserName = "Administrator" Then
+
+      'Set logon wallpaper settings
+      WshShell.RegWrite "HKEY_USERS\.DEFAULT\Control Panel\Desktop\Wallpaper", sWinDir+sWallpaper,"REG_SZ"
+      WshShell.RegWrite "HKEY_USERS\.DEFAULT\Control Panel\Desktop\WallpaperStyle", "2","REG_SZ"
+      WshShell.RegWrite "HKEY_USERS\.DEFAULT\Control Panel\Desktop\FontSmoothing", "2" ,"REG_SZ"
+
+      'set desktop.vbs to run every time a user logs on
+      wshshell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\Run\Desktop", sWinDir+"desktop.vbs", "REG_SZ"
+
+     End If
+
+ End if
+
+Set WshShell = nothing
+Set FSO = nothing
+Set objNet = nothing
+

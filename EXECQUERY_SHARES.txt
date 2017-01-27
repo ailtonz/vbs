@@ -1,0 +1,29 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+On Error Resume Next
+Set objSvc = GetObject("WinMgmts:")
+Set objProductSet = objSvc.ExecQuery("Select Name, InstallDate, PackageCache from Win32_Product")
+If Err <> 0 or objProductSet.count=0 Then
+	Wscript.Echo "Something went wrong " & Hex(err.number), err.description, err,source
+End If
+For Each objProduct in objProductSet
+	strProp = 	strProp &_
+			"------------------------------" & vbcrlf & _
+			objProduct.Name & vbcrlf & _
+			"------------------------------" & vbcrlf
+'The SWbemObject.properties_ property points to an array of SWbemProperty objects				
+	Set oPropSet = objProduct.properties_
+	For Each oProp in oPropSet
+			strProp = strProp & oProp.Name & ": " & oProp.Value & vbcrlf
+	Next
+Next
+Wscript.echo strProp
+

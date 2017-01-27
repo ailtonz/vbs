@@ -1,0 +1,38 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+Dim fso, WshShell, foundCD, d, dc, path
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set WshShell = CreateObject("WScript.Shell")
+Set dc = fso.Drives 
+found = False
+
+If fso.FileExists("\\london\setup\winsrc\I386\DSCLient.exe") Then
+	WshShell.Run "\\london\setup\winsrc\I386\DSCLIENT.EXE /t:c:\temp /c", 6,True
+	WshShell.Run "c:\temp\setup.exe /Q", 1, True
+Else
+	Do Until foundCD = True
+		MsgBox "Setup will now install the Directory Service Client." & vbcrlf & "Please insert the Windows 2000 Advanced Server CD into any CD-Drive.", vbOkonly - vbModal,"DSCLient Setup"
+		For Each d in dc
+			path = d.driveLetter & ":\CLIENTS\WIN9X\DSCLIENT.EXE"
+			If d.IsReady Then
+				If fso.FileExists(path) Then
+					foundCD = True
+					WshShell.Run path & " /t:c:\temp /c", 6, True
+					WshShell.Run "c:\temp\setup.exe /Q", 1, True
+				End If
+			End If
+		Next
+	Loop
+End if
+
+
+

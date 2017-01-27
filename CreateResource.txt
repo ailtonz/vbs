@@ -1,0 +1,199 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'This starter file creates File receive functions required to complete the lab in Module 07.
+
+
+Dim gBTSServerName
+Dim gBTSGroupName
+Dim g_objService
+Dim g_objLocator
+Dim l_bAdminUtilInitialized
+
+Const PLForPOToLitWare = "C:\Northwind Traders\PO_Electronics"
+Const PLForPOToCA  = "C:\Northwind Traders\PO_Appliances"
+Const PLForInvFromCA = "C:\Coast Appliances\PO"
+Const PLForInvFromLitWare = "C:\LitWare\PO"
+Const POToLitWare = "PO To LitWare"
+Const POToCoastAppliances = "PO To Coast Appliances"
+Const ConvToInvoiceFromCoastAppliances ="Convert PO To Invoice From Coast Appliances"
+Const ConvToInvoiceFromLitWare ="Convert PO To Invoice From LitWare"
+Const ChannelForPOToLiWare = "Channel For PO To LitWare"
+Const ChannelForPOToCA = "Channel For PO To Coast Appliances"
+Const ChannelForInvoiceFromLiWare = "Channel For (Electronic Goods) Invoice To Northwind Traders"
+Const ChannelForInvoiceFromCA = "Channel For (Home Appliances) Invoice To Northwind Traders"
+
+Const RECVSVC_NAMESPACE = "MicrosoftBizTalkServer_ReceiveFunction"
+Const GROUP_NAMESPACE = "MicrosoftBizTalkServer_Group"
+Const wbemChangeFlagCreateOnly = 2
+Const SERVER_NAMESPACE = "MicrosoftBizTalkServer_SERVER"
+Const ADMIN_PROTOCOL_TYPE_FILE = 1
+
+gBTSServerName = SetGetEnvVar("PROCESS", "COMPUTERNAME", "", False)
+gBTSGroupName = GetBTSGroupName(gBTSServerName)
+
+
+StopServer()
+InitAdminUtil
+Dim lRSName, lRSGroupName, lRSDocumentFormat, lRSProcessingServer, lRSFileMask, lRSProtocolType
+Dim lRSPollingLoc, lRSSourceValue, lRSSourceQualifier, lRSDestinationValue, lRSDestinationQualifier
+Dim lRSChannelName, lRSEnvelopeName
+
+Dim lRSName2,  lRSPollingLoc2, lRSChannelName2
+Dim lRSName3,  lRSPollingLoc3, lRSChannelName3
+Dim lRSName4,  lRSPollingLoc4, lRSChannelName4
+
+	lRSName = POToLitWare
+	lRSName2 =  POToCoastAppliances 
+	lRSName3 = ConvToInvoiceFromCoastAppliances
+	lRSName4 = ConvToInvoiceFromLitWare
+	lRSGroupName = gBTSGroupName
+	lRSProcessingServer = gBTSServerName
+	lRSFileMask = "*.xml"
+	lRSProtocolType = ADMIN_PROTOCOL_TYPE_FILE
+	lRSPollingLoc = PLForPOToLitWare
+	lRSPollingLoc2 = PLForPOToCA 
+	lRSPollingLoc3= PLForInvFromCA
+	lRSPollingLoc4 = PLForInvFromLitWare
+	lRSChannelName = ChannelForPOToLiWare 
+	lRSChannelName2 = ChannelForPOToCA
+	lRSChannelName3= ChannelForInvoiceFromCA
+	lRSChannelName4 = ChannelForInvoiceFromLiWare
+
+	
+
+	Call CreateReceiveService(lRSName, lRSGroupName, lRSDocumentFormat, lRSProcessingServer, lRSFileMask, lRSProtocolType,lRSPollingLoc, lRSDocumentName, lRSSourceValue, lRSSourceQualifier, lRSDestinationValue, lRSDestinationQualifier, lRSChannelName, lRSEnvelopeName)
+	
+	Call CreateReceiveService(lRSName2, lRSGroupName, lRSDocumentFormat, lRSProcessingServer, lRSFileMask, lRSProtocolType,lRSPollingLoc2, lRSDocumentName, lRSSourceValue, lRSSourceQualifier, lRSDestinationValue, lRSDestinationQualifier, lRSChannelName2, lRSEnvelopeName)
+	
+	Call CreateReceiveService(lRSName3, lRSGroupName, lRSDocumentFormat, lRSProcessingServer, lRSFileMask, lRSProtocolType,lRSPollingLoc3, lRSDocumentName, lRSSourceValue, lRSSourceQualifier, lRSDestinationValue, lRSDestinationQualifier, lRSChannelName3, lRSEnvelopeName)
+	
+	Call CreateReceiveService(lRSName4, lRSGroupName, lRSDocumentFormat, lRSProcessingServer, lRSFileMask, lRSProtocolType,lRSPollingLoc4, lRSDocumentName, lRSSourceValue, lRSSourceQualifier, lRSDestinationValue, lRSDestinationQualifier, lRSChannelName4, lRSEnvelopeName)
+	MsgBox "File receive functions created successfully"
+
+
+CleanupAdminUtil()
+StartServer()
+
+Function InitAdminUtil()
+	If (l_bAdminUtilInitialized = 1) Then  Exit Function
+	Set g_objLocator = CreateObject("WbemScripting.SWbemLocator")
+	Set g_objService = g_objLocator.ConnectServer(".", "root\MicrosoftBiztalkServer")
+	l_bAdminUtilInitialized = 1
+End Function
+
+
+Function CleanupAdminUtil()
+	If (l_bAdminUtilInitialized = 0) Then  Exit Function
+	Set g_objService = Nothing
+	Set g_objLocator = Nothing
+	l_bAdminUtilInitialized = 0	
+End Function
+
+Function GetServerByName(strServerName)
+    Set GetServerByName = Nothing
+    Set GetServerByName = g_objService.Get(SERVER_NAMESPACE & ".NAME=""" & strServerName & """")
+End Function
+
+Function GetGroupByName(strGroupName)
+    Set GetGroupByName = Nothing
+    Set GetGroupByName = g_objService.Get(GROUP_NAMESPACE & ".NAME=""" & strGroupName & """")
+End Function
+
+Function GetBTSGroupName(strServer)
+	Dim objServer, bOnTheFly
+	If (l_bAdminUtilInitialized = 0) Then
+		InitAdminUtil
+		bOnTheFly = True
+	End If	
+	Set objServer = GetServerByName(strServer)
+	GetBTSGroupName = objServer.GroupName
+	
+	Set objServer = Nothing
+	
+	If (bOnTheFly) Then
+		CleanupAdminUtil
+	End If
+End Function
+
+Function StartServer()
+	Dim objShell
+
+	Set objShell =  WScript.CreateObject ("Wscript.Shell")
+	objShell.Run "Net Start BTSSVC", 0, TRUE
+	Set objShell = Nothing
+End Function
+
+Function StopServer()
+	Dim objShell
+	Set objShell =  WScript.CreateObject ("Wscript.Shell")
+	objShell.Run "Net Stop BTSSVC", 0, TRUE
+	Set objShell = Nothing
+End Function
+
+Function SetGetEnvVar(strType, strName, strDefaultValue, bSet)
+	On Error Resume Next
+	Dim wshShell, wshSysEnv
+	SetGetEnvVar = strDefaultValue
+	If (TypeName(strName) <> "String") Or IsEmpty(strName) Or Len(strName) = 0 Or (TypeName(strType) <> "String") Or IsEmpty(strType) Or Len(strType) = 0 Then
+		FailOnError "SetGetEnvVar().CheckParameters"
+		Exit Function
+	End If
+	Set wshShell = WScript.CreateObject ("WScript.Shell")
+	Set wshSysEnv = wshShell.Environment(strType)
+	FailOnError "SetGetEnvVar().SetwshSysEnv"
+	If bSet Then
+		wshSysEnv(strName) = strDefaultValue
+		FailOnError "SetGetEnvVar().set_wshSysEnv(" & strName & ")"
+	Else
+		SetGetEnvVar = wshSysEnv(strName)
+	End If
+	If SetGetEnvVar = "" Then
+		SetGetEnvVar = strDefaultValue
+	End If
+End Function
+
+
+Function CreateReceiveService(strRecvSvcName, strGroupName, fDocumentFormat, strProcessingServer, strFileMask, fProtocolType, strPollingLoc, _
+										strDocumentName, strSourceID, strSourceQualifier, strDestinationID, strDestinationQualifier, _
+										strChannelName, strEnvelopeName)
+    Dim objBTSRecvSvc
+    Dim objBTSRecvSvcInstance
+
+    CreateReceiveService = True
+    Set objBTSRecvSvc = g_objService.Get(RECVSVC_NAMESPACE)
+    Set objBTSRecvSvcInstance = objBTSRecvSvc.SpawnInstance_
+ 
+    objBTSRecvSvcInstance.Name = strRecvSvcName
+    objBTSRecvSvcInstance.GroupName = strGroupName
+    objBTSRecvSvcInstance.FilenameMask = strFileMask
+    objBTSRecvSvcInstance.ProcessingServer = strProcessingServer
+    objBTSRecvSvcInstance.ProtocolType = fProtocolType
+    objBTSRecvSvcInstance.PollingLocation = strPollingLoc
+    objBTSRecvSvcInstance.OpennessFlag = BIZTALK_OPENNESS_TYPE_NOTOPEN
+	 If (strDocumentName <> "") Then  objBTSRecvSvcInstance.DocumentName = strDocumentName
+	 If (strSourceID <> "") Then  objBTSRecvSvcInstance.SourceID = strSourceID
+	 If (strSourceQualifier <> "") Then  objBTSRecvSvcInstance.SourceQualifier = strSourceQualifier
+	 If (strDestinationID <> "") Then  objBTSRecvSvcInstance.DestinationID = strDestinationID
+    If (strDestinationQualifier <> "") Then  objBTSRecvSvcInstance.DestinationQualifier = strDestinationQualifier
+    If (strChannelName <> "") Then  objBTSRecvSvcInstance.ChannelName = strChannelName
+    If (strEnvelopeName <> "") Then  objBTSRecvSvcInstance.EnvelopeName = strEnvelopeName    
+
+    objBTSRecvSvcInstance.Put_ (wbemChangeFlagCreateOnly)
+    If Err <> 0 Then
+        CreateReceiveService = False
+    End If
+    
+    Set objBTSRecvSvcInstance = Nothing
+    Set objBTSRecvSvc = Nothing
+    
+End Function
+
+

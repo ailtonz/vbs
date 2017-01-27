@@ -1,0 +1,236 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+bob = WshShell.RegRead("HKCU\Control Panel\Desktop\Wallpaper")
+
+Set objNet = WScript.CreateObject("WScript.Network")
+
+
+
+if objNet.ComputerName="VANCOUVER" then
+if bob <> "c:\setup\images\van.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\van.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="DENVER" then
+if bob <> "c:\setup\images\den.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\den.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="ACAPULCO" then
+if bob <> "c:\setup\images\aca.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\aca.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="MIAMI" then
+if bob <> "c:\setup\images\mia.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\mia.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="LISBON" then
+if bob <> "c:\setup\images\lis.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\lis.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="BONN" then
+if bob <> "c:\setup\images\bon.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\bon.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="STOCKHOLM" then
+if bob <> "c:\setup\images\sto.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\sto.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="MOSCOW" then
+if bob <> "c:\setup\images\mos.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\mos.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="BANGALORE" then
+if bob <> "c:\setup\images\ban.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\ban.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="SINGAPORE" then
+if bob <> "c:\setup\images\sin.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\sin.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="MANILA" then
+if bob <> "c:\setup\images\man.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\man.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="TOKYO" then
+if bob <> "c:\setup\images\tok.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\tok.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="PERTH" then
+if bob <> "c:\setup\images\per.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\per.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="BRISBANE" then
+if bob <> "c:\setup\images\bri.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\bri.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="AUCKLAND" then
+if bob <> "c:\setup\images\auc.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\auc.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="SUVA" then
+if bob <> "c:\setup\images\suv.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\suv.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="LIMA" then
+if bob <> "c:\setup\images\lim.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\lim.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="SANTIAGO" then
+if bob <> "c:\setup\images\san.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\san.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="CARACAS" then
+if bob <> "c:\setup\images\car.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\car.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="MONTEVIDEO" then
+if bob <> "c:\setup\images\mon.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\mon.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="CASABLANCA" then
+if bob <> "c:\setup\images\cas.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\cas.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="TUNIS" then
+if bob <> "c:\setup\images\tun.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\tun.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="KHARTOUM" then
+if bob <> "c:\setup\images\kha.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\kha.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+if objNet.ComputerName="NAIROBI" then
+if bob <> "c:\setup\images\nai.bmp" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKCU\Control Panel\Desktop\Wallpaper", "c:\setup\images\nai.bmp" ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\paper2.cmd", 6, true
+end if
+end if
+
+

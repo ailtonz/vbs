@@ -1,0 +1,975 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'  File:      CreateSchemaObject.vbs
+'
+'  Summary:   Utils for creating and verifying schema objects
+'             Schema objects need to  be unique -- so they are suffixed with 
+'             some unique id in the samples.
+'
+'  WARNING:   The schema objects CANNOT Be deleted using ado or oledb exercise 
+'             caution !
+'
+'  Sample:    Data Warehouse Scripts
+'
+'---------------------------------------------------------------------
+'  This file is part of the Microsoft Commerce Server 2000 SDK
+'
+'  Copyright (C) 2000 Microsoft Corporation.  All rights reserved.
+'
+' This source code is intended only as a supplement to Microsoft
+' Commerce Server 2000 and/or on-line documentation.  See these other
+' materials for detailed information regarding Microsoft code samples.
+'
+' THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+' KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+' IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+' PARTICULAR PURPOSE.
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'Option Explicit
+
+'BEGIN ADO CONSTANTS
+'--- redefined here
+Const adModeReadWrite = 3
+Const adModeWrite = 2
+
+'---- DataTypeEnum Values ----
+Const adEmpty = 0 
+Const adTinyInt = 16 
+Const adSmallInt = 2 
+Const adInteger = 3 
+Const adBigInt = 20 
+Const adUnsignedTinyInt = 17 
+Const adUnsignedSmallInt = 18 
+Const adUnsignedInt = 19 
+Const adUnsignedBigInt = 21 
+Const adSingle = 4 
+Const adDouble = 5 
+Const adCurrency = 6 
+Const adDecimal = 14 
+Const adNumeric = 131 
+Const adBoolean = 11 
+Const adError = 10 
+Const adUserDefined = 132 
+Const adVariant = 12 
+Const adIDispatch = 9 
+Const adIUnknown = 13 
+Const adGUID = 72 
+Const adDate = 7 
+Const adDBDate = 133 
+Const adDBTime = 134 
+Const adDBTimeStamp = 135 
+Const adBSTR = 8 
+Const adChar = 129 
+Const adVarChar = 200 
+Const adLongVarChar = 201 
+Const adWChar = 130 
+Const adVarWChar = 202 
+Const adLongVarWChar = 203 
+Const adBinary = 128 
+Const adVarBinary = 204 
+Const adLongVarBinary = 205 
+Const adFileTime = 64
+
+'----- RecordCreateOptionsEnum ---- 
+ Const adCreateCollection = &H2000
+ Const adCreateStructDoc = &H80000000
+ Const adCreateOverwrite = &H4000000
+ Const adFailIfNotExists = &HFFFFFFFF
+ Const adOpenIfExists = &H200000
+'END ADO CONSTANTS
+
+'---- utils const ----
+Public Const fPrimaryKey = 1
+Public Const fMultiValued = 2
+Public Const fHasDefaultVal = 4
+Public Const fIsRequired = 8
+Public Const fIsJoinKey = 16
+Public Const fDontClear = 32
+Public Const fGenerateColDef = 64
+Public Const fIsUniqueKey = 128
+
+'--- flags for clsdef
+Public Const fGenerateIdentity = &H1
+Public Const fGenerateTableDef = &H2
+Public Const fGenerateKeyDef = &H4
+Public Const fGeneratePartDef = &H8
+Public Const fIsAbstract = &H10
+
+Public Const fHasAggrExp = &H100  'member is aggregate
+Public Const fIsDimension = &H1000
+Public Const fIsMeasure = &H10000
+
+'----- types of relations
+'This would be an enum in vb
+'in catlog.h :this is many to 1
+Public Const eRelType_1M  = &H2
+'this is inheritance type relation 
+Public Const eRelType_PC =  &H4
+'this is many to many relation
+Public  Const eRelType_MM  = &H3
+
+'Single entry-point
+Call Main()
+
+'------------------------------------------------------------------------------
+'  Procedure : Main
+'  Purpose : Invoke sample code
+'------------------------------------------------------------------------------
+Sub Main()
+	On Error Resume Next
+
+	WScript.Echo " MAIN ---"
+
+	Dim cn
+	Dim strURL 'url type connstring
+	Dim strConn 'oledb 2.0 provider type conn string
+	Dim strSQLConn 
+
+	'-----------------------------------------------------------------
+	'| IMPORTANT : All of the connection string below must be edited |
+	'|             to all point to the same DW                       |
+	'-----------------------------------------------------------------
+	'sqloleb conn to get a unique datetimestamp from sqlserver
+	strSQLConn = "PROVIDER=SQLOLEDB;SERVER=servername;database=dbname;user id=username;password=********;"
+	strURL = "URL=mscop://InProcConnect/Server=servername:database=dbname:catalog=DWSChema:user=username:password=********:FASTLOAD=True"
+
+	Set cn = createobject("ADODB.Connection")
+
+	WScript.echo "before conn open"
+	cn.Open strURL
+
+	If Err.Number <> 0 Then
+		WScript.Echo "There was an error while attempting to open a connection to the DW," & vbCrLf & "please make sure the connection strings are correct."
+		WScript.Echo "Error: " & Err.Description & vbCrLf & "Err #: " & CStr(Err.Number) & vbCrLf & "Source: " & Err.Source
+		WScript.Quit(1)
+	End If
+
+	TestBindToCls cn, "Visit" 'visit is valid in DW 
+
+	TestBindToMem cn, "Visit/VisitNum"
+	'--- create class and member
+
+	TestCreateClsMem strSQLConn, strURL
+	TestCreateKey strSQLConn, strURL
+	TestCreateRelMem strSQLConn, strURL
+	TestCreateClsMultiVal strSQLConn, strURL
+End Sub
+
+'------------------------------------------------------------------------------
+'  Procedure : CreateClassDef
+'  Purpose : Utility to create classes
+'  Parameters : objConn 
+'				strClsDef - name of classdef to be created
+'               strSrcDef - source definition name
+'				strBaseClsName - this is useful for aggregations 
+'								 simple classes can pass ""
+'				bGenKeyDef = True - generate key definition automatically
+'				iClassType - type of classdef
+'				strFilter - exclusion expresion only used by aggregate classes
+'
+'   Notes : The Schema change mode should have been Set to True prior to calling
+'			this function
+'------------------------------------------------------------------------------
+Sub CreateClassDef(objConn, strClsDef, strSrcDef, strBaseClsName, bGenKeyDef, iClassType, strFilter)
+	Dim rec
+
+	Set rec =  CreateObject("ADODB.Record")
+
+	rec.Open "Class/" & strClsDef, objConn, adModeReadWrite, adCreateOverwrite
+	rec("IsPersistent") = 1
+	rec("ClassDefName") = strClsDef
+	rec("SourceDefName") = strSrcDef
+	rec("GeneratePartitionDef") = 1
+	rec("GenerateTableDef") = 1
+
+	If bGenKeyDef Then
+		rec("GenerateKeyDef") = 1
+	End If
+
+	'to create an aggregate class --
+	If strBaseClsName <> "" Then
+		rec("BaseClassName") = strBaseClsName
+	End If
+
+	rec("GenerateIdentity") = 1
+	rec("ClassType" ) = iClassType  '0 - general, 3 aggregate, 2 fact,1 dimension ?
+	rec("InstExclusionExpr") = strFilter
+
+	rec("__Commit") = 1
+	rec.Fields.Update
+
+	rec.close
+End Sub
+
+'------------------------------------------------------------------------------
+'  Procedure : CreateMemberDef
+'  Purpose : Utility to create members
+'  Parameters : objConn
+'				strClsDef - name of classdef
+'				strMemDef - name of member
+'				strMemDefType - type of the memberdef
+'				lMemFlags - MemberDef Creation flags
+'				strDefVal - default value for member
+'				strAggrExp - oused in aggregate classes to identIfy what and how data gets rolled up
+'
+'  Notes : user is supposed to Set the schema mode to updatable and reSet after the member is created
+'------------------------------------------------------------------------------
+Sub CreateMemberDef(objConn, strClsDef, strMemDef, strMemDefType, lMemFlags, strDefVal, strAggrExp)
+	Dim rec 
+
+	Set rec = CreateObject("ADODB.Record")
+
+	rec.Open "Member/" & strClsDef & "/" & strMemDef, objConn, adModeReadWrite, adCreateOverwrite
+
+	rec("MemberDefName") = strMemDef
+	rec("TypeName") = strMemDefType
+	If (lMemFlags And fGenerateColDef) > 0 Then  'default case
+		rec("GenerateColumnDef") = 1
+	End If
+	If (lMemFlags And fPrimaryKey) > 0 Then
+		rec("IsPrimaryKey") = 1
+	End If
+	If (lMemFlags And fMultiValued) > 0 Then
+		rec("IsMultiValued") = 1
+	End If
+	If (lMemFlags And fHasDefaultVal) > 0 Then
+		rec("DefaultValueAsStr") = strDefVal
+	End If
+	If (lMemFlags And fIsUniqueKey) > 0 Then
+		rec("IsUniqueKey") = 1
+	End If
+	If (lMemFlags And fIsDimension) > 0 Then
+		rec("IsDimension") =1
+	End If
+	If (lMemFlags And fIsMeasure ) > 0 Then
+		rec("IsMeasure") = 1
+	End If
+
+	'member aggregate - Then Set the aggregate expression 
+	If (lMemFlags And fHasAggrExp) > 0 Then
+		 rec("ExpressionStr") = strAggrExp
+	End If
+   
+	rec("__Commit") = 1
+	rec.Fields.Update
+
+	rec.Close
+End Sub
+
+'------------------------------------------------------------------------------
+'  Procedure : CreateKeyDef
+'  Purpose : Create a key definition
+'  Parameters : objConn
+'				strClsDef - name of classdef
+'				strKeyDefName - name of keydef
+'
+'  Notes : Can create a keydefinition only If the ClassDef has been created with
+'		   GenerateKeyDef = 0
+'         -Also , schema change mode should be enabled prior to this
+'------------------------------------------------------------------------------
+Sub CreateKeyDef(objConn, strClsDef, strKeyDefName)
+	Dim rec
+
+	Set rec = CreateObject("ADODB.Record")
+
+	rec.Open "Key/" & strKeyDefName, objConn, adModeReadWrite, adCreateOverwrite
+
+	rec("ClassDefName") = strClsDef
+
+	rec("__Commit") = 1
+	rec.Fields.Update
+
+	rec.Close
+End sub
+
+'------------------------------------------------------------------------------
+'  Procedure : CreateKeyMemberDef
+'  Purpose : Create a key definition
+'  Parameters : objConn
+'				strClsDef - name of classdef
+'				strKeyDefName - name of keydef
+'				strMemDefName - name of key member
+'				iOrdinalPosInKey - numerical position of member in key
+'
+'  Notes : Can create a keydefinition only If the ClassDef has been created with
+'		   GenerateKeyDef = 0
+'         -Also , schema change mode should be enabled prior to this
+'------------------------------------------------------------------------------
+Sub CreateKeyMemberDef(objConn, strKeyDefName, strMemDefName, iOrdinalPosInKey)
+	Dim rec 
+
+	Set rec = CreateObject("ADODB.Record")
+
+	rec.Open "KeyMember/" & strKeyDefName & "/" & strMemDefName, objConn, adModeReadWrite, adCreateOverwrite
+
+	rec("KeyDefName")    = strKeyDefName
+	rec("MemDefName") = strMemDefName
+	rec("OrdinalPosInKey") = iOrdinalPosInKey
+
+	rec("__Commit") = 1
+	rec.Fields.Update
+
+	rec.Close
+End sub
+
+'------------------------------------------------------------------------------
+'  Procedure : CreateRelationDef
+'  Purpose : create a  Relation Definitin
+'  Parameters : objConn
+'				strRelName - name of the reldef
+'				strClsParent - parent class name
+'				strClsChild - child class name
+'				strKeyParent - name of parent's key
+'				iRelType - the type of relationship this is
+'
+'  Notes : The classes Parent and child referred to must exist.
+'		   The Keydefinition for the parent must exist (1-M)
+'------------------------------------------------------------------------------
+Sub CreateRelDef(objConn, strRelName, strClsParent, strClsChild, strKeyParent, iRelType)
+	Dim rec 
+
+	Set rec = CreateObject("ADODB.Record")
+
+	rec.Open "Relation/" & strRelName, objConn, adModeWrite, adCreateOverwrite
+
+	rec("ParentClassName") = strClsParent
+	rec("ParentClasskey") = strKeyParent
+	rec("ChildClassName") = strClsChild
+	rec("RelType") = iRelType
+
+	rec("__Commit") = 1
+	rec.Fields.Update
+
+	rec.Close
+End Sub
+
+'------------------------------------------------------------------------------
+'  Procedure : CreateRelMemDef
+'  Purpose : Create a Relation Member Definition :Associate key member in parent with another
+'			 member in child (sorta foreign key thing)
+'  Parameters : objConn
+'				strRelName - name of the reldef
+'				strParentKeyMem - key of the parent 
+'				strChildMem - member which is same type as parent  which serves as foreign key in the child
+'------------------------------------------------------------------------------
+Sub CreateRelMemDef(objConn, strRelName, strParentKeyMem, strChildMem) 
+	Dim rec
+
+	Set rec = CreateObject("ADODB.Record")
+
+	rec.Open "RelMember/" & strRelName &"/" & strParentKeyMem & "/" & strChildMem, objConn, adModeReadWrite, adCreateOverwrite
+
+	rec("ChildMemName") =  strChildMem
+	rec("ParentMemName") = strParentKeyMem
+
+	rec("__Commit") = 1
+	rec.Fields.Update
+
+	rec.Close
+End Sub
+
+'------------------------------------------------------------------------------
+'  Function : GetSQLTimestampStr
+'  Purpose : Get the SQL CURRENT_TIMESTAMP datetime with millisec format so 
+'			 that it is unique every time you access it. Use this to create object 
+'			 and members with that timestamp so that they are unique within the database.
+'  Parameters : strSQLConn - SQL OLEDB connection
+'
+'  Notes : This method is used to generate unique object names since it is not possible
+'		   to remove objects from the DW, but you also cannot have duplicate names.
+'------------------------------------------------------------------------------
+Function GetSQLCurrTimestampStr(strSQLConn)
+	Dim rs
+	Dim vVal
+
+	Set rs = CreateObject("ADODB.RecordSet")
+
+	rs.Open "select  CONVERT(Decimal(19,5) ,CURRENT_TIMESTAMP,21) as TS", strSQLConn
+
+	vVal = rs("TS") 'easier to debug
+	vVal = Replace(vVal,".",  "") 'replce with empty (remove . so that it is valid for table names)
+
+	GetSQLCurrTimestampStr = vVal
+End Function
+
+'------------------------------------------------------------------------------
+'  Function : TestCreateClsMem
+'  Purpose : Example to show class def and member def creation
+'  Parameters : strSQLConn - SQL OLEDB connection
+'				strURL - CS OLEDB Provider connection
+'------------------------------------------------------------------------------
+Sub TestCreateClsMem(strSQLConn, strURL)
+	Dim objCmd 
+	Dim objConn
+	Dim objRec
+	Dim strTS   'current_timestamp -decimal string used for object creation
+	Dim strClsDef, strSrcDef, strBaseClsName, bGenKeyDef, strFilter
+	Dim strMemDefType, strDefVal, strAggrExp
+	Dim lMemFlags
+	Dim vVal
+
+	Set objCmd = CreateObject("ADODB.Command")
+
+	Set objConn = CreateObject("ADODB.Connection")
+
+	objConn.Open strURL
+	Set objCmd.ActiveConnection = objConn
+
+	'------------------------------------------------
+	'	Turn on schema change mode
+	'------------------------------------------------
+	objCmd.CommandText = "SchemaMode=1"
+	objCmd.Execute
+
+	strTS = GetSQLCurrTimestampStr(strSQLConn)
+	strClsDef = "MyCls" & strTS 
+	strSrcDef = "test_Source"
+	strBaseClsName =""
+	strFilter = ""
+	bGenKeyDef = True
+	lMemFlags = fGenerateColDef
+
+	WScript.Echo "DBG: Class Name: " & strClsDef
+	'create class
+	CreateClassDef objConn, strClsDef, strSrcDef, strBaseClsName, bGenKeyDef, 0, strFilter
+
+	'-- MEM1 : create member which is a primary key member
+	lMemFlags = fGenerateColDef + fPrimaryKey + fIsJoinKey + fIsUniqueKey + fHasDefaultVal  
+	strMemDef = "MemKey"  
+	strMemDefType = "WSTR"
+	strDefVal = "UNKNOWN"
+	strAggrExp = ""
+
+	WScript.Echo "DBG: Mem key: " & strMemDef
+	CreateMemberDef objConn, strClsDef, strMemDef, strMemDefType, lMemFlags,  strDefVal, strAggrExp 
+
+	'-- MEM2 : create non key member
+	lMemFlags =  fGenerateColDef +  fHasDefaultVal
+	strMemDef = "MemLong" 
+	strMemDefType = "LONG"
+	strDefVal = "0"
+	strAggrExp = ""
+
+	WScript.Echo "DBG: Mem : " & strMemDef
+	CreateMemberDef objConn, strClsDef, strMemDef, strMemDefType, lMemFlags, strDefVal, strAggrExp 
+
+	'------------------------------------------------
+	'  Commit Schema 
+	'------------------------------------------------
+	objCmd.CommandText = "CommitSchema"
+	objCmd.Execute
+
+	'------------------------------------------------
+	'	Turn off schema change mode 
+	'------------------------------------------------
+	objCmd.CommandText = "SchemaMode=0"
+	objCmd.Execute
+
+	Set objConn = Nothing 'data flush here for fastload
+	Set objCmd = Nothing 
+
+	'------------------------------------------------
+	'	Add instance data to the class just created 
+	'------------------------------------------------
+	Set objConn = CreateObject("ADODB.Connection")
+	Set objRec = CreateObject("ADODB.Record")
+
+	objConn.Open strURL
+
+	On Error Resume Next
+
+	vVal = GetSQLCurrTimestampStr(strSQLConn)
+	objRec.Open "Instance/" & strClsDef, objConn, adModeReadWrite, adCreateOverwrite
+
+	If Err.Number <> 0 Then
+		WScript.Echo "Error : " & Hex(Err.Number) & " Desc: " & Err.Description & " Source: " & Err.Source
+		Err.clear
+	End If
+	
+	objRec ( "MemKey") = "Key" & vVal
+	objRec ("MemLong") = 111
+
+	objRec("__Commit") = 1
+	objRec.Fields.Update
+
+	If Err.Number <> 0 Then
+		WScript.Echo "Error : " & Hex(Err.Number) & " Desc: " & Err.Description & " Source: " & Err.Source
+		Err.Clear
+	End If
+
+	Set objConn = Nothing
+End Sub
+
+'------------------------------------------------------------------------------
+'  Function : TestCreateKey
+'  Purpose : Example to show key def and key member def creation
+'  Parameters : strSQLConn - SQL OLEDB connection
+'				strURL - CS OLEDB Provider connection
+'
+'  Notes : We must create a new class to add the key to since we can not modIfy
+'		   an existing class in this way.
+'------------------------------------------------------------------------------
+Sub TestCreateKey(strSQLConn, strURL)
+	Dim objCmd 
+	Dim objRec 
+	Dim objConn
+	Dim strTS   'current_timestamp -decimal string used for object creation
+	Dim strClsDef, strSrcDef, strBaseClsName, bGenKeyDef, strFilter
+	Dim strMemDefType, strDefVal, strAggrExp
+	Dim strKeyDefName, iOrdinalPosInKey, strKeyMem,strMemDef
+
+	Dim lMemFlags
+
+	Set objConn = CreateObject("ADODB.Connection")
+	Set objCmd = CreateObject("ADODB.Command")
+
+	objConn.Open strURL
+
+	Set objCmd.ActiveConnection = objConn
+
+	'------------------------------------------------
+	'	Turn on schema change mode
+	'------------------------------------------------
+	objCmd.CommandText = "SchemaMode=1"
+	objCmd.Execute
+
+	strTS = GetSQLCurrTimestampStr(strSQLConn)
+
+	strClsDef = "MyParent" & strTS   ' create a class 
+	strSrcDef = "test_Source"
+	strBaseClsName =""
+	strFilter = ""
+	bGenKeyDef = False
+	lMemFlags = fGenerateColDef
+
+	WScript.Echo "DBG: Class Name: " & strClsDef
+	'create class -without the KeyDefinition automatically generated 
+	CreateClassDef objConn, strClsDef, strSrcDef, strBaseClsName, bGenKeyDef, 0, strFilter
+
+	'-- MEM1 : create member but do not mark it as primary key since we will build the key later
+	lMemFlags = fGenerateColDef + fHasDefaultVal
+	strMemDef = "MemKey" & strTS
+	strMemDefType = "WSTR"
+	strDefVal = "UNKNOWN"
+	strAggrExp = ""
+
+	WScript.Echo "DBG: Mem key: " & strMemDef
+	CreateMemberDef objConn, strClsDef, strMemDef, strMemDefType, lMemFlags, strDefVal, strAggrExp 
+
+	'-- MEM2 : create non key member
+	lMemFlags =  fGenerateColDef +  fHasDefaultVal
+	strMemDef = "MemLong" & strTS
+	strMemDefType = "LONG"
+	strDefVal = "0"
+	strAggrExp = ""
+
+	WScript.Echo "DBG: Mem : " & strMemDef
+	CreateMemberDef objConn, strClsDef, strMemDef, strMemDefType, lMemFlags, strDefVal, strAggrExp 
+
+	strKeyDefName = strClsDef & "PK"
+	'--- KEY  definition for class 1
+	CreateKeyDef objConn, strClsDef, strKeyDefName
+
+	strKeyMem = "MemKey" & strTS
+	iOrdinalPosInKey = 0
+
+	CreateKeyMemberDef objConn, strKeyDefName, strKeyMem, iOrdinalPosInKey
+
+	'------------------------------------------------
+	'  Commit Schema 
+	'------------------------------------------------
+	objCmd.CommandText = "CommitSchema"
+	objCmd.Execute
+
+	'------------------------------------------------
+	'	Turn ff schema change mode
+	'------------------------------------------------
+	objCmd.CommandText = "SchemaMode=0"
+	objCmd.Execute
+
+	Set objConn = Nothing 'data flush here for fastload
+
+	'------------------------------------------------
+	'	Add instance data to the class just created 
+	'------------------------------------------------
+	Set objRec = CreateObject("ADODB.Record")
+	Set objConn = CreateObject("ADODB.Connection")
+
+	objConn.Open strURL
+
+	objRec.Open "Instance/" & strClsDef, objConn, adModeReadWrite, 67108864
+
+	objRec(strKeyMem) = "FOO" & GetSQLCurrTimestampStr(strSQLConn)
+	objRec(strMemDef) = 11111111
+
+	objRec("__Commit") = 1
+	objRec.fields.update
+
+	Set objConn = Nothing 'data flush here for fastload
+	Set objCmd = Nothing 
+End Sub
+
+'------------------------------------------------------------------------------
+'  Function : TestCreateRelMem
+'  Purpose : Example to show relationship def and relationship member def creation
+'  Parameters : strSQLConn - SQL OLEDB connection
+'				strURL - CS OLEDB Provider connection
+'
+'  Notes : We must create a new class to add the key to since we can not modIfy
+'		   an existing class in this way.
+'		   The relation is actually M-M between Student - Courses
+'		   Here we model 1- M relations : STUDENT 1 - M  with STUDENTENROLLED 
+'		   COURSES  1 - M with STUDENTENROLLED / 
+'------------------------------------------------------------------------------
+Sub TestCreateRelMem(strSQLConn, strURL)
+	Dim objCmd 
+	Dim objConn
+	Dim strTS   'current_timestamp -decimal string used for object creation
+	Dim strClsDef, strSrcDef, strBaseClsName, bGenKeyDef, strFilter
+	Dim strMemDefType, strDefVal, strAggrExp
+	Dim strKeyDefName, iOrdinalPosInKey, strKeyMem, strKeyParent
+	Dim strClsParent, strClsChild
+	Dim strMemDef, strRelName, strParentKeyMem, strChildMemName, iRelType
+	Dim lMemFlags
+
+	Set objConn = CreateObject("ADODB.Connection")
+	Set objCmd = CreateObject("ADODB.Command")
+
+	objConn.Open strURL
+	Set objCmd.ActiveConnection = objConn
+
+	'------------------------------------------------
+	'	Turn on schema change mode
+	'------------------------------------------------
+	objCmd.CommandText = "SchemaMode=1"
+	objCmd.Execute
+
+	strTS = GetSQLCurrTimestampStr(strSQLConn)
+
+	strClsDef = "Student" & strTS   ' create a class 
+	strClsParent = strClsDef
+	strSrcDef = "test_Source"
+	strBaseClsName =""
+	strFilter = ""
+	bGenKeyDef = False
+	lMemFlags = fGenerateColDef
+	
+	'------------------------------------------------
+	'  Create  Student Class : parent of StudentEnrolled
+	'------------------------------------------------
+	WScript.Echo "DBG: Class Name: " & strClsDef
+	'create class -without the KeyDefinition automatically generated 
+	CreateClassDef objConn, strClsDef, strSrcDef, strBaseClsName, bGenKeyDef, 0, strFilter
+
+	'-- MEM1 : create member  but do not mark it as primary key since we will build the key later
+	' -- student_id
+	lMemFlags =  fGenerateColDef + fHasDefaultVal
+	strMemDef = "Student_id"
+	strKeyMem = strMemDef
+	strMemDefType = "WSTR"
+	strDefVal = "UNKNOWN"
+	strAggrExp = ""
+
+	WScript.Echo "DBG: Mem key: " & strMemDef
+	CreateMemberDef objConn, strClsDef, strMemDef, strMemDefType, lMemFlags, strDefVal, strAggrExp 
+
+	'-- MEM2 : first name
+	lMemFlags =  fGenerateColDef + fHasDefaultVal
+	strMemDef = "Student_FirstName" 
+	strMemDefType = "WSTR"
+	strDefVal = "UNKNOWN"
+	strAggrExp = ""
+
+	WScript.Echo "DBG: Mem : " & strMemDef
+	CreateMemberDef objConn, strClsDef, strMemDef, strMemDefType, lMemFlags, strDefVal, strAggrExp 
+
+	'-- MEM3 : last name
+	lMemFlags =  fGenerateColDef + fHasDefaultVal
+	strMemDef = "Student_LastName" 
+	strMemDefType = "WSTR"
+	strDefVal = "UNKNOWN"
+	strAggrExp = ""
+
+	WScript.Echo "DBG: Mem : " & strMemDef
+	CreateMemberDef objConn, strClsDef, strMemDef, strMemDefType ,  lMemFlags ,  strDefVal,strAggrExp 
+
+	strKeyDefName = strClsDef & "PK"
+	strKeyParent  = strKeyDefName  'key definition for parent
+	'--- KEY  definition for class 1
+	CreateKeyDef objConn, strClsDef, strKeyDefName
+
+
+	'strKeyMem is already set to key member
+	iOrdinalPosInKey = 0
+	CreateKeyMemberDef objConn,strKeyDefName, strKeyMem, iOrdinalPosInKey
+
+	'------------------------------------------------
+	'  Create Class 2: StudentEnrolled (don't generate automatic key def)
+	'------------------------------------------------
+	strTS = GetSQLCurrTimestampStr(strSQLConn)
+
+	strClsDef = "StudentEnrolled" & strTS   ' create a class 
+	strClsChild = strClsDef
+	strSrcDef = "test_Source"
+	strBaseClsName =""
+	strFilter = ""
+	bGenKeyDef = False 
+	lMemFlags = fGenerateColDef
+
+	'------------------------------------------------
+	'  Create  StudentEnrolled Class
+	'------------------------------------------------
+	WScript.Echo "DBG: Class Name: " & strClsDef
+	'create class -without the KeyDefinition automatically generated 
+	CreateClassDef objConn, strClsDef, strSrcDef, strBaseClsName,  bGenKeyDef, 0, strFilter
+
+	'-- MEM1 : create member but do not mark it as primary key since we will build the key later
+	' -- student_id
+	lMemFlags = fGenerateColDef + fHasDefaultVal
+	strMemDef = "EnrollStudent_id"
+	strKeyMem = strMemDef
+	strMemDefType = "WSTR"
+	strDefVal = "UNKNOWN"
+	strAggrExp = ""
+
+	WScript.Echo "DBG: Mem key: " & strMemDef
+	CreateMemberDef objConn, strClsDef, strMemDef, strMemDefType, lMemFlags, strDefVal, strAggrExp 
+
+	'-- MEM2 : Enroll Date -default value is a pain
+	lMemFlags = fGenerateColDef + fHasDefaultVal
+	strMemDef = "Enroll_Date" 
+	strMemDefType = "DATETIME"
+	strDefVal = "1900-1-1 0:0:0.0"
+	strAggrExp = ""
+
+	WScript.Echo "DBG: Mem : " & strMemDef
+	CreateMemberDef objConn, strClsDef, strMemDef, strMemDefType, lMemFlags, strDefVal, strAggrExp 
+
+	'-- MEM3 : Course Id
+	lMemFlags =  fGenerateColDef +  fHasDefaultVal
+	strMemDef = "Enroll_CourseId" 
+	strMemDefType = "WSTR"
+	strDefVal = "UNKNOWN"
+	strAggrExp = ""
+
+	WScript.Echo "DBG: Mem : " & strMemDef
+	CreateMemberDef objConn, strClsDef, strMemDef, strMemDefType, lMemFlags, strDefVal, strAggrExp 
+
+	'create key for child
+	strKeyDefName = strClsDef & "PK"
+	'--- KEY  definition for class 2
+	CreateKeyDef objConn, strClsDef, strKeyDefName
+	'--- create key memberdef for child class (studentenroll)
+	iOrdinalPosInKey = 0
+	CreateKeyMemberDef objConn, strKeyDefName, strKeyMem, iOrdinalPosInKey
+
+	'-----------------------------------------------
+	' RELATION  : Setup Relation between Student and StudentEnroll 
+	'	Set up relation member to be Student_id map to EnrollStudent_id
+	'-----------------------------------------------
+	strRelName = "Rel_Student_Enroll" & strTS
+
+	iRelType = eRelType_1M
+
+	CreateRelDef objConn, strRelName, strClsParent, strClsChild, strKeyParent, iRelType 
+
+	'create relation member between student_id and EnrollStudent_id
+	strParentKeyMem = "Student_Id"
+	strChildMemName = strKeyMem
+	CreateRelMemDef objConn, strRelName, strParentKeyMem, strChildMemName 
+
+	'------------------------------------------------
+	'  Commit Schema 
+	'------------------------------------------------
+	objCmd.CommandText = "CommitSchema"
+	objCmd.Execute
+
+	'------------------------------------------------
+	'	Turn ff schema change mode
+	'------------------------------------------------
+	objCmd.CommandText = "SchemaMode=0"
+	objCmd.Execute
+
+	Set objConn = Nothing 'data flush here for fastload
+	Set objCmd = Nothing 
+End Sub
+ 
+'------------------------------------------------------------------------------
+'  Function : TestCreateClsMultiVal
+'  Purpose : Example to show class def and multivalued member def creation
+'  Parameters : strSQLConn - SQL OLEDB connection
+'				strURL - CS OLEDB Provider connection
+'------------------------------------------------------------------------------
+Sub TestCreateClsMultiVal(strSQLConn, strURL)
+	Dim objCmd 
+	Dim objConn
+	Dim objRec
+	Dim strTS   'current_timestamp -decimal string used for object creation
+	Dim strClsDef, strSrcDef, strBaseClsName, bGenKeyDef, strFilter
+	Dim strMemDefType, strDefVal, strAggrExp
+	Dim lMemFlags
+	Dim vVal
+
+	Set objConn =CreateObject("ADODB.Connection")
+	Set objCmd = CreateObject("ADODB.Command")
+
+	objConn.Open strURL
+	Set objCmd.ActiveConnection = objConn
+
+	'------------------------------------------------
+	'	Turn on schema change mode
+	'------------------------------------------------
+	objCmd.CommandText = "SchemaMode=1"
+	objCmd.Execute
+
+	strTS = GetSQLCurrTimestampStr(strSQLConn)
+	strClsDef = "TestMV" & strTS 
+	strSrcDef = "test_Source"
+	strBaseClsName =""
+	strFilter = ""
+	bGenKeyDef = True
+	lMemFlags = fGenerateColDef
+
+	WScript.Echo "DBG: Class Name: " & strClsDef
+	'create class
+	CreateClassDef objConn, strClsDef, strSrcDef, strBaseClsName, bGenKeyDef, 0, strFilter
+
+	'-- MEM1 : create member which is a primary key member
+	lMemFlags = fGenerateColDef + fPrimaryKey + fIsJoinKey + fIsUniqueKey + fHasDefaultVal + fIs
+	strMemDef = "MemKey"  
+	strMemDefType = "WSTR"
+	strDefVal = "UNKNOWN"
+	strAggrExp = ""
+
+	WScript.Echo "DBG: Mem key: " & strMemDef
+	CreateMemberDef objConn, strClsDef, strMemDef, strMemDefType, lMemFlags, strDefVal, strAggrExp 
+
+	'-- MEM2 : create non key multivalued member
+	lMemFlags = fGenerateColDef + fHasDefaultVal + fMultiValued
+	strMemDef = "MVLong" 
+	strMemDefType = "LONG"
+	strDefVal = "0"
+	strAggrExp = ""
+
+	WScript.Echo "DBG: Mem : " & strMemDef
+	CreateMemberDef objConn, strClsDef, strMemDef, strMemDefType, lMemFlags, strDefVal, strAggrExp 
+
+	'------------------------------------------------
+	'  Commit Schema 
+	'------------------------------------------------
+	objCmd.CommandText = "CommitSchema"
+	objCmd.Execute
+
+	'------------------------------------------------
+	'	Turn ff schema change mode
+	'------------------------------------------------
+	objCmd.CommandText = "SchemaMode=0"
+	objCmd.Execute
+
+	Set objConn = Nothing  
+	Set objCmd = Nothing 
+
+	'------------------------------------------------
+	'	Add instance data to the class just created 
+	'------------------------------------------------
+	Set objConn = CreateObject("ADODB.Connection")
+	Set objRec = CreateObject("ADODB.Record")
+
+	objConn.Open strURL
+
+	On Error Resume Next 
+
+	vVal = GetSQLCurrTimestampStr(strSQLConn)
+	objRec.Open "Instance/" & strClsDef, objConn, adModeReadWrite, adCreateOverwrite
+
+	If Err.Number <> 0 Then
+		WScript.Echo "Error : " & Hex(Err.Number) & " Desc: " & Err.Description & " Source: " & Err.Source
+		Err.clear
+	End If
+
+	objRec("MemKey") = "Key" & vVal
+	objRec("MVLong") = Array(111,222322,333,4444,5555,77777,66666)
+
+	objRec("__Commit") = 1
+	objRec.Fields.Update
+
+	If Err.Number <> 0 Then
+		WScript.Echo "Error : " & Hex(Err.Number) & " Desc: " & Err.Description & " Source: " & Err.Source
+		Err.Clear
+	End If
+
+	Set objConn = Nothing  'flush to data store  - 
+End Sub
+
+'------------------------------------------------------------------------------
+'
+'  TEST : Bind to classdef
+'	strClsName is needed to bind to classdefinition
+'
+'------------------------------------------------------------------------------
+Sub TestBindToCls(vConn, strClsName)
+	Dim rec 
+	Dim  fld
+	Set rec = createobject("ADODB.Record")
+
+	rec.Open "Class/" & strClsName , vConn
+
+	WScript.Echo "dump the properties of class " & strClsName
+	WScript.Echo "property name = property value"
+
+	For Each fld In rec.fields
+		Select Case fld.Type
+		Case adIUnknown or adIDispatch
+			WScript.Echo Cstr(fld.Name) & " is an object  (or idispatch)"
+		Case adEmpty
+			'Fields with a Type of adEmpty return a Value that ADO does not knoe how to evaluate,
+			'so they must be skipped. If you want to access any of these Fields you will need to
+			'interact with the Commerce Server OLEDB Provider directly from OLEDB.
+			WScript.Echo CStr(fld.Name) & " is a special field and can only be accesed from OLEDB"
+		Case Else
+			WScript.Echo Cstr(fld.name)  & " = " & Cstr(fld.Value)
+		End Select
+	Next
+End Sub
+
+'------------------------------------------------------------------------------
+'
+'  TEST : Bind to Memberdef 
+'	 memderdef url needs  <classname>/<membername>
+'
+'------------------------------------------------------------------------------
+Sub TestBindToMem(vConn, strMemURL)
+	Dim rec 
+	Dim  fld
+	Set rec = createobject("ADODB.Record")
+
+	rec.Open "Member/" & strMemURL , vConn
+
+	WScript.Echo "dump the properties of member " & strMemURL
+	WScript.Echo "property name = property value"
+
+	For Each fld In rec.fields
+		Select Case fld.Type
+		Case adIUnknown or adIDispatch
+			WScript.Echo Cstr(fld.Name) & " is an object  (or idispatch)"
+		Case adEmpty
+			'Fields with a Type of adEmpty return a Value that ADO does not knoe how to evaluate,
+			'so they must be skipped. If you want to access any of these Fields you will need to
+			'interact with the Commerce Server OLEDB Provider directly from OLEDB.
+			WScript.Echo CStr(fld.Name) & " is a special field and can only be accesed from OLEDB"
+		Case Else
+		   WScript.Echo Cstr(fld.name)  & " = " & Cstr(fld.Value)
+		End Select
+	Next
+End Sub
+

@@ -1,0 +1,24 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set fso = createobject("scripting.filesystemobject")
+set wshshell = wscript.createobject("wscript.shell")
+fso.createtextfile("c:\status\domain.txt")
+set x = fso.opentextfile("c:\status\domain.txt",8)
+y = array("namerica","samerica","europe","asia","africa","spacific")
+for each i in y
+   if (fso.fileexists("c:\status\" & i & ".txt")) then
+      x.writeline i
+   end if
+next
+x.writeline "end"
+x.close
+wshshell.run "C:\tools\exchdel.exe", 6, true
+

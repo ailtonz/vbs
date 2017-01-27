@@ -1,0 +1,28 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+On Error Resume Next
+Set objSvc = GetObject("WinMgmts:")
+Set objConsumerClass = objSvc.GET("ActiveScriptEventConsumer")
+
+Set myInstance = objConsumerClass.spawninstance_
+	myInstance.name = "writeToFile"
+	myInstance.ScriptingEngine = "VBScript"
+	myInstance.ScriptFileName = "C:\Program Files\MSDNTrain\2439\Labs\Lab04\Lab 4.2\Starter\writeToFile.vbs"
+	myInstance.ScriptText = NULL
+	myInstance.KIllTimeout = 30
+myInstance.put_
+If Err = 0 Then
+	Wscript.Echo "Success! writeToFile instance created"
+Else
+	Wscript.Echo hex(err.number), err.Description
+End If
+wscript.quit
+

@@ -1,0 +1,35 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' Create the Wscript shell
+Set WshShell = WScript.CreateObject( "WScript.Shell" )
+' Echo individual environment variables
+WScript.Echo WshShell.Environment.Item("WINDIR") 
+WScript.Echo WshShell.Environment.Item("PATH") 
+WScript.Echo WshShell.Environment.Item("PROMPT")
+' Expand and environment variable
+WScript.Echo WshShell.ExpandEnvironmentStrings("%WINDIR%")
+' Show the path to the desktop
+WScript.Echo "Your desktop is " & WshShell.SpecialFolders("Desktop")
+
+
+' Use a for-next loop to echo all the environment variables
+WScript.Echo " There are " & wshshell.Environment("Process").Count  & " Environment variables"
+
+For Each strEnv In WshShell.Environment("PROCESS")
+    wscript.echo strenv	  
+Next
+
+' Pause for 5 seconds
+wscript.Echo "Pausing for 5 seconds."
+wscript.sleep 5000
+
+Wscript.Echo "Script is finished"
+

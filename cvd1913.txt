@@ -1,0 +1,42 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' Creates a set of users on the local computer.
+
+Const ADS_UF_DONT_EXPIRE_PASSWD = &h10000
+
+Set WshNetwork = wscript.CreateObject("Wscript.Network")
+strComputer = WshNetwork.ComputerName
+
+Set colAccounts = GetObject("WinNT://" & strComputer & "")
+Set objGroup = GetObject("WinNT://" & strComputer & "/Users,group")
+
+Call CrtUser("Instructor", "P@ssw0rd")
+Call CrtUser("EuropeDirector", "P@ssw0rd")
+Call CrtUser("PacificDirector", "P@ssw0rd")
+Call CrtUser("NADirector", "P@ssw0rd")
+Call CrtUser("SalesAnalyst", "P@ssw0rd")
+
+Function CrtUser(sUID, sPW)
+   Set oUsr = colAccounts.Create("user", sUID)
+   oUsr.SetPassword sPW
+   oUsr.SetInfo
+
+   oUsrFlags = oUsr.Get("UserFlags")
+   oUsrFlags = oUsrFlags OR ADS_UF_DONT_EXPIRE_PASSWD
+   oUsr.Put "userFlags", oUsrFlags
+
+   oUsr.Put "PasswordExpired", 0
+ 
+   oUsr.SetInfo
+
+   objGroup.Add(oUsr.ADsPath)
+End Function
+

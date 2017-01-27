@@ -1,0 +1,35 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' DHCP.vbs
+'
+' This script creates the DHCP Scopes
+
+set wshshell = wscript.CreateObject("wscript.shell")
+
+classroom = getclsrm
+
+
+wshshell.Run "netsh exec C:\Tools\DHCP" & classroom & ".dmp", 0, true
+
+
+
+private function getclsrm
+	set fso = createobject("scripting.filesystemobject")
+	set fl = fso.OpenTextFile ("c:\setup\instruct\lonset2.cmd")
+	while left (x,13) <> "set classroom"
+		x = fl.readline
+	wend
+	fl.close
+	rtrim x
+	lgn = len(x)
+	getclsrm = left(right(x,lgn-14),1)
+end function
+

@@ -1,0 +1,33 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim count: count = 0
+Dim vStart, vFinish
+Set objSvc = GetObject("winmgmts:")
+Set sink = wscript.CreateObject("WbemScripting.SWbemSink","SINK_")
+vStart = time()
+retVal = objSvc.ExecQueryAsync( sink,"Select * From Win32_ntLogEvent Where LogFile = 'Application'")
+
+WScript.Echo "Don't close this until the " & vbcrlf & "Asynchronous operation is done"
+'We could continue with some other work here if required
+Wscript.Quit
+
+'------------------- only subroutines below this line ---------------------------
+Sub SINK_OnCompleted(iHResult, objErrorObject, objAsyncContext)
+    vFinish = time()
+	vElapsedTime = round((vFinish-vStart) * 100000,2)
+	Wscript.echo "There were " & count & " messages and it took " & vElapsedTime & " seconds"
+End Sub
+
+Sub SINK_OnObjectReady(objObject, objAsyncContext)
+	count = count + 1
+End Sub
+
+

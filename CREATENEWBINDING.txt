@@ -1,0 +1,154 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Stephen Enloe
+
+'senloe@microsoft.com
+
+'Reads an input csv file to create Exchange mailboxes in an
+'Exchange/Win2000 environment.
+
+Dim oContainer
+Dim InPutFile
+Dim FileSystem
+
+Const ForReading = 1, ForWriting = 2, ForAppending = 8
+
+'Initialize global variables
+'open input file...
+
+Set objNet = WScript.CreateObject("WScript.Network")
+CompName = objNet.ComputerName
+CompName = lcase(CompName)
+
+if CompName = "van-mbx1" then
+	Users = "C:\Tools\NAUsers.dat"
+elseif CompName = "lim-mbx1" then
+	Users = "C:\Tools\SAUsers.dat"
+elseif CompName = "par-mbx1" then
+	Users = "C:\Tools\EUUsers.dat"
+elseif CompName = "cap-mbx1" then
+	Users = "C:\Tools\AFUsers.dat"
+elseif CompName = "mos-mbx1" then
+	Users = "C:\Tools\ASUsers.dat"
+elseif CompName = "can-mbx1" then
+	Users = "C:\Tools\SPUsers.dat"
+else 'not an mbx server
+	wscript.Quit
+end if
+
+Set FileSystem = WScript.CreateObject("Scripting.FileSystemObject")
+Set InPutFile = FileSystem.OpenTextFile(Users,ForReading,True)
+
+
+Do While InPutFile.AtEndOfStream<> True
+
+'Input is a csv file with full name, alias, domain
+' EG.  Joe Doe,jdoe,namerica
+
+   InLine=InPutFile.ReadLine
+   InArray = Split(InLine,",",-1,1)
+   FullName = InArray(0)
+   Alias = InArray(1)
+   Domain = InArray(2)
+
+   If Domain = "Namerica" then
+      PF1Server = "VAN-PF1"
+      MBXServer = "VAN-MBX1"
+   
+   elseif Domain = "Samerica" then
+      PF1Server = "LIM-PF1"
+      MBXServer = "LIM-MBX1"
+
+   elseif Domain = "Europe" then
+      PF1Server = "PAR-PF1"
+      MBXServer = "PAR-MBX1"
+
+   elseif Domain = "Africa" then
+      PF1Server = "CAP-PF1"
+      MBXServer = "CAP-MBX1"
+
+   elseif Domain = "Asia" then
+      PF1Server = "MOS-PF1"
+      MBXServer = "MOS-MBX1"
+
+   elseif Domain = "Spacific" then
+      PF1Server = "CAN-PF1"
+      MBXServer = "CAN-MBX1"
+
+   end if
+
+   
+   Set oContainer=GetObject("LDAP://CN=Users,DC=" & Domain & ",DC=nwtraders,DC=msft")
+   'Call Sub to create mailboxes
+   CreateUser oContainer
+
+'and again ...
+Loop
+
+'Clean up
+InPutFile.Close
+Set FileSystem = Nothing
+Set oContainer = Nothing
+
+WScript.Quit(0)
+
+
+
+Sub CreateUser(oCont)
+   WholeName = Split(FullName," ",-1,1)
+   FirstName = WholeName(0)
+   LastName = WholeName(UBound(WholeName))
+
+   'Create user
+   Set oUser = oContainer.Create("User","CN=" & FullName)
+   
+   'Assign properties values to user
+   oUser.Put "samAccountName",Alias
+   oUser.Put "givenName",FirstName
+   oUser.Put "sn",LastName
+   oUser.Put "userPrincipalName",Alias & "@nwtraders.msft"
+   
+'trap the object exists error and quit the script
+   on error resume next
+   oUser.SetInfo
+   if err.number = -2147019886 then
+	wscript.quit
+   end if
+   on error goto 0
+   
+   oUser.SetPassword "password"  'let user change it later
+   'enable the account
+   oUser.AccountDisabled = False
+
+   Set oMailbox = oUser
+
+   'Create a mailbox for the recipient
+   'You cannot create a mailbox using ADSI, so use CDOEXM
+   ' Full LDAP path to the information store may be hard to dig up
+   ' ... the adsiedit tool helps ...
+
+
+   oMailbox.CreateMailbox "LDAP://" & PF1Server & "/CN=Mailbox Store (" & MBXServer & ")" & _ 
+			",CN=First Storage Group" & _
+			",CN=InformationStore, CN=" & MBXServer & _
+			",CN=Servers, CN=" & Domain & " Administrative Group" & _
+			",CN=Administrative Groups" & _
+			",CN=Northwind Traders" & _
+			",CN=Microsoft Exchange, CN=Services" & _
+			",CN=Configuration,DC=nwtraders,DC=msft"
+
+   oUser.SetInfo
+
+   'Clean up
+   Set oUser = Nothing
+   Set oMailbox = Nothing
+End Sub
+

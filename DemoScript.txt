@@ -1,0 +1,35 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+Private Sub DeleteUserQuery(objDSC, lngKey)
+	'// This routine will delete a previous saved user query
+	'// from the DTA database
+	
+	'// INPUTS
+	'// objDSC = reference to a Data Source Control
+	'// lngKey = the primary key of the saved query record
+	
+	Dim objConn, strArg1, strCmdString
+	
+	Set objConn = objDSC.Connection
+	
+	'// Build the stored procedure command that will delete this record
+	strArg1 = lngKey
+	strCmdString = "dta_ui_delete_userquery(" & strArg1 & ")"
+	
+	'// Execute this commend
+	objConn.Execute strCmdString,,4
+	
+	'// Free our reference
+	Set objConn = Nothing
+
+End Sub
+

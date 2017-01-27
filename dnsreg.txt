@@ -1,0 +1,37 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' dnslint.vbs
+'
+' This script installs DNSLint
+
+set wshshell = wscript.CreateObject("wscript.shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+Const TemporaryFolder = 2
+
+'Extract the files in DNSLint.exe to %temp%
+wshshell.run "C:\MOC\2192\Labfiles\Setup\DNSLint.exe /auto", 0, true
+
+'Copy extracted files to C:\DNSLint
+if not(fso.FolderExists("C:\DNSLint")) then fso.CreateFolder "C:\DNSLint"
+
+source = fso.GetSpecialFolder(TemporaryFolder) & "\"
+dest = "C:\DNSLint\"
+
+file = "DNSLint Documentation.doc"
+if fso.FileExists(source & file) then
+   fso.CopyFile source & file, dest & file
+end if
+
+file = "dnslint.exe"
+if fso.FileExists(source & file) then
+   fso.CopyFile source & file, dest & file
+end if
+

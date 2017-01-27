@@ -1,0 +1,27 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set catalog = CreateObject("COMAdmin.COMAdminCatalog")
+Set apps= catalog.GetCollection("Applications")
+apps.populate
+numApps = apps.Count
+For i = 0 to numApps - 1
+	if apps.Item(i).Value("Name") = "ScriptApp" then
+		WScript.Echo apps.Item(i).Value("Name")
+		set app = apps.Item(i)
+		Set rolesInApp = apps.GetCollection("Roles", app.Value("ID"))
+		Set newRole = rolesInApp.Add
+		newRole.Value("Name") = "Managers"
+		rolesInApp.SaveChanges
+	end if 
+Next
+apps.SaveChanges
+
+

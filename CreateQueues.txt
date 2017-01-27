@@ -1,0 +1,50 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Option Explicit
+Const ADS_GROUP_TYPE_GLOBAL_GROUP = &H2
+Const ADS_GROUP_TYPE_DOMAIN_LOCAL_GROUP = &H4
+Const ADS_GROUP_TYPE_LOCAL_GROUP = &H4
+Const ADS_GROUP_TYPE_UNIVERSAL_GROUP = &H8
+Const ADS_GROUP_TYPE_SECURITY_ENABLED = &H80000000
+Dim oMyDomain, oRootDSE, oOU, grp, oUSR, sDomainADSPath
+Set oRootDSE = GetObject("LDAP://RootDSE")
+Set oMyDomain = GetObject("LDAP://" _
+  & oRootDSE.Get ("defaultNamingContext"))
+sDomainADSPath = oMyDomain.ADSPath
+Set oOU = oMyDomain.Create _
+  ("organizationalUnit", "OU=Student100OU")
+oOU.Description = "Student number 100 private OU"
+On Error Resume Next
+oOU.SetInfo
+If err.Number = -2147019886 then
+  WScript.Echo "The OU already exists, but can continue" 
+  Err.Clear
+Set oOU = GetObject _
+  ("LDAP://OU=Student100OU,DC=NWTraders,DC=msft")
+End If
+Set grp = oOU.Create("group", "CN=DeptAdmin")
+grp.Put "samAccountName", "dptAd"
+grp.Put "groupType", ADS_GROUP_TYPE_DOMAIN_LOCAL_GROUP Or ADS_GROUP_TYPE_SECURITY_ENABLED
+grp.SetInfo
+Set oUSR = oOU.Create("user", "CN=Frank Lee") 
+oUSR.Put"samAccountName", "FrankL"
+oUSR.Put "department", "MIS"
+oUSR.Put "sn", "Lee"
+oUSR.SetInfo
+oUSR.SetPassword "TempPassword"
+oUSR.AccountDisabled = False
+oUSR.SetInfo
+If Err.Number <> 0 then
+  WScript.Echo "Errors occurred - make sure that the user and group do not already exist..."
+Else
+  WScript.Echo "Finished"
+end if
+

@@ -1,0 +1,42 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Const NDir = "C:\Northwind Traders"
+Const NDirpoelec = "C:\Northwind Traders\PO_Electronics"
+Const NDirpohomeApp = "C:\Northwind Traders\PO_Appliances"
+Const LitDir = "C:\LitWare"
+Const LitPay = "C:\LitWare\Payment"
+Const LitPo = "C:\LitWare\PO"
+Const Ca = "C:\Coast Appliances"
+Const Capay = "C:\Coast Appliances\Payment"
+Const Capo = "C:\Coast Appliances\PO"
+
+
+AssurePath(NDir)
+AssurePath(NDirpoelec)
+AssurePath(NDirpohomeApp)
+AssurePath(LitDir)
+AssurePath(LitPay)
+AssurePath(LitPo)
+AssurePath(Ca)
+AssurePath(Capay)
+AssurePath(Capo)
+
+Sub AssurePath(strPath)
+	Dim fso
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If not fso.FolderExists(strPath) Then
+		fso.CreateFolder strPath
+	End If
+	Set fso = Nothing
+End Sub
+
+MsgBox "Directories Created Successfully"
+

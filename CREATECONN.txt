@@ -1,0 +1,107 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+On error resume next
+CopyFilesToRepository
+CreateBTCObjects
+
+if(err <> 0)then
+
+MsgBox err.Description, vbOKOnly + vbExclamation, "Unable to create BTC Objects"
+On error goto 0
+dim objSked, strPath, WshShell
+strPath = WScript.ScriptFullName
+strPath = Mid(strPath, 1, InStrRev(strPath, "\"))
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run """" & strPath & "RemoveBTCObjects.vbs" & """"
+
+end if
+
+sub CreateBTCObjects()
+
+Dim config, srcorg, destorg, doc, port, channel
+set config = CreateObject("BizTalk.BizTalkConfig.1")
+
+'Create Organizations
+Set srcorg = config.CreateOrganization
+srcorg.Name = "__source__"
+srcorg.Create
+
+Set dstorg = config.CreateOrganization
+dstorg.Name = "__destination__"
+dstorg.Create
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+Set WshSysEnv = WshShell.Environment("PROCESS")
+dim sCompName
+sCompName = WshSysEnv("ComputerName")
+
+'Create Documents
+Set doc = config.CreateDocument
+doc.Name = "__sourcedoc__"
+doc.Reference = "http://" & sCompName & "/BizTalkServerRepository/DocSpecs/Microsoft/SamplePO.xml"
+doc.Create
+
+Set doc2 = config.CreateDocument
+doc2.Name = "__destdoc__"
+doc2.Reference = "http://" & sCompName & "/BizTalkServerRepository/DocSpecs/Microsoft/SamplePOShipping.xml"
+doc2.Create
+
+
+'Create Port
+Set port = config.CreatePort
+port.Name = "__Port__"
+port.DestinationEndpoint.Organization = dstorg.Handle
+port.PrimaryTransport.Type = 4096
+port.Create
+
+
+'Create Channel
+Set channel = config.CreateChannel
+channel.Name = "__Channel__"
+channel.SourceEndpoint.Organization = srcorg.Handle
+channel.Port = port.Handle
+channel.InputDocument = doc.Handle
+channel.OutputDocument = doc2.Handle
+channel.MapReference = "http://" & sCompName & "/BizTalkServerRepository/Maps/Microsoft/SamplePOMap.xml"
+channel.Create    
+
+MsgBox "Configuration objects created successfully", vbOKOnly, "XML Translation Sample"
+
+End Sub
+
+sub CopyFilesToRepository
+	dim vDir, sDocPath, sMapPath
+	dim sCurPath, WshShell, fso
+
+	set vDir = nothing
+
+	sCurPath = WScript.ScriptFullName
+	sCurPath = Mid(strPath, 1, InStrRev(strPath, "\"))
+
+	set vDir = GetObject("IIS://localhost/w3svc/1/Root/BizTalkServerRepository")
+	if not (vDir is nothing) then
+		sDocPath = vDir.Path & "\DocSpecs\Microsoft\"
+		sMapPath = vDir.Path & "\Maps\Microsoft\"
+
+		CopyFile sCurPath, sDocPath, "SamplePO.xml"
+		CopyFile sCurPath, sDocPath, "SamplePOShipping.xml"
+		CopyFile sCurPath, sMapPath, "SamplePOMap.xml"
+	end if
+end sub
+
+sub CopyFile(srcdir, destdir, fname)
+	Dim f, fso
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	fso.CopyFile srcdir & fname, destdir
+	Set f = fso.GetFile(destdir & fname)
+	f.attributes = f.attributes and not(1)
+End sub
+
