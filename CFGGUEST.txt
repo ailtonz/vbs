@@ -1,0 +1,88 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set fso = CreateObject("Scripting.FileSystemObject")
+set wshshell=wscript.createobject("wscript.shell")
+
+fso.CreateFolder("d:\Lab10C")
+wshshell.Run "net share Lab10C=d:\Lab10C", 6, true
+fso.CreateFolder("d:\MigStore")
+wshshell.Run "net share MigStore=d:\MigStore", 6, true
+fso.CreateFolder("d:\RAHelp")
+wshshell.Run "net share RAHelp=d:\RAHelp", 6, true
+fso.CreateFolder("d:\Home")
+wshshell.Run "net share Home=d:\Home", 6, true
+fso.CreateFolder("d:\Profiles")
+wshshell.Run "net share Profiles=d:\Profiles", 6, true
+fso.CreateFolder("d:\USMT")
+wshshell.Run "net share USMT=d:\USMT", 6, true
+fso.CreateFolder("d:\USMT\Load")
+fso.CreateFolder("d:\USMT\Scan")
+fso.CreateFolder("d:\MigStore\DomUserVan")
+fso.CreateFolder("d:\MigStore\DomUserDen")
+fso.CreateFolder("d:\MigStore\DomUserPer")
+fso.CreateFolder("d:\MigStore\DomUserBri")
+fso.CreateFolder("d:\MigStore\DomUserLis")
+fso.CreateFolder("d:\MigStore\DomUserBon")
+fso.CreateFolder("d:\MigStore\DomUserLim")
+fso.CreateFolder("d:\MigStore\DomUserSan")
+fso.CreateFolder("d:\MigStore\DomUserBan")
+fso.CreateFolder("d:\MigStore\DomUserSin")
+fso.CreateFolder("d:\MigStore\DomUserCas")
+fso.CreateFolder("d:\MigStore\DomUserTun")
+fso.CreateFolder("d:\MigStore\DomUserAca")
+fso.CreateFolder("d:\MigStore\DomUserMia")
+fso.CreateFolder("d:\MigStore\DomUserAuk")
+fso.CreateFolder("d:\MigStore\DomUserSuv")
+fso.CreateFolder("d:\MigStore\DomUserSto")
+fso.CreateFolder("d:\MigStore\DomUserMos")
+fso.CreateFolder("d:\MigStore\DomUserCar")
+fso.CreateFolder("d:\MigStore\DomUserMon")
+fso.CreateFolder("d:\MigStore\DomUserMan")
+fso.CreateFolder("d:\MigStore\DomUserTok")
+fso.CreateFolder("d:\MigStore\DomUserKha")
+fso.CreateFolder("d:\MigStore\DomUserNai")
+
+
+'set directory permissions
+wshshell.Run "c:\tools\setperms.bat", 6, true
+
+
+'copy contents of the StudentCD\Labfiles\USMT folder on the Instructor CD to D:\USMT\Load and D:\USMT\Scan
+dim fso, d, dc, dl, run
+set wshshell=wscript.createobject("wscript.shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+set dc = fso.drives
+do until resp=vbcancel
+	For each d in dc
+		set dl = fso.getdrive(d)
+		lookfor=dl & "2272B_sg.doc"
+		if dl.isready then
+			if (fso.FileExists(lookfor)) then
+				Set ts = fso.CreateTextFile("c:\tools\labcopy.vbs", True)
+				ts.WriteLine "Set oSHApp = CreateObject(" & chr(34) & "Shell.Application" & chr(34) & ")" 
+				ts.writeline "sSrc = " & chr(34) & dl & "\StudentCD\Labfiles\USMT\*.*" & chr(34)
+				ts.writeline "sDest = " & chr(34) & "D:\USMT\Load" & chr(34)
+				ts.writeline "oSHApp.Namespace(sDest).CopyHere sSrc, &H10&"
+				ts.writeline "sSrc = " & chr(34) & dl & "\StudentCD\Labfiles\USMT\*.*" & chr(34)
+				ts.writeline "sDest = " & chr(34) & "D:\USMT\Scan" & chr(34)
+				ts.writeline "oSHApp.Namespace(sDest).CopyHere sSrc, &H10&"
+				ts.writeline "WScript.Quit"
+				ts.Close
+				WshShell.run "c:\tools\labcopy.vbs", 1, true
+				wscript.quit
+			end if
+		end If
+	Next
+	resp=Msgbox ("Please insert the Trainer Materials Compact Disc into the CD drive." & CHR(10) & "After you have inserted the CD, click OK.", vbOKCancel)
+loop
+msgbox "Setup cannot copy lab files. After the automated setup finishes, complete the " & chr(10) & "installation of the instructor computer by copying the entire contents of the" & chr(10) & "\StudentCD\Labfiles\USMT folder on the Trainer Materials Compact Disc to D:\USMT\Load and D:\USMT\Scan." 
+wscript.quit
+

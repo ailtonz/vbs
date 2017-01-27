@@ -1,0 +1,59 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Create Config Object
+Set config = CreateObject("BizTalk.BizTalkConfig")
+
+'Create Source Org
+Set SrcOrg = config.CreateOrganization
+SrcOrg.Name = "SourceOrganization"
+SrcOrgHandle = SrcOrg.Create
+Set SrcOrg = Nothing
+
+'Create Destination Org
+Set DestOrg = config.CreateOrganization
+DestOrg.Name = "DestinationOrganization"
+DestOrgHandle = DestOrg.Create
+Set DestOrg = Nothing
+
+'Create InDoc
+Set InDoc = config.CreateDocument
+InDoc.Name = "SourcePOSchema"
+InDoc.Reference = "C:\SDKDemo\DocSchemas\SourcePOSchema.xml"
+InDocHandle = InDoc.Create
+Set InDoc = Nothing
+
+'Create OutDoc
+Set OutDoc = config.CreateDocument
+OutDoc.Name = "DestPOSchema"
+OutDoc.Reference = "C:\SDKDemo\DocSchemas\DestPOSchema.xml"
+OutDocHandle = OutDoc.Create
+Set OutDoc = Nothing
+
+'Create Port
+Set Port = config.CreatePort
+Port.Name = "DemoPort"
+Port.PrimaryTransport.Type = 256 'File
+Port.DestinationEndpoint.Organization = DestOrgHandle
+Port.PrimaryTransport.Address = "file://C:\SDKDemo\DropLocation\OutDoc%tracking_id%.xml"
+PortHandle = Port.Create
+Set Port = Nothing
+
+'Create Channel
+Set Channel = config.CreateChannel
+Channel.Name = "DemoChannel"
+Channel.SourceEndpoint.Organization = SrcOrgHandle
+Channel.InputDocument = InDocHandle
+Channel.OutputDocument = OutDocHandle
+Channel.Port = PortHandle
+Channel.mapReference = "C:\SDKDemo\Maps\POMap.xml"
+Channel.Create
+Set Channel = Nothing
+

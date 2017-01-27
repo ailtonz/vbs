@@ -1,0 +1,392 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+'-------------------------------------------
+' UTILITIES SECTION
+'
+
+Dim gWebDavServer
+
+gWebDavServer = SetGetEnvVar("PROCESS", "COMPUTERNAME", "", False)
+
+Function GetServerNameFromURL(bstrURL)		' As String
+    Dim strTemp		' String
+
+    pos = InStr(8, bstrURL, "/")
+    strTemp = Left(bstrURL, pos - 1)
+    GetServerNameFromURL = strTemp
+End Function
+
+
+Function GetAliasID(sName, sQual, sValue, org)
+    Set aliasrs = org.Aliases
+    Do While Not aliasrs.EOF
+        If (aliasrs("name") = sName) And (aliasrs("qualifier") = sQual) _
+					And (aliasrs("value") = sValue) Then
+            GetAliasID = aliasrs("id")
+            Exit Do
+        End If
+        aliasrs.MoveNext
+    Loop
+End Function
+
+
+Function GetAppID(sName, org)
+    Set Apprs = org.Applications
+    Do While Not Apprs.EOF
+        If Apprs("name") = sName Then
+            GetAppID = Apprs("id")
+            Exit Do
+        End If
+        Apprs.MoveNext
+    Loop
+End Function
+
+
+Function DBDeleteTables()
+   On Error Resume Next
+    Dim adors, objIMParms
+
+    Set objIMParms = CreateObject("GetIMParams.CGetIMParams")
+    If Err.Number <> 0 Then 
+       Wscript.echo "GetIMParams.dll must be registered for delete routing to work properly."
+       DBDeleteTables = False
+    else
+       objIMParms.GetIMParams mvarDBUser, mvarDBPassword, mvarDBName, mvarDBServer
+       ConnStr = "Provider=SQLOLEDB.1;Persist Security Info=True;Data Source=" & mvarDBServer & ";" & _ 
+                           "Initial Catalog=" & mvarDBName & ";" & _ 
+                           "User ID=" & mvarDBUser & ";" & _ 
+                           "Password=" & mvarDBPassword & ";"
+
+       Set objIMParms = Nothing
+       Set adors = CreateObject("ADODB.Recordset")
+       adors.Open "delete from bts_outputconfig WHERE outagrid <> 1", ConnStr
+       adors.Open "delete from bts_portgroups", ConnStr
+       adors.Open "delete from bts_channel WHERE id <> 1", ConnStr
+       adors.Open "delete from bts_port WHERE id <> 1", ConnStr
+       adors.Open "delete from bts_portgroup", ConnStr
+       adors.Open "delete from bts_controlnumber", ConnStr
+       adors.Open "delete from bts_envelope", ConnStr
+       adors.Open "delete from bts_document WHERE id <> 1 AND id <> 2", ConnStr
+       adors.Open "delete from bts_xmlshare WHERE id <> 1", ConnStr
+       adors.Open "delete from bts_alias WHERE id <> 120001", ConnStr
+       adors.Open "delete from bts_application", ConnStr
+       adors.Open "delete from bts_organization WHERE id <> 110001", ConnStr
+       adors.Open "delete from bts_appint", ConnStr
+       adors.Open "delete from bts_certificate", ConnStr
+       Set adors = Nothing
+       DBDeleteTables = true
+   End If
+
+End Function
+
+
+Sub CleanBTM()
+	Dim config, obj, RS, HomeOrgID
+
+	Set config = CreateObject("BizTalk.BizTalkConfig")
+
+	Set obj = config.CreateChannel
+	Set RS = config.Channels
+	While Not RS.EOF
+	        obj.Load RS(0)
+	        obj.Remove
+	        RS.MoveNext
+	Wend
+		
+	Set obj = config.CreatePortGroup
+	Set RS = config.PortGroups
+	While Not RS.EOF
+	        obj.Load RS(0)
+	        obj.Remove
+	        RS.MoveNext
+	Wend
+
+	Set obj = config.CreatePort
+	Set RS = config.Ports
+	While Not RS.EOF
+	        obj.Load RS(0)
+	        obj.Remove
+	        RS.MoveNext
+	Wend
+
+	Set obj = config.CreateEnvelope
+	Set RS = config.Envelopes
+	While Not RS.EOF
+	        obj.Load RS(0)
+	        obj.Remove
+	        RS.MoveNext
+	Wend
+
+	Set obj = config.CreateDocument
+	Set RS = config.Documents
+	While Not RS.EOF
+	        obj.Load RS(0)
+	        obj.Remove
+	        RS.MoveNext
+	Wend
+
+	Set obj = config.CreateOrganization
+	Set RS = config.Organizations
+	While Not RS.EOF
+	        obj.Load rs(0)
+	        If obj.IsDefault Then 
+				HomeOrgID = obj.Handle
+			Else
+				obj.Remove
+			End If
+	        RS.MoveNext
+	Wend
+
+	'// clear Home Org Aliases, except default and one with org name
+	obj.load HomeOrgID
+	Set RS = obj.Aliases
+	
+	'// reset default alias
+	obj.SaveAlias obj.GetDefaultAlias, "sName" & Now(), False, "sQual" & Now(), "sValue" & Now()
+	RS.MoveFirst
+	While Not RS.EOF
+		If RS("qualifier") = "Organization Name"  Then '// reset def. Alias
+			obj.SaveAlias RS(0), "Organization", True, "Organization Name", obj.Name
+			obj.Save
+		Else
+			obj.RemoveAlias RS(0)
+		End If
+		RS.MoveNext
+	Wend
+	
+   
+   	'// clear Home Org Apps.
+	Set RS = obj.Applications
+	While Not RS.EOF
+		obj.RemoveApplication RS("id")
+		RS.MoveNext
+	Wend
+   
+   
+	obj.save
+
+	Set obj = Nothing
+	Set RS = Nothing
+	Set config = Nothing
+End Sub
+
+Function SetGetEnvVar(strType, strName, strDefaultValue, bSet)
+    Dim wshShell, wshSysEnv
+    SetGetEnvVar = strDefaultValue
+    If (TypeName(strName) <> "String") Or IsEmpty(strName) Or Len(strName) = 0 Or (TypeName(strType) <> "String") Or IsEmpty(strType) Or Len(strType) = 0 Then
+            Exit Function
+    End If
+    Set wshShell = CreateObject("WScript.Shell")
+    Set wshSysEnv = wshShell.Environment(strType)
+    If bSet Then
+        wshSysEnv(strName) = strDefaultValue
+        
+    Else
+		SetGetEnvVar = wshSysEnv(strName)
+    End If
+    If SetGetEnvVar = "" Then
+        SetGetEnvVar = strDefaultValue
+    End If
+End Function
+
+Sub ErrCheck(ObjectName)
+	If Err.number <> 0 Then
+		Wscript.Echo "---------------------------------------------" & vbCRLF & _
+			"Err Creating Object: " & ObjectName & vbCRLF & _
+			"Code:  " & Hex(Err.number) & " (" & Err.number & ") " & vbCRLF	& _
+			"Error: " & Err.Description & vbCRLF
+	End If
+	Err.Clear
+End Sub
+
+' END OF THE UTILITIES SECTION
+'
+'-------------------------------------------
+
+
+
+
+'-------------------------------------------
+' Globals to hold our objects.
+'
+Dim BTConf, doc, org, port, channel
+
+
+'-------------------------------------------
+' CREATE ALL OF THE BIZTALK ENTITIES THAT 
+'  WE NEED AND CONFIGURE THEM.
+'
+Function Config
+
+	' CREATE THE OBJECTS THAT WE'LL USE.
+	Set BTConf = CreateObject("BizTalk.BizTalkConfig")
+	Set doc = BTConf.CreateDocument			
+	Set org = BTConf.CreateOrganization		
+	Set port = BTConf.CreatePort			
+	Set channel = BTConf.CreateChannel
+		
+	' CALL THE FUNCTIONS TO CREATE THE BIZTALK ENTITIES.
+	CreateOrganizations
+	CreateDocuments
+	CreatePorts
+	CreateChannels
+
+	' RELEASE THE OBJECTS
+	Set BTConf = nothing		
+	Set doc = nothing			
+	Set org = nothing			
+	Set port = nothing			
+	Set channel = nothing
+
+End Function 'Config		
+
+
+'-------------------------------------------
+' CREATE ORGANIZATIONS AND ALIASES
+'
+Function CreateOrganizations
+	Process_HomeOrg
+	Create_MyTestSourceOrg
+	Set org = nothing
+End Function 'CreateOrganziations
+
+
+Dim lHomeOrgHandle
+Dim lHomeOrgAliasHandle
+Dim lApplicationHandle
+
+Function Process_HomeOrg
+	org.clear
+	org.LoadByName "Home Organization"	
+	lHomeOrgHandle = org.Handle	
+	lHomeOrgAliasHandle = org.GetDefaultAlias
+	org.CreateApplication("MyAICTestApplication")
+	lApplicationHandle = GetAppID("MyAICTestApplication", org)	
+End Function 'Process_HomeOrg
+
+
+Dim lMyTestSourceOrgHandle
+Dim lMyTestSourceOrgAliasHandle
+
+Function Create_MyTestSourceOrg
+	org.clear
+	org.name = "MyTestSourceOrganization"
+	org.Comments = ""
+	lMyTestSourceOrgHandle = org.Create	
+	Call ErrCheck(lMyTestSourceOrgHandle) 					
+	lMyTestSourceOrgAliasHandle = GetAliasID ("Organization", "OrganizationName", "MyTestSourceOrganization", org)	
+End Function 'Create_MyTestSourceOrg
+
+
+'-------------------------------------------
+' CREATE DOCUMENT DEFINITIONS
+'
+Function CreateDocuments	
+	Create_MyTestDoc
+	Set doc = nothing	
+End Function 'CreateDocuments		
+
+
+Dim lMyTestDocHandle
+
+Function Create_MyTestDoc
+	doc.clear				
+	doc.name = "MyAICTestDocument"
+	doc.reference = "http://" & gWebDavServer & "/BizTalkServerRepository/DocSpecs/Microsoft/CommonPO.xml"	
+	lMyTestDocHandle = doc.Create	
+	Call ErrCheck(lMyTestDocHandle) 					
+End Function 'Create_MyTestDoc
+
+
+'-------------------------------------------
+' CREATE MESSAGING PORTS
+'
+Function CreatePorts
+	Create_MyTestMessagingPort
+	Set port = nothing
+End Function 'CreatePorts
+
+
+Dim lMyTestMessagingPortHandle
+
+Function Create_MyTestMessagingPort
+	port.clear
+	port.name = "MyAICTestPort"
+	' set the endpoint object - port.DestinationEndPoint
+	port.DestinationEndPoint.Organization = lHomeOrgHandle
+	port.DestinationEndPoint.Alias = lHomeOrgAliasHandle
+	port.DestinationEndPoint.Application = lApplicationHandle
+	' set transport info for port.PrimaryTransport
+	port.PrimaryTransport.Address = "{119CA84A-A201-44A9-9AF7-745853BB089F}"		
+	port.PrimaryTransport.Type = BIZTALK_TRANSPORT_TYPE_APPINTEGRATION
+	' create object and check errors
+	lMyTestMessagingPortHandle = port.Create					
+	Call ErrCheck(lMyTestMessagingPortHandle) 					
+End Function 'Create_MyTestMessagingPort
+
+
+'-------------------------------------------
+' CREATE CHANNELS
+'
+Function CreateChannels
+	Create_MyTestChannel
+	Set channel = nothing
+End Function 'CreateChannels
+
+Dim lMyTestChannel
+
+Function Create_MyTestChannel
+	channel.clear
+	channel.name = "MyAICTestChannel"
+	' set the endpoint object - channel.SourceEndPoint
+	channel.SourceEndPoint.Organization = lMyTestSourceOrgHandle
+	channel.SourceEndPoint.Alias = lMyTestSourceOrgAliasHandle
+	channel.InputDocument = lMyTestDocHandle
+	channel.OutputDocument = lMyTestDocHandle
+	channel.Port = lMyTestMessagingPortHandle
+	' Logging info
+	channel.LoggingInfo.LogNativeInputDocument = 0
+	channel.LoggingInfo.LogNativeOutputDocument = 0
+	channel.LoggingInfo.LogXMLInputDocument = 0
+	channel.LoggingInfo.LogXMLOutputDocument = 0
+	channel.RetryCount = 0
+	channel.RetryInterval = 999
+	' create object and check errors
+	lMyTestChannel = channel.Create					
+	Call ErrCheck(lMyTestChannel) 					
+	
+	' set port configuration for lMyTestMessagingPortHandle
+	Dim ttype
+	Dim oDictConfigTest
+
+	ttype = BIZTALK_TRANSPORT_TYPE_APPINTEGRATION
+	Set oDictConfigTest = CreateObject("Commerce.Dictionary")
+	Set oDictConfigTest = channel.GetConfigData( 0,lMyTestMessagingPortHandle, ttype)
+	oDictConfigTest.Value("File_FullPath") = CStr("C:\Program Files\msdntrain\2379\labs\lab8\started\docresults.txt")
+	oDictConfigTest.Value("LogFile_FullPath") = CStr("C:\Program Files\msdntrain\2379\labs\lab8\started\docresults.txt")
+	channel.SetConfigData 0,lMyTestMessagingPortHandle, oDictConfigTest
+
+	'Set oDictConfigTest = channel.GetConfigData( 0,lMyTestMessagingPortHandle, ttype)
+	'for each i in oDictConfigTest
+	'	msgbox(i & " = " & oDictConfigTest(i))
+	'next
+
+	'oDictConfigTest.Value("File_FullPath") = CStr("C:\Program Files\msdntrain\2379\labs\lab8\started\docresults.txt")
+	'oDictConfigTest.Value("LogFile_FullPath") = CStr("C:\Program Files\msdntrain\2379\labs\lab8\started\docresults.txt")
+	'set oDbInt = CreateObject("Biztalk.BizTalkDBInternal")
+	'set oComp = oDbInt.GetPipelineComponentAdmin("AICVBPipelineComp.PipelineComp", true)
+	'oComp.SetConfigData(oDictConfigTest)
+
+
+
+End Function 'Create_MyTestChannel
+

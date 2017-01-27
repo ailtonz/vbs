@@ -1,0 +1,674 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+Dim IE
+Set IE = CreateObject("InternetExplorer.Application")
+ie.left=0
+ie.top=0
+ie.height=570
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///\\london\dcpromo\dc2.htm"
+ie.visible=1
+
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultPassword", "password" ,"REG_SZ"
+
+
+
+
+
+Set objNet = WScript.CreateObject("WScript.Network")
+CompName = objNet.ComputerName 
+CompDomain = objNet.UserDomain
+
+
+If CompName = "VANCOUVER" then
+	If CompDomain = "NAmerica1" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	Set fso = CreateObject("Scripting.FileSystemObject")
+  	Set MyFile = fso.CreateTextFile("\\london\setup\namerica1.txt", True)
+	MyFile.WriteLine("Namerica1.")
+	MyFile.Close
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "namerica1" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\van.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\van.txt", 1, true
+	end if
+End if
+
+
+
+If CompName = "LISBON" then
+	If CompDomain = "Europe1" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	Set fso = CreateObject("Scripting.FileSystemObject")
+  	Set MyFile = fso.CreateTextFile("\\london\setup\europe1.txt", True)
+	MyFile.WriteLine("Europe1.")
+	MyFile.Close
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "europe1" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\lis.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\lis.txt", 1, true
+	end if
+End if
+
+
+
+If CompName = "BANGALORE" then
+	If CompDomain = "Asia1" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	Set fso = CreateObject("Scripting.FileSystemObject")
+  	Set MyFile = fso.CreateTextFile("\\london\setup\asia1.txt", True)
+	MyFile.WriteLine("Asia1.")
+	MyFile.Close
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "asia1" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\ban.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\ban.txt", 1, true
+	end if
+End if
+
+
+
+If CompName = "PERTH" then
+	If CompDomain = "Spacific1" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	Set fso = CreateObject("Scripting.FileSystemObject")
+  	Set MyFile = fso.CreateTextFile("\\london\setup\spacific1.txt", True)
+	MyFile.WriteLine("SPacific1.")
+	MyFile.Close
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "spacific1" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\per.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\per.txt", 1, true
+	end if
+End if
+
+
+
+If CompName = "LIMA" then
+	If CompDomain = "SAmerica1" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	Set fso = CreateObject("Scripting.FileSystemObject")
+  	Set MyFile = fso.CreateTextFile("\\london\setup\samerica1.txt", True)
+	MyFile.WriteLine("Samerica1.")
+	MyFile.Close
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "samerica1" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\lim.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\lim.txt", 1, true
+	end if
+End if
+
+
+
+If CompName = "CASABLANCA" then
+	If CompDomain = "Africa1" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	Set fso = CreateObject("Scripting.FileSystemObject")
+  	Set MyFile = fso.CreateTextFile("\\london\setup\africa1.txt", True)
+	MyFile.WriteLine("Africa1.")
+	MyFile.Close
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "africa1" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\cas.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\cas.txt", 1, true
+	end if
+End if
+
+
+
+If CompName = "ACAPULCO" then
+	If CompDomain = "NAmerica2" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	Set fso = CreateObject("Scripting.FileSystemObject")
+  	Set MyFile = fso.CreateTextFile("\\london\setup\namerica2.txt", True)
+	MyFile.WriteLine("Namerica2.")
+	MyFile.Close
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "namerica2" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\aca.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\aca.txt", 1, true
+	end if
+End if
+
+
+
+If CompName = "STOCKHOLM" then
+	If CompDomain = "Europe2" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	Set fso = CreateObject("Scripting.FileSystemObject")
+  	Set MyFile = fso.CreateTextFile("\\london\setup\europe2.txt", True)
+	MyFile.WriteLine("Europe2.")
+	MyFile.Close
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "europe2" ,"REG_SZ"
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\sto.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\sto.txt", 1, true
+	end if
+End if
+
+
+
+If CompName = "MANILA" then
+	If CompDomain = "Asia2" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	Set fso = CreateObject("Scripting.FileSystemObject")
+  	Set MyFile = fso.CreateTextFile("\\london\setup\asia2.txt", True)
+	MyFile.WriteLine("Asia2.")
+	MyFile.Close
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "asia2" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\man.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\man.txt", 1, true
+	end if
+End if
+
+
+
+If CompName = "AUCKLAND" then
+	If CompDomain = "SPacific2" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	Set fso = CreateObject("Scripting.FileSystemObject")
+  	Set MyFile = fso.CreateTextFile("\\london\setup\spacific2.txt", True)
+	MyFile.WriteLine("SPacific2.")
+	MyFile.Close
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "spacific2" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\auc.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\auc.txt", 1, true
+	end if
+End if
+
+
+
+If CompName = "CARACAS" then
+	If CompDomain = "SAmerica2" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	Set fso = CreateObject("Scripting.FileSystemObject")
+  	Set MyFile = fso.CreateTextFile("\\london\setup\samerica2.txt", True)
+	MyFile.WriteLine("Samerica2.")
+	MyFile.Close
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "samerica2" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\car.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\car.txt", 1, true
+	end if
+End if
+
+
+
+If CompName = "KHARTOUM" then
+	If CompDomain = "Africa2" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	Set fso = CreateObject("Scripting.FileSystemObject")
+  	Set MyFile = fso.CreateTextFile("\\london\setup\africa2.txt", True)
+	MyFile.WriteLine("Namerica1.")
+	MyFile.Close
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "africa2" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\kha.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\kha.txt", 1, true
+	end if
+End if
+
+
+
+If CompName = "DENVER" then
+	If CompDomain = "Namerica1" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	x=0
+	do while x=0
+	msg = "Checking for the Namerica1 domain ... "
+	msg2 = "Changing Domain Model"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	bob = WshShell.Popup(msg,5,msg2,64)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If (fso.FileExists("\\london\setup\namerica1.done")) Then
+    	x=1
+	End If
+	if x=0 then
+	wscript.sleep 60000
+	end if
+	Loop
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "namerica1" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\register.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\den.txt", 1, true
+	end if
+End if
+
+
+If CompName = "BONN" then
+	If CompDomain = "Europe1" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	x=0
+	do while x=0
+	msg = "Checking for the Europe1 domain ... "
+	msg2 = "Changing Domain Model"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	bob = WshShell.Popup(msg,5,msg2,64)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If (fso.FileExists("\\london\setup\europe1.done")) Then
+    	x=1
+	End If
+	if x=0 then
+	wscript.sleep 60000
+	end if
+	Loop
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "europe1" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\register.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\bon.txt", 1, true
+	end if
+End if
+
+
+If CompName = "SINGAPORE" then
+	If CompDomain = "Asia1" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	x=0
+	do while x=0
+	msg = "Checking for the Asia1 domain ... "
+	msg2 = "Changing Domain Model"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	bob = WshShell.Popup(msg,5,msg2,64)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If (fso.FileExists("\\london\setup\asia1.done")) Then
+    	x=1
+	End If
+	if x=0 then
+	wscript.sleep 60000
+	end if
+	Loop
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "asia1" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\register.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\sin.txt", 1, true
+	end if
+End if
+
+
+If CompName = "BRISBANE" then
+	If CompDomain = "Spacific1" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	x=0
+	do while x=0
+	msg = "Checking for the Spacific1 domain ... "
+	msg2 = "Changing Domain Model"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	bob = WshShell.Popup(msg,5,msg2,64)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If (fso.FileExists("\\london\setup\spacific1.done")) Then
+    	x=1
+	End If
+	if x=0 then
+	wscript.sleep 60000
+	end if
+	Loop
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "spacific1" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\register.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\bri.txt", 1, true
+	end if
+End if
+
+
+If CompName = "SANTIAGO" then
+	If CompDomain = "Samerica1" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	x=0
+	do while x=0
+	msg = "Checking for the Samerica1 domain ... "
+	msg2 = "Changing Domain Model"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	bob = WshShell.Popup(msg,5,msg2,64)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If (fso.FileExists("\\london\setup\samerica1.done")) Then
+    	x=1
+	End If
+	if x=0 then
+	wscript.sleep 60000
+	end if
+	Loop
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "samerica1" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\register.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\san.txt", 1, true
+	end if
+End if
+
+
+If CompName = "TUNIS" then
+	If CompDomain = "Africa1" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	x=0
+	do while x=0
+	msg = "Checking for the Africa1 domain ... "
+	msg2 = "Changing Domain Model"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	bob = WshShell.Popup(msg,5,msg2,64)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If (fso.FileExists("\\london\setup\africa1.done")) Then
+    	x=1
+	End If
+	if x=0 then
+	wscript.sleep 60000
+	end if
+	Loop
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "africa1" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\register.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\tun.txt", 1, true
+	end if
+End if
+
+
+If CompName = "MIAMI" then
+	If CompDomain = "Namerica2" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	x=0
+	do while x=0
+	msg = "Checking for the Namerica2 domain ... "
+	msg2 = "Changing Domain Model"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	bob = WshShell.Popup(msg,5,msg2,64)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If (fso.FileExists("\\london\setup\namerica2.done")) Then
+    	x=1
+	End If
+	if x=0 then
+	wscript.sleep 60000
+	end if
+	Loop
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "namerica2" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\register.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\mia.txt", 1, true
+	end if
+End if
+
+
+If CompName = "MOSCOW" then
+	If CompDomain = "Europe2" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	x=0
+	do while x=0
+	msg = "Checking for the Europe2 domain ... "
+	msg2 = "Changing Domain Model"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	bob = WshShell.Popup(msg,5,msg2,64)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If (fso.FileExists("\\london\setup\europe2.done")) Then
+    	x=1
+	End If
+	if x=0 then
+	wscript.sleep 60000
+	end if
+	Loop
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "europe2" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\register.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\mos.txt", 1, true
+	end if
+End if
+
+
+If CompName = "TOKYO" then
+	If CompDomain = "Asia2" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	x=0
+	do while x=0
+	msg = "Checking for the Asia2 domain ... "
+	msg2 = "Changing Domain Model"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	bob = WshShell.Popup(msg,5,msg2,64)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If (fso.FileExists("\\london\setup\asia2.done")) Then
+    	x=1
+	End If
+	if x=0 then
+	wscript.sleep 60000
+	end if
+	Loop
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "asia2" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\register.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\tok.txt", 1, true
+	end if
+End if
+
+
+If CompName = "SUVA" then
+	If CompDomain = "Spacific2" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	x=0
+	do while x=0
+	msg = "Checking for the Spacific2 domain ... "
+	msg2 = "Changing Domain Model"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	bob = WshShell.Popup(msg,5,msg2,64)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If (fso.FileExists("\\london\setup\spacific2.done")) Then
+    	x=1
+	End If
+	if x=0 then
+	wscript.sleep 60000
+	end if
+	Loop
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "spacific2" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\register.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\suv.txt", 1, true
+	end if
+End if
+
+
+If CompName = "MONTEVIDEO" then
+	If CompDomain = "Samerica2" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	x=0
+	do while x=0
+	msg = "Checking for the Samerica2 domain ... "
+	msg2 = "Changing Domain Model"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	bob = WshShell.Popup(msg,5,msg2,64)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If (fso.FileExists("\\london\setup\samerica2.done")) Then
+    	x=1
+	End If
+	if x=0 then
+	wscript.sleep 60000
+	end if
+	Loop
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "samerica2" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\register.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\mon.txt", 1, true
+	end if
+End if
+
+
+If CompName = "NAIROBI" then
+	If CompDomain = "Africa2" then
+	Msgbox, "This student computer has already joined the " & CompDomain & " domain."
+	Wscript.quit
+	else
+	x=0
+	do while x=0
+	msg = "Checking for the Africa2 domain ... "
+	msg2 = "Changing Domain Model"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	bob = WshShell.Popup(msg,5,msg2,64)
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	If (fso.FileExists("\\london\setup\africa2.done")) Then
+    	x=1
+	End If
+	if x=0 then
+	wscript.sleep 60000
+	end if
+	Loop
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "africa2" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.RegWrite "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce\", "\\london\dcpromo\final\register.vbs" ,"REG_SZ"
+	Set WshShell = WScript.CreateObject("WScript.Shell")
+	WshShell.run "dcpromo /answer:\\london\dcpromo\domains\nai.txt", 1, true
+	end if
+End if
+
+
+

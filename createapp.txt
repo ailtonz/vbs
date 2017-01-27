@@ -1,0 +1,807 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'<%
+'-------------------------------------------------------------------------------------------
+' 
+'-------------------------------------------------------------------------------------------
+'Option Explicit
+On Error Resume Next
+'-------------------------------------------------------------------------------------------
+
+'-------------------------------------------------------------------------------------------
+' VBSCript Converted from Tutorial_en.xml
+'-------------------------------------------------------------------------------------------
+
+'-------------------------------------------------------------------------------------------
+' Resources Section
+
+Const rReceive = "ResponseSecure"
+Const rPollingLocation = "c:\data\POApproval\PODrop"
+Const rPollingFile = "myResponse?.txt" 
+Const rWebDAVApp = "POApproval"
+'Docs
+Const rDoc = "Response"
+Const rDocSpec = "defResponse.xml"
+'Const rDocDestination = "DecisionFactors"
+'Const rDocSpecDestination = "defDecisionFactors.xml"
+'Orgs
+Const rHome = "Home Organization"
+Const rSource = "Approver"
+Const rDestination = "Approver"
+' Application
+Const rApplication = "POApprovalSked"
+'Port
+Const rPort = "Response"
+'Channel
+Const rChannel = "ResponseSigned"
+'Map
+'Const rMapSpec = "mapBasicPO_DecisionFactors.xml"
+'COM component
+'Const cScriptorCLS = "{60D5591C-64A3-4A25-8822-A20356BCD0D4}"
+' Queue
+Const rQueue = "direct=os:.\Private$\Response"
+' Signature Info
+Const rSignName = "Approver "
+Const rSignReference = "authagent@Approver.com, US, WA, Redmond, Approver.com, Purchasing, Approver"
+
+PassFail "Resources"
+
+'-------------------------------------------------------------------------------------------
+' VBScript Converted from Tutorial.xml
+'-------------------------------------------------------------------------------------------
+
+' Tutorial
+'-------------------------------------------------------------------------------------------
+' Constants Section
+
+Const BIZTALK_TRANSPORT_TYPE_HTTP = 4
+Const BIZTALK_TRANSPORT_TYPE_APPINTEGRATION = 32
+Const BIZTALK_TRANSPORT_TYPE_MSMQ = 128 'Specifies that this instance of the object selects a Microsoft Message Queuing transport component. 
+Const BIZTALK_TRANSPORT_TYPE_FILE = 256
+Const BIZTALK_TRANSPORT_TYPE_OPENDESTINATION = 2048
+Const BIZTALK_OPENNESS_TYPE_NOTOPEN = 1
+Const BIZTALK_OPENNESS_TYPE_SOURCE = 2
+Const BIZTALK_OPENNESS_TYPE_DESTINATION = 4
+Const BIZTALK_STORE_TYPE_MY = 1 'Specifies that the certificate store is type MY. This store contains certificates authorized only by your organization. 
+Const BIZTALK_STORE_TYPE_BIZTALK = 2 'Specifies that the certificate is stored in the dedicated BizTalk Server 2000 store. 
+
+PassFail "Constants"
+
+'-------------------------------------------------------------------------------------------
+' Globals Section
+
+Dim gBTSServerName
+Dim gBTSGroupName
+Dim gRef
+Dim gRefMap
+Dim gRefDocDestination
+Dim gOrgHome
+Dim gOrgSource
+Dim gOrgDestination
+Dim gDoc
+Dim gDocDestination
+Dim gPort
+Dim gChannel
+Dim gApplication
+
+PassFail "Globals"
+
+'-------------------------------------------------------------------------------------------
+' Script Section
+
+	gBTSServerName = SetGetEnvVar("PROCESS", "COMPUTERNAME", "", False)
+   	gBTSGroupName = GetBTSGroupName(gBTSServerName)
+   	gRef = GetWebDAVURL(gBTSServerName) + "/DocSpecs/" + rWebDAVApp + "/" + rDocSpec
+   	
+PassFail "Script"
+
+'-------------------------------------------------------------------------------------------
+' SETUP Section
+
+
+'************BEGIN SETUP CODE <PRE>
+' ---- Workaround for Caching Issue Need to Stop and Start the Service
+
+Set SETUPobjShell =  WScript.CreateObject("Wscript.Shell")
+SETUPobjShell.Run "Net Stop BTSSVC", 0, TRUE
+PASSFAIL "BizTalk Service Stopped"
+SETUPobjShell.Run "Net Start BTSSVC", 0, TRUE
+PASSFAIL "BizTalk Service Started"
+
+Set SESTUPobjShell = Nothing
+'***Broken in IDS2
+'Set SETUPobjComPlus = CreateObject("COMAdmin.COMAdminCatalog")
+'SETUPobjComPlus.ShutdownApplication "BizTalk Server Out-of-process package"
+'Set SETUPobjComPlus = Nothing
+'PASSFAIL "BizTalk Out of Process Object Shut Down"
+
+SETUPWebDavURL = GetWebDAVURL(SetGetEnvVar("PROCESS", "COMPUTERNAME", "", False))
+' ----- End Workaround
+'----- SETUP ReceiveFunctions Processing Started
+StopServer()
+InitAdminUtil
+
+	DeleteReceiveSvc(rReceive)
+	PassFail "Remove Receive Service(s)"
+
+	Dim lRSName, lRSGroupName, lRSDocumentFormat, lRSProcessingServer, lRSFileMask, lRSProtocolType
+	Dim lRSPollingLoc, lRSSourceValue, lRSSourceQualifier, lRSDestinationValue, lRSDestinationQualifier
+	Dim lRSChannelName, lRSEnvelopeName
+
+		lRSName = rReceive
+		lRSGroupName = gBTSGroupName
+		lRSProcessingServer = gBTSServerName
+		lRSFileMask = rPollingFile
+		lRSProtocolType = ADMIN_PROTOCOL_TYPE_FILE
+		lRSPollingLoc = rPollingLocation
+		lRSChannelName = rChannel
+		lRSEnvelopeName = ""
+
+	Call CreateReceiveService(lRSName, lRSGroupName, lRSDocumentFormat, lRSProcessingServer, lRSFileMask, lRSProtocolType, _
+									  lRSPollingLoc, lRSDocumentName, lRSSourceValue, lRSSourceQualifier, lRSDestinationValue, _
+									  lRSDestinationQualifier, lRSChannelName, lRSEnvelopeName)
+
+CleanupAdminUtil()
+StartServer()
+Set SETUPTempShell = Nothing
+'----- SETUP ReceiveFunctions Processing Complete
+'----- SETUP File Processing Started
+Set SETUPTempShell = WScript.CreateObject("WScript.Shell")
+Set SETUPTempFS = CreateObject("Scripting.FileSystemObject")
+
+SetupTempStr  = SETUPWebDavURL + "/DocSpecs/" + rWebDAVApp + "/"
+MakeWebDAVApp SetupTempStr
+SetupTempFile = SETUPTempFS.GetAbsolutePathName(rDocSpec)
+PASSFAIL "Getting Absolute Path for DocSpec " + rDocSpec
+AddFileToWebDAVURL SetupTempFile, SetupTempStr + GetFileNameFromPath(rDocSpec)
+
+Set SETUPTempShell = Nothing
+'----- SETUP File Processing Complete
+'************END SETUP CODE </PRE>
+
+PassFail "SETUP"
+
+'-------------------------------------------------------------------------------------------
+' BTC Section
+
+'-------------------------------------------------------------------------------------------
+Dim BTM, Handle, Port, PortGroup, Document, Envelope, Organization, Channel
+
+set BTM = CreateObject("BizTalk.BizTalkConfig")
+Set Port = BTM.CreatePort
+Set PortGroup = BTM.CreatePortGroup
+Set Document = BTM.CreateDocument
+Set Envelope = BTM.CreateEnvelope
+Set Organization = BTM.CreateOrganization
+Set Channel = BTM.CreateChannel
+'-------------------------------------------------------------------------------------------
+RemoveManagementObject Channel, rChannel
+RemoveManagementObject Port, rPort
+RemoveManagementObject Document, rDoc
+'RemoveManagementObject Document, rDocDestination
+RemoveManagementObject Organization, rSource
+'RemoveManagementObject Organization, rDestination
+PassFail "Remove Management Objects"
+'-------------------------------------------------------------------------------------------
+Organization.Clear
+On Error Resume Next
+Organization.LoadByName(rHome)
+If Err.Number = 0 Then
+	gOrgHome = Organization.Handle
+	'On Error Goto 0
+	Organization.CreateApplication rApplication
+	Organization.Save
+	If Err.Number <> 0 Then
+		Err.Clear
+	End If
+Else
+	Err.Clear
+	Organization.Name = rHome
+	gOrgHome = Organization.Create
+	'Handle = Organization.Handle
+End If
+PassFail "Completed """ & Organization.Name & """ with Handle: " & gOrgHome
+'-------------------------------------------------------------------------------------------
+' Need to loop through the applications recordset and find the 
+' correct application ID.
+Dim Applications
+' Get the Application Handle
+Set Applications = Organization.Applications
+'Organization.LoadApplication rApplication, gApplication
+'Wscript.echo "Application: " & gApplication
+If Not (Applications.BOF And Applications.EOF) Then
+	Do While Not Applications.EOF
+		If Applications.Fields("Name") = rApplication Then
+			gApplication = Applications.Fields("id")			
+		End If
+		Applications.MoveNext
+	Loop
+End If
+PassFail "Completed Applications with Handle: " & gApplication
+Set Applications = Nothing
+
+'-------------------------------------------------------------------------------------------
+Organization.Clear
+On Error Resume Next
+
+Organization.LoadByName(rSource)
+If Err.Number = 0 Then
+	gOrgSource = Organization.Handle
+	'Set Applications = Organization.Applications
+	'gApplication = Applications.Fields("id")
+	'Organization.LoadApplication rApplication, gApplication
+	'If Err.Number <> 0 Then
+	'	Err.Clear
+	'	Organization.CreateApplication rApplication
+	'End If
+	'Organization.Save
+Else
+	Err.Clear
+	Organization.Name = rSource
+	'Organization.CreateApplication rApplication
+	gOrgSource = Organization.Create
+	'Handle = Organization.Handle
+End If
+PassFail "Completed """ & Organization.Name & """ with Handle: " & gOrgSource
+
+'-------------------------------------------------------------------------------------------
+Document.Clear
+On Error Resume Next
+Document.LoadByName(rDoc)
+If Err.Number = 0 Then
+	gDoc = Document.Handle
+Else
+	Err.Clear
+	Document.Name = rDoc
+	'wscript.echo gRef.Reference
+	Document.Reference = gRef
+	gDoc = Document.Create
+End If
+PassFail "Completed """ & Document.Name & """ with Handle: " & gDoc
+
+'-------------------------------------------------------------------------------------------
+Port.Clear
+On Error Resume Next
+Port.LoadByName(rPort)
+If Err.Number = 0 Then
+	gPort = Port.Handle
+Else
+	Err.Clear
+	On Error goto 0 
+	Port.Name = rPort
+	'Port.Comments = ""
+	Port.DestinationEndPoint.Organization = gOrgHome
+	Port.DestinationEndPoint.Application = gApplication
+	Port.PrimaryTransport.Type = BIZTALK_TRANSPORT_TYPE_MSMQ
+	'Port.PrimaryTransport.Parameter = "databaseaic aicmain"
+	Port.PrimaryTransport.Address = rQueue
+	'Port.DestinationEndpoint.Openness = 1
+	'Port.PrimaryTransport.Parameter = ""
+	Port.Comments = ""
+	Port.ControlNumberValue = ""
+	gPort = Port.Create
+End If
+PassFail "Completed """ & Port.Name & """ with Handle: " & gPort
+
+'-------------------------------------------------------------------------------------------
+Channel.Clear
+On Error Resume Next
+Channel.LoadByName(rChannel)
+If Err.Number = 0 Then
+	gChannel = Channel.Handle
+Else
+	Err.Clear
+	On Error goto 0
+	Channel.Name = rChannel
+	Channel.SourceEndPoint.Organization = gOrgSource
+	'Channel.SourceEndPoint.Application = gApplication
+	Channel.InputDocument = gDoc
+	Channel.VerifySignatureCertificateInfo.Reference = rSignReference
+	Channel.VerifySignatureCertificateInfo.Store = BIZTALK_STORE_TYPE_BIZTALK
+	
+	Channel.OutputDocument = gDoc
+	'Channel.MapReference = gRefMap
+	Channel.Port = gPort
+	gChannel = Channel.Create
+End If
+PassFail "Completed """ & Channel.Name & """ with Handle: " & gChannel
+
+'-------------------------------------------------------------------------------------------Set Port = Nothing
+Set PortGroup = Nothing
+Set Document = Nothing
+Set Envelope = Nothing
+Set Organization = Nothing
+Set Channel = Nothing
+PassFail "Destroy all BTM Objects"
+
+'PassFail "BTC"
+
+'-------------------------------------------------------------------------------------------
+'	Utilities used by E2EXML
+'-------------------------------------------------------------------------------------------
+' PassFail() will report Pass or Fail
+Sub PassFail(strScope)
+	If Err.Number <> 0 Then
+		'Fail rE2ETCDescription & ": " & strScope & " Error: x" & Hex(Err.Number) & " Description: " & Err.Description & " Source: " & Err.Source
+		Fail strScope & " Error: x" & Hex(Err.Number) & " Description: " & Err.Description & " Source: " & Err.Source
+		Err.Clear
+	Else
+		'Pass rE2ETCDescription & ": " & strScope
+		Pass strScope  
+	End If
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Fail() will always report Failure and Exit Script
+Sub Fail(strScope)
+	WScript.Echo "[FAIL] " & SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False) & ":" & strScope
+	WScript.Quit
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Pass() will report Pass
+Sub Pass(strScope)
+	WScript.Echo "[PASS] " & SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False) & ":" & strScope
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' FailOnError() will call Fail() on Error
+Sub FailOnError(strScope)
+	If Err.Number <> 0 Then
+		Fail strScope & " Error: x" & Hex(Err.Number) & " Description: " & Err.Description & " Source: " & Err.Source
+		Err.Clear
+	End If
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' AppendErrors() Utility
+' This function is currently just a dummy
+Sub AppendErrors(strScope, objErrList)
+	Dim i
+	FailOnError strScope
+	For i = 1 To objErrList.Count
+		WScript.Echo objErrList.Item(i - 1)
+	Next
+End Sub
+
+Function ReadWholeFile(strFileName)
+	ReadWholeFile = ""
+	On Error Resume Next
+	Dim FileSys, File
+	Set FileSys = CreateObjectHelper ("Scripting.FileSystemObject")
+
+	Set File = FileSys.OpenTextFile(strFileName, 1)
+	if Err.Number = 0 then
+		ReadWholeFile = File.ReadAll()
+       	File.Close
+	end if
+	Err.Clear
+    set File = nothing
+    set FileSys = nothing
+	On Error Goto 0
+End Function
+
+'-------------------------------------------------------------------------------------------
+' Information Output Utility
+Sub Info(strMsg)
+	WScript.Echo "[INFO] " & strMsg 
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' ProcessError() checks for error and if it is not expected quit script
+Sub ProcessError(strScope, iExpErrNumber, strExpErrSrc, strExpErrDescr)
+	If Err.Number <> iExpErrNumber Or (UCase(strExpErrSrc) <> "ANY" And UCase(Err.Source) <> UCase(strExpErrSrc)) Or (UCase(strExpErrDescr) <> "ANY" And UCase(Err.Description) <> UCase(strExpErrDescr)) Then
+		Fail strScope & "_EXPECTED_: ERROR: " & iExpErrNumber & "(x" & Hex(iExpErrNumber) & ") SOURCE: """ & strExpErrSrc & """ DESCRIPTION: """ & strExpErrDescr & """ <> _ACTUAL_: "
+	End If
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Set or Get Environment Variable
+Function SetGetEnvVar(strType, strName, strDefaultValue, bSet)
+	On Error Resume Next
+	Dim wshShell, wshSysEnv
+	SetGetEnvVar = strDefaultValue
+	If (TypeName(strName) <> "String") Or IsEmpty(strName) Or Len(strName) = 0 Or (TypeName(strType) <> "String") Or IsEmpty(strType) Or Len(strType) = 0 Then
+		FailOnError "SetGetEnvVar().CheckParameters"
+		Exit Function
+	End If
+	Set wshShell = WScript.CreateObject ("WScript.Shell")
+	Set wshSysEnv = wshShell.Environment(strType)
+	FailOnError "SetGetEnvVar().SetwshSysEnv"
+	If bSet Then
+		wshSysEnv(strName) = strDefaultValue
+		FailOnError "SetGetEnvVar().set_wshSysEnv(" & strName & ")"
+	Else
+		SetGetEnvVar = wshSysEnv(strName)
+	End If
+	If SetGetEnvVar = "" Then
+		SetGetEnvVar = strDefaultValue
+	End If
+End Function
+
+'-------------------------------------------------------------------------------------------
+' From AdminUtil.vbs
+'-------------------------------------------------------------------------------------------
+Dim g_objLocator
+Dim g_objService
+Dim l_bAdminUtilInitialized
+
+' Wbem Scripting Constants
+Const wbemChangeFlagCreateOrUpdate = 0
+Const wbemChangeFlagUpdateOnly = 1
+Const wbemChangeFlagCreateOnly = 2
+Const wbemChangeFlagUpdateCompatible = 0
+Const wbemChangeFlagUpdateSafeMode = 32
+Const wbemChangeFlagUpdateForceMode = 64
+
+Const GROUP_NAMESPACE = "MicrosoftBizTalkServer_Group"
+Const MGMT_NAMESPACE = "MicrosoftBizTalkServer_MgmtDB"
+Const SERVER_NAMESPACE = "MicrosoftBizTalkServer_SERVER"
+Const RECVSVC_NAMESPACE = "MicrosoftBizTalkServer_ReceiveFunction"
+Const QUEUE_NAMESPACE = "MicrosoftBizTalkServer_Queue"
+Const WORKQ_NAMESPACE = "MicrosoftBizTalkServer_WorkQueue"
+Const SCHEDULEDQ_NAMESPACE = "MicrosoftBizTalkServer_ScheduledQueue"
+Const RETRYQ_NAMESPACE = "MicrosoftBizTalkServer_RetryQueue"
+Const SUSPENDEDQ_NAMESPACE = "MicrosoftBizTalkServer_SuspendedQueue"
+
+Const ADMIN_DOCUMENT_FORMAT_STANDARD = 0
+Const ADMIN_DOCUMENT_FORMAT_CUSTOM = 1
+
+Const ADMIN_PROTOCOL_TYPE_UNSPECIFIED = 0
+Const ADMIN_PROTOCOL_TYPE_FILE = 1
+Const ADMIN_PROTOCOL_TYPE_MSMQ = 2
+
+Function InitAdminUtil()
+	If (l_bAdminUtilInitialized = 1) Then  Exit Function
+
+	Set g_objLocator = CreateObjectHelper ("WbemScripting.SWbemLocator")
+	Set g_objService = g_objLocator.ConnectServer(".", "root\MicrosoftBiztalkServer")
+	l_bAdminUtilInitialized = 1
+End Function
+
+Function CleanupAdminUtil()
+	If (l_bAdminUtilInitialized = 0) Then  Exit Function
+
+	Set g_objService = Nothing
+	Set g_objLocator = Nothing
+	
+	l_bAdminUtilInitialized = 0	
+End Function
+
+Function GetServerByName(strServerName)
+    Set GetServerByName = Nothing
+    Set GetServerByName = g_objService.Get(SERVER_NAMESPACE & ".NAME=""" & strServerName & """")
+End Function
+
+Function GetGroupByName(strGroupName)
+    Set GetGroupByName = Nothing
+    Set GetGroupByName = g_objService.Get(GROUP_NAMESPACE & ".NAME=""" & strGroupName & """")
+
+End Function
+
+Function GetBTSGroupName(strServer)
+	Dim objServer, bOnTheFly
+
+	If (l_bAdminUtilInitialized = 0) Then
+		InitAdminUtil
+		bOnTheFly = True
+	End If	
+
+	Set objServer = GetServerByName(strServer)
+	GetBTSGroupName = objServer.GroupName
+	
+	Set objServer = Nothing
+	
+	If (bOnTheFly) Then
+		CleanupAdminUtil
+	End If
+End Function
+
+Function StartServer()
+	Dim SETUPobjShell
+
+	Set objShell =  WScript.CreateObject ("Wscript.Shell")
+	objShell.Run "Net Start BTSSVC", 0, TRUE
+	Set objShell = Nothing
+
+End Function
+
+Function StopServer()
+	Dim objShell
+	
+	Set objShell =  WScript.CreateObject ("Wscript.Shell")
+	SETUPobjShell.Run "Net Stop BTSSVC", 0, TRUE
+	Set objShell = Nothing
+
+End Function
+
+Function GetMgmtDB(strLocalServer)
+    Dim objBTSMgmt
+    Dim objSet_BTSMgmt
+    Dim objBTSMgmtInstance
+    
+    Set GetMgmtDB = Nothing
+    Set objBTSMgmt = g_objService.Get(MGMT_NAMESPACE)
+    Set objSet_BTSMgmt = objBTSMgmt.Instances_
+    If objSet_BTSMgmt.Count <> 1 Then
+       Exit Function
+    End If
+    
+    Set GetMgmtDB = objSet_BTSMgmt.Item(MGMT_NAMESPACE & ".LocalServer=""" & strLocalServer & """")
+End Function
+
+Function GetWebDAVURL(strServerName)
+	 GetWebDAVURL = "http://" + strServerName + "/BizTalkServerRepository"
+End Function
+
+Function GETBTSDirectory()
+	Dim prodID, installer
+
+	prodID = "{E0993E49-C0A8-11D2-973D-00C04F79E4B3}"
+
+	Set installer = CreateObjectHelper ("WindowsInstaller.Installer")
+	GETBTSDirectory = installer.ProductInfo(prodID, "InstallLocation")
+	Set installer = Nothing
+
+End Function
+
+Function CreateReceiveService(strRecvSvcName, strGroupName, fDocumentFormat, strProcessingServer, strFileMask, fProtocolType, strPollingLoc, _
+										strDocumentName, strSourceID, strSourceQualifier, strDestinationID, strDestinationQualifier, _
+										strChannelName, strEnvelopeName)
+    Dim objBTSRecvSvc
+    Dim objBTSRecvSvcInstance
+
+    CreateReceiveService = True
+    Set objBTSRecvSvc = g_objService.Get(RECVSVC_NAMESPACE)
+    Set objBTSRecvSvcInstance = objBTSRecvSvc.SpawnInstance_
+ 
+    objBTSRecvSvcInstance.Name = strRecvSvcName
+    objBTSRecvSvcInstance.GroupName = strGroupName
+    objBTSRecvSvcInstance.FilenameMask = strFileMask
+    objBTSRecvSvcInstance.ProcessingServer = strProcessingServer
+    objBTSRecvSvcInstance.ProtocolType = fProtocolType
+    objBTSRecvSvcInstance.PollingLocation = strPollingLoc
+    objBTSRecvSvcInstance.OpennessFlag = BIZTALK_OPENNESS_TYPE_NOTOPEN
+	 If (strDocumentName <> "") Then  objBTSRecvSvcInstance.DocumentName = strDocumentName
+	 If (strSourceID <> "") Then  objBTSRecvSvcInstance.SourceID = strSourceID
+	 If (strSourceQualifier <> "") Then  objBTSRecvSvcInstance.SourceQualifier = strSourceQualifier
+	 If (strDestinationID <> "") Then  objBTSRecvSvcInstance.DestinationID = strDestinationID
+    If (strDestinationQualifier <> "") Then  objBTSRecvSvcInstance.DestinationQualifier = strDestinationQualifier
+    If (strChannelName <> "") Then  objBTSRecvSvcInstance.ChannelName = strChannelName
+    If (strEnvelopeName <> "") Then  objBTSRecvSvcInstance.EnvelopeName = strEnvelopeName    
+
+    objBTSRecvSvcInstance.Put_ (wbemChangeFlagCreateOnly)
+    If Err <> 0 Then
+        CreateReceiveService = False
+    End If
+    
+    Set objBTSRecvSvcInstance = Nothing
+    Set objBTSRecvSvc = Nothing
+    
+End Function
+
+Function DeleteReceiveSvc(strRecvSvcName)
+	On Error Resume Next
+	Call g_objService.Delete(RECVSVC_NAMESPACE & ".NAME=""" & strRecvSvcName & """")
+	 If (Err.Number <> 0) Then
+		Err.Clear
+	    DeleteReceiveSvc = False
+	 Else
+	 	 DeleteReceiveSvc = True
+	 End If   
+
+End Function
+
+
+'-------------------------------------------------------------------------------------------
+' From DBUtil.vbs
+'-------------------------------------------------------------------------------------------
+Sub RemoveManagementObject(ByRef brObj, strName)
+    On Error Resume Next
+    ' first load the object
+    brObj.LoadByName strName
+    If Err.Number = 0 Then
+        brObj.Remove
+        If Err.Number <> 0 Then ' Couldn't be removed
+        'If Err.Number = -1061154218 Then ' Couldn't be removed
+			'wscript.echo "Couldn't delete: " & err.number
+			Err.Clear
+		End If
+'    ElseIf Err.Number <>  -1061154302 Or InStr(Err.Description,  "The object was not found") < 1 Then
+    ElseIf Err.Number <>  -1061154302 Then
+        FailOnError "RemoveManagementObject(" & TypeName(brObj) & ", """ & strName & """)"
+        Exit Sub
+    Else
+        ' Object just does not exist, ignore the error
+        Err.Clear
+    End If
+    PassFail "RemoveManagementObject(" & TypeName(brObj) & ", """ & strName & """)"
+End Sub
+
+'------------------------------------------------------------------------------------------
+' following routines are WebDAV routines implemented via ADO
+'------------------------------------------------------------------------------------------
+Function EnumerateWebDAVApps(bstrURL)	'As ADODB.Recordset
+	On Error Resume Next
+    Dim rs			' ADODB.Recordset
+    Dim conn		' ADODB.Connection
+    Dim strServer	' String
+    
+	Set rs = CreateObjectHelper ("ADODB.Recordset")
+    Set conn = GetMSDAIPPDSOConnection
+    strServer = GetServerNameFromURL(bstrURL)
+    
+    Call conn.Open(strServer)
+    Call rs.Open(bstrURL, conn, 0, 1, 512)
+	PassFail "EnumerateWebDAVApps(" & btsrURL & ")"
+    Set EnumerateWebDAVApps = rs
+End Function
+
+'------------------------------------------------------------------------------------------
+Sub MakeWebDAVApp(bstrURL)
+	On Error Resume Next
+    Dim rec		' New ADODB.Record
+    Dim conn	' ADODB.Connection
+
+    Set rec = CreateObjectHelper ("ADODB.Record")
+    Set conn = GetMSDAIPPDSOConnection
+    
+    strServer = GetServerNameFromURL(bstrURL)
+    conn.Mode = 3
+    Call conn.Open(strServer)
+    Call rec.Open(bstrURL, conn, 3, 8192, -1)
+	' ignore the error
+	if Err.Number = -2147217768 then
+		Err.Clear
+	else
+		if Err.Number = 0 then
+		    rec.Close
+		end if
+	end if 
+    conn.Close
+	PassFail "MakeWebDAVApp(" & bstrURL & ")"		
+End Sub
+
+'------------------------------------------------------------------------------------------
+Sub AddFileToWebDAVURL(bstrFilePath, bstrURL)
+	On Error Resume Next
+    Dim rec		' ADODB.Record
+    Dim stm		' ADODB.Stream
+    Dim conn	' ADODB.Connection
+	Dim strServerName
+
+    strServerName = GetServerNameFromURL(bstrURL)
+    
+	Set rec = CreateObjectHelper ("ADODB.Record")
+	Set stm = CreateObjectHelper ("ADODB.Stream")
+    Set conn = GetMSDAIPPDSOConnection
+    conn.Mode = 3
+    Call conn.Open(strServerName)
+    Call rec.Open(bstrURL, conn, 3, 67108864, 8388608)
+    stm.Type = 1
+    Call stm.Open("URL=" & bstrURL, 2, -1)
+    Call stm.LoadFromFile(bstrFilePath)
+    rec.Fields("IsReadOnly") = False
+    rec.Close
+    stm.Close
+    conn.Close
+	PassFail "AddFileToWebDAVURL(" & bstrFilePath & ", " & bstrURL & ")"
+End Sub
+
+'------------------------------------------------------------------------------------------
+Function GetFileNameFromPath(bstrFilepathname)	' As String
+    Dim pos		' Long
+    Dim posold	' Long
+
+    pos = InStr(1, bstrFilepathname, "\")
+    While pos <> 0
+        posold = pos
+        pos = InStr(pos + 1, bstrFilepathname, "\")
+    Wend
+    GetFileNameFromPath = Right(bstrFilepathname, Len(bstrFilepathname) - posold)
+End Function
+
+'------------------------------------------------------------------------------------------
+Function GetServerNameFromURL(bstrURL)		' As String
+    Dim strTemp		' String
+
+    pos = InStr(8, bstrURL, "/")
+    strTemp = Left(bstrURL, pos - 1)
+    GetServerNameFromURL = strTemp
+End Function
+
+'------------------------------------------------------------------------------------------
+Function GetPathNameFromURL(bstrURL)		' As String
+	Dim strTmp
+
+	strTmp = Replace(bstrURL, "/", "\")  ' Convert forward slashes to back slashes
+	strTmp = Mid(strTmp, 8)
+
+	GetPathNameFromURL = strTmp
+
+End Function
+
+'------------------------------------------------------------------------------------------
+Function GetMSDAIPPDSOConnection()	' As ADODB.Connection
+    Dim conn	' ADODB.Connection
+
+	Set conn = CreateObjectHelper ("ADODB.Connection")
+    conn.Provider = "MSDAIPP.DSO"
+    conn.Properties("Protocol Provider").Value = "{9FECD570-B9D4-11d1-9C78-0000F875AC61}"
+    Set GetMSDAIPPDSOConnection = conn
+End Function
+
+'------------------------------------------------------------------------------------------
+Sub DumpRecordSet(strName, RS)
+    Dim i, j, k
+
+	On Error Resume Next
+
+    k = RS.Fields.Count - 1
+    If RS.EOF And RS.BOF Then
+		WSCript.Echo strName & " RecordSet is Empty"
+        Exit Sub
+    End If
+    RS.MoveFirst
+	j = 1
+    While Not RS.EOF
+		Info "START_FIELD_VALUES_FOR___" & strName & "(" & j & ")___"
+        For i = 0 To k
+            Info RS.Fields(i).Name & " = " & RS.Fields(RS.Fields(i).Name) & " (" & RS.Fields(i).Type & ")"
+        Next
+		Info "END_FIELD_VALUES_FOR_____" & strName & "(" & j & ")___"
+        RS.MoveNext
+		j = j + 1
+    Wend
+	PassFail "DumpRecordSet(" & strName & ", RS)"
+End Sub ' DumpRecordSet(strName, RS)
+
+'-------------------------------------------------------------------------------------------------------------------------------------------------------------
+Sub AssurePath(strPath)
+	Dim fso
+
+	Set fso = CreateObjectHelper ("Scripting.FileSystemObject")
+	If not fso.FolderExists(strPath) Then
+		fso.CreateFolder strPath
+	End If
+	Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------------------------------------
+'
+'		AIC utilities
+'
+'-------------------------------------------------------------------------------------------
+' Object Class Name Constants
+Const IInterchange_Object	= "BizTalk.Interchange" ' Set the Default
+Const MS_BTS_Service		= "Microsoft BizTalk Server"
+
+
+'-----------------------------------------------------------------------------------------
+Function CreateObjectHelper (ServerNameAndTypeName)
+	On Error Resume Next
+	Dim obj
+	Set obj = CreateObject(ServerNameAndTypeName)
+	Set CreateObjectHelper = obj
+
+	if 0 <> Err.number then
+		LogFail ("Creating Object " + ServerNameAndTypeName)
+	End if	
+End Function 'CreateObjectHelper 
+
+'-----------------------------------------------------------------------------------------
+'-------------------------------------------------------------------------------------------
+'
+'		End of AIC utilities
+'
+'-------------------------------------------------------------------------------------------
+'%>
+

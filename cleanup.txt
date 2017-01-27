@@ -1,0 +1,133 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'******************************************************************************
+'* This sub cleans all of the entities in BizTalk.
+'*
+
+Option Explicit
+
+Sub CleanBizTalk()
+	On Error Resume Next
+
+	Dim config, obj, RS, HomeOrgID
+
+	Set config = CreateObject("BizTalk.BizTalkConfig")
+
+
+	'* Delete all of the Channels *
+	Set obj = config.CreateChannel
+	Set RS = config.Channels
+	While Not RS.EOF
+	        obj.Load RS(0)
+	        obj.Remove
+	        RS.MoveNext
+	Wend
+		
+	'* Delete all of Port Groups *
+	Set obj = config.CreatePortGroup
+	Set RS = config.PortGroups
+	While Not RS.EOF
+	        obj.Load RS(0)
+	        obj.Remove
+	        RS.MoveNext
+	Wend
+
+	'* Delete all of Ports *
+	Set obj = config.CreatePort
+	Set RS = config.Ports
+	While Not RS.EOF
+	        obj.Load RS(0)
+	        obj.Remove
+	        RS.MoveNext
+	Wend
+
+	'* Delete all of Envelopes *
+	Set obj = config.CreateEnvelope
+	Set RS = config.Envelopes
+	While Not RS.EOF
+	        obj.Load RS(0)
+	        obj.Remove
+	        RS.MoveNext
+	Wend
+
+	'* Delete all of Documents *
+	Set obj = config.CreateDocument
+	Set RS = config.Documents
+	While Not RS.EOF
+	        obj.Load RS(0)
+	        obj.Remove
+	        RS.MoveNext
+	Wend
+
+	'* Delete all of Organizations except the home organization *
+	Set obj = config.CreateOrganization
+	Set RS = config.Organizations
+	While Not RS.EOF
+	        obj.Load rs(0)
+	        If obj.IsDefault Then 
+				HomeOrgID = obj.Handle
+			Else
+				obj.Remove
+			End If
+	        RS.MoveNext
+	Wend
+
+	obj.save
+
+	'* Delete all of the aliases (except the original one) for the home organization *
+	obj.load HomeOrgID
+	Set RS = obj.Aliases
+	obj.SaveAlias obj.GetDefaultAlias, "sName" & Now(), False, "sQual" & Now(), "sValue" & Now()
+	RS.MoveFirst
+	While Not RS.EOF
+		If RS("qualifier") = "OrganizationName"  Then 
+			obj.SaveAlias RS(0), "Organization", True, "OrganizationName", obj.Name
+			obj.Save
+		Else
+			obj.RemoveAlias RS(0)
+			obj.Save
+			'Compensating for a weird bug.
+			if err.number <> 0 then
+				err.clear
+				Set obj = config.CreateOrganization
+				obj.load HomeOrgID
+			End If
+		End If
+		RS.MoveNext
+	Wend
+
+	obj.save
+
+   	'* Delete all of the home organization applications.
+	Set RS = obj.Applications
+	While Not RS.EOF
+		obj.RemoveApplication RS("id")
+		RS.MoveNext
+	Wend
+   
+   
+	obj.save
+
+	Set obj = Nothing
+	Set RS = Nothing
+	Set config = Nothing
+End Sub
+
+
+'******************************************************************************
+'* Main Execution Point For the Script.
+'*
+
+CleanBizTalk
+wscript.echo "BizTalk is now as clean as a whistle!"
+
+
+

@@ -1,0 +1,82 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' cfgfiles.vbs
+'
+' This script creates the files and folders.
+
+set fso = CreateObject("Scripting.FileSystemObject")
+set wshshell = Wscript.CreateObject("Wscript.Shell")
+
+' Determine domain name
+Set IPConfigSet = GetObject("winmgmts:").ExecQuery ("select IPAddress from Win32_NetworkAdapterConfiguration where IPenabled=TRUE and DHCPEnabled=FALSE")
+for each j in IpConfigSet
+	if Not IsNull(j.ipaddress) then
+		ipAddr = j.ipaddress(i)
+		pos = InStrRev(ipAddr, ".")
+		strDomainNum = Mid(ipAddr, pos + 1)
+		strDomainName = "nwtraders" & strDomainNum
+		strFullDomainName = strDomainName & ".msft"
+	end if
+next
+
+'Create the Reports folder
+fso.CreateFolder "C:\Reports"
+wshshell.run "c:\windows\system32\cacls C:\Reports /e /g " & chr(34) & "DB Users" & chr(34) & ":c", 0, true
+wshshell.run "c:\windows\system32\cacls C:\Reports /e /g " & chr(34) & "DB Operators" & chr(34) & ":c", 0, true
+
+'Create the Logs folder
+fso.CreateFolder "C:\Logs"
+fso.createtextfile "C:\Logs\Logs.txt", true
+wshshell.run "cmd /c echo y| cacls C:\Logs\Logs.txt /T /G MoseleyJ:f", 0, true
+wshshell.run "cmd /c echo y| cacls C:\Logs /T /G MoseleyJ:f", 0, true
+wshshell.run "c:\moc\setup\subinacl /subdirectories C:\Logs\*.* /setowner=" & strFullDomainName & "\MoseleyJ", 0, true
+wshshell.run "c:\moc\setup\subinacl /subdirectories C:\Logs /setowner=" & strFullDomainName & "\MoseleyJ", 0, true
+
+'Create the Daily Reports folder
+fso.CreateFolder "C:\Daily Reports"
+fso.createtextfile "C:\Daily Reports\Daily Report.txt", true
+wshshell.run "c:\windows\system32\cacls " & chr(34) & "C:\Daily Reports" & chr(34) & " /e /g Users:c", 0, true
+wshshell.run "net share " & chr(34) & "Daily Reports" & chr(34) & "=" & chr(34) & "C:\Daily Reports" & chr(34), 0, true
+
+'Create the salesusers folder
+fso.CreateFolder "C:\salesusers"
+wshshell.run "net share salesusers=C:\salesusers /grant:users,full", 0, true
+wshshell.run "c:\windows\system32\cacls C:\salesusers /e /g users:f", 0, true
+
+'Create the users folder
+fso.CreateFolder "C:\users"
+wshshell.run "net share users=C:\users /grant:users,full", 0, true
+wshshell.run "c:\windows\system32\cacls C:\users /e /g users:f", 0, true
+
+'Create the gpmc folder
+fso.CreateFolder "C:\gpmc"
+wshshell.run "net share gpmc=C:\gpmc", 0, true
+wshshell.run "c:\windows\system32\cacls C:\gpmc /e /g users:f", 0, true
+
+'Create the public folder
+fso.CreateFolder "C:\public"
+wshshell.run "net share public=C:\public", 0, true
+
+'Create the data folder
+fso.CreateFolder "C:\data"
+wshshell.run "net share data=C:\data", 0, true
+
+'Create the cso folder
+fso.CreateFolder "C:\cso"
+wshshell.run "net share cso=C:\cso", 0, true
+
+'Create the projects folder
+fso.CreateFolder "C:\projects"
+wshshell.run "net share projects=C:\projects /grant:users,full", 0, true
+wshshell.run "c:\windows\system32\cacls C:\projects /e /g users:f", 0, true
+fso.createtextfile "C:\projects\project1.txt", true
+fso.createtextfile "C:\projects\project2.txt", true
+

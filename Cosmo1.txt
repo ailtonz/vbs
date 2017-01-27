@@ -1,0 +1,100 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' createsite.vbs by Xavier Minet
+' Microsoft Consulting Services Belgium
+'
+'
+' This scripts creates the site structure for LCM
+'
+' Remark: NO ERROR HANDLING - WE ASSUME WE RUN THIS SCRIPT
+'         ON THE FIRST DC, RIGHT AFTER DCPROMO
+'
+' Remark: BEFORE RUNNING THIS SCRIPT, SET THE DESIRED SCHEDULE
+'         ON THE DEFAULTIPSITELINK. IF MORE THAN ONE SCHEDULE
+'         NECESSARY, DEFINE ADDITIONAL DUMMY SITELINKS AND
+'         MODIFY THIS SCRIPT ACCORDINGLY
+'
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Dim MyList(1)
+
+
+' First, the usual Bindings
+
+
+Set Root=GetObject("LDAP://RootDSE")
+ConfigurationRoot = Root.Get("configurationNamingContext")
+Set Root  = GetObject("LDAP://" & ConfigurationRoot)
+Set SitesRoot = Root.GetObject("sitesContainer", "CN=Sites")
+set SubnetsRoot = SitesRoot.GetObject("subnetsContainer", "CN=Subnets")
+set TransportRoot = SitesRoot.GetObject("interSiteTransportContainer", "CN=Inter-Site Transports")
+set IPTransportRoot = TransportRoot.GetObject("interSiteTransport", "CN=IP")
+Set MyDefaultIPSiteLink = IPTransportRoot.GetObject("siteLink", "CN=DEFAULTIPSITELINK")
+
+' Let's create the sites. The complexity of site creation is
+' "hidden" in the MakeSite function - see end of the script
+
+
+
+result=MakeSite("CorpHQ")
+
+result2=MakeSiteLink("Default-First-Site-Name", "CorpHQ", "DEFAULTIPSITELINK")
+
+
+
+
+'''''''''''''''''''''''''''''''''''''''''
+Function MakeSite(SiteName)
+
+'''''''''''''''''''''''''''''''''''''''''
+
+'creation of the site (container)
+
+	set NewSite = SitesRoot.Create("site","CN=" & SiteName)
+	NewSite.SetInfo
+
+'creation of the Servers container and other objects
+
+	set thisSite = SitesRoot.GetObject("site", "CN=" & SiteName)
+	set NewServersContainer = thisSite.Create("serversContainer", "CN=Servers")
+	NewServersContainer.SetInfo
+
+	set NewNTDSSiteSettings = thisSite.Create("nTDSSiteSettings", "CN=NTDS Site Settings")
+	NewNTDSSiteSettings.SetInfo
+	
+	set NewSiteLicensingSettings = thisSite.Create("licensingSiteSettings", "CN=Licensing Site Settings")
+	NewSiteLicensingSettings.SetInfo
+
+	MakeSite = NewSite.cn
+
+End Function
+
+
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''
+Function MakeSiteLink(Site1, Site2, MySiteLinkName)
+
+''''''''''''''''''''''''''''''''''''''''''''''''
+	set temp = SitesRoot.GetObject("Site", "CN=" & Site1)	
+	MyList(0) = temp.distinguishedName
+	set temp = SitesRoot.GetObject("Site", "CN=" & Site2)	
+	MyList(1) = temp.distinguishedName
+	
+
+	set  MySiteLinkName = IPTransportRoot.GetObject("siteLink", "CN=DEFAULTIPSITELINK")
+	MySiteLinkName.Put "siteList", MyList
+	MySiteLinkName.SetInfo
+
+
+End Function
+

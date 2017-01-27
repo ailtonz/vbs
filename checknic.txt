@@ -1,0 +1,132 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set wshshell = wscript.createobject("wscript.shell")
+Set IPConfigSet = GetObject("winmgmts:").ExecQuery ("select IPAddress, settingID from Win32_NetworkAdapterConfiguration where IPenabled=TRUE and DHCPEnabled = FALSE")
+for each j in IpConfigSet
+	if Not IsNull(j.ipaddress) then
+		x = j.ipaddress(i)
+		bob = left(x,9)
+		z = right(bob,1)
+		if left (x,7) = "192.168" and right(x,3) = "200" and z = getclsrm then
+			wscript.quit
+		end if
+	end if
+next
+
+for each j in IPConfigSet
+	if Not IsNull(j.ipaddress) then
+		y = j.settingID(i)
+		clsrm = getclsrm
+		chgip clsrm,y
+		wshshell.run "c:\tools\reboot.cmd", 6, true
+		wscript.quit
+	end if
+next
+		
+Set IPConfigSet = GetObject("winmgmts:").ExecQuery ("select SettingID,IPAddress from Win32_NetworkAdapterConfiguration where IPEnabled=TRUE and DHCPenabled=TRUE")
+for each j in IPConfigSet
+	if Not IsNull(j.ipaddress) then
+		y=j.settingid(i)
+		clsrm = getclsrm
+		chgip clsrm,y
+		wshshell.run "c:\tools\reboot.cmd", 6, true
+		wscript.quit
+	end if
+next
+
+private sub chgip (clsrm,y)
+	wshshell.run "c:\tools\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v EnableDHCP /t REG_DWORD /d 0 /f"
+	wshshell.run "c:\tools\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v IPAddress /t REG_MULTI_SZ /d 192.168." & clsrm & ".200 /f"
+	wshshell.run "c:\tools\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\interfaces\" & y & " /v SubNetMask /t REG_MULTI_SZ /d 255.255.255.0 /f"
+	wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v NameServer /t REG_SZ /d 192.168." & clsrm & ".200 /f" 'reg entry to set DNS
+	wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v DefaultGateway /t REG_MULTI_SZ /d 192.168." & clsrm & ".200 /f" 'reg entry to set gateway
+	wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v DefaultGatewayMetric /t REG_MULTI_SZ /d 1 /f" 'reg entry to set gateway
+end sub
+
+private function getclsrm
+	set fso = createobject("scripting.filesystemobject")
+	set fl = fso.OpenTextFile ("c:\setup\instruct\lonset2.cmd")
+	while left (x,13) <> "set classroom"
+		x = fl.readline
+	wend
+	fl.close
+	rtrim x
+	lgn = len(x)
+	getclsrm = left(right(x,lgn-14),1)
+end function
+	
+
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set wshshell = wscript.createobject("wscript.shell")
+Set IPConfigSet = GetObject("winmgmts:").ExecQuery ("select IPAddress, settingID from Win32_NetworkAdapterConfiguration where IPenabled=TRUE and DHCPEnabled = FALSE")
+for each j in IpConfigSet
+	if Not IsNull(j.ipaddress) then
+		x = j.ipaddress(i)
+		bob = left(x,9)
+		z = right(bob,1)
+		if left (x,7) = "192.168" and right(x,3) = "200" and z = getclsrm then
+			wscript.quit
+		end if
+	end if
+next
+
+for each j in IPConfigSet
+	if Not IsNull(j.ipaddress) then
+		y = j.settingID(i)
+		clsrm = getclsrm
+		chgip clsrm,y
+		wshshell.run "c:\tools\reboot.cmd", 6, true
+		wscript.quit
+	end if
+next
+		
+Set IPConfigSet = GetObject("winmgmts:").ExecQuery ("select SettingID,IPAddress from Win32_NetworkAdapterConfiguration where IPEnabled=TRUE and DHCPenabled=TRUE")
+for each j in IPConfigSet
+	if Not IsNull(j.ipaddress) then
+		y=j.settingid(i)
+		clsrm = getclsrm
+		chgip clsrm,y
+		wshshell.run "c:\tools\reboot.cmd", 6, true
+		wscript.quit
+	end if
+next
+
+private sub chgip (clsrm,y)
+	wshshell.run "c:\tools\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v EnableDHCP /t REG_DWORD /d 0 /f"
+	wshshell.run "c:\tools\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v IPAddress /t REG_MULTI_SZ /d 192.168." & clsrm & ".200 /f"
+	wshshell.run "c:\tools\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\interfaces\" & y & " /v SubNetMask /t REG_MULTI_SZ /d 255.255.255.0 /f"
+	wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v NameServer /t REG_SZ /d 192.168." & clsrm & ".200 /f" 'reg entry to set DNS
+	wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v DefaultGateway /t REG_MULTI_SZ /d 192.168." & clsrm & ".200 /f" 'reg entry to set gateway
+	wshshell.run "c:\tools\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v DefaultGatewayMetric /t REG_MULTI_SZ /d 1 /f" 'reg entry to set gateway
+end sub
+
+private function getclsrm
+	set fso = createobject("scripting.filesystemobject")
+	set fl = fso.OpenTextFile ("c:\setup\instruct\lonset2.cmd")
+	while left (x,13) <> "set classroom"
+		x = fl.readline
+	wend
+	fl.close
+	rtrim x
+	lgn = len(x)
+	getclsrm = left(right(x,lgn-14),1)
+end function
+	
+

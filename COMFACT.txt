@@ -1,0 +1,38 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' VBScript.
+'comapps.vbs
+'------------------------------- 
+' Get the Applications collection and populate it
+Set catalog = CreateObject("COMAdmin.COMAdminCatalog")
+Set Applications = Catalog.GetCollection("Applications")
+Applications.Populate
+
+For Each AppObject in Applications
+  If AppObject.Name = "Lab Order Processing" Then
+    Set Roles = Applications.GetCollection("Roles",AppObject.Value("ID"))
+    Roles.Populate
+    For Each RoleObject in Roles
+      If RoleObject.Name = "Manager" Then
+        Set Users = Roles.GetCollection("UsersInRole",RoleObject.Value("Name"))
+        Set NewUser = Users.Add
+        NewUser.Value("User") = "Instructor"
+        Users.SaveChanges
+      Else
+        Set Users = Roles.GetCollection("UsersInRole",RoleObject.Value("Name"))
+        Set NewUser = Users.Add
+        NewUser.Value("User") = "Everyone"
+        Users.SaveChanges
+      End If
+    Next
+  End If
+Next
+

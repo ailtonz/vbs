@@ -1,0 +1,73 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' cfgdns.vbs
+'
+' This script configures DNS Server Service
+
+Option Explicit
+
+Dim WshShell
+Dim IpConfigSet, IPConfig, IPAddr, Classroom, CmdStr, ServerStr
+Dim i
+
+ServerStr = "london"
+Classroom = getclsrm
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+
+' Add the forward lookup zones contoso and nwtraders1 thru nwtraders24
+Call AddFwdLookupZone(ServerStr, "contoso")
+For i = 1 To 24
+	Call AddFwdLookupZone(ServerStr, "nwtraders" & i)
+Next
+
+' Add 192.168.x reverse lookup zone
+CmdStr = "c:\setup\dnscmd " & ServerStr & " /ZoneAdd " & Classroom & ".168.192.in-addr.arpa /Primary /file " & _
+          Classroom & ".168.192.in-addr.arpa.dns"
+WshShell.Run CmdStr, 0, True
+
+CmdStr = "c:\setup\dnscmd " & ServerStr & " /ZoneResetSecondaries " & Classroom & ".168.192.in-addr.arpa /NonSecure"
+WshShell.Run CmdStr, 0, True
+
+CmdStr = "c:\setup\dnscmd " & ServerStr & " /Config " & Classroom & ".168.192.in-addr.arpa /AllowUpdate 0x00000001"
+WshShell.Run CmdStr, 6, True
+
+WScript.Quit 0
+
+
+'''''''''''''''''''''''''''
+' Retrieve classroom number
+'''''''''''''''''''''''''''
+private function getclsrm
+Dim fso, fl, x, lgn
+	set fso = createobject("scripting.filesystemobject")
+	set fl = fso.OpenTextFile ("c:\setup\instruct\lonset2.cmd")
+	while left (x,13) <> "set classroom"
+		x = fl.readline
+	wend
+	fl.close
+	rtrim x
+	lgn = len(x)
+	getclsrm = left(right(x,lgn-14),1)
+end function
+
+'''''''''''''''''''''''''''
+' Add a Forward Lookup Zone
+'''''''''''''''''''''''''''
+Sub AddFwdLookupZone(Server, DomainName)
+	CmdStr = "c:\setup\dnscmd " & Server & " /ZoneAdd " & _ 
+		 DomainName & ".msft /Primary /file " & DomainName & ".msft.dns"
+	WshShell.Run CmdStr, 0, True
+	CmdStr = "c:\setup\dnscmd " & Server & " /Config " & _
+		 DomainName & ".msft /AllowUpdate 0x00000001"
+	WshShell.Run CmdStr, 0, True
+End Sub
+

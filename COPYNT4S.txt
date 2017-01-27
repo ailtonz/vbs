@@ -1,0 +1,46 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+On error resume next
+set fso = createobject("scripting.filesystemobject")
+set wshshell = wscript.CreateObject("wscript.shell")
+'create and share isa2000 source folder
+if fso.FolderExists("d:\isa2000") then
+	fso.DeleteFolder "d:\isa2000", true
+end if
+fso.CreateFolder("d:\isa2000")
+wshshell.Run "net share isa2000=d:\isa2000", 1, true
+
+'determine if the right cd is in the drive and create another file to copy the source files
+set dc = fso.Drives
+do until resp = vbcancel
+	For each d in dc
+		set dl = fso.GetDrive(d)
+		lookfor = dl & "\isaautorun.exe"
+		if dl.IsReady then
+			if fso.FileExists(lookfor) then
+				Set ts = fso.CreateTextFile("c:\tools\isacopy.vbs", true)
+				ts.WriteLine "set fso = Createobject(" & chr(34) & "scripting.filesystemobject" & chr (34) & ")"
+				ts.WriteLine "src = " & chr(34) & dl & "\*.*" & chr(34)
+				ts.WriteLine "dest = " & chr(34) & "d:\isa2000" & chr(34)
+				ts.WriteLine "fso.copyfolder src,dest,true"
+				ts.WriteLine "fso.copyfile src,dest,true"
+				ts.Close
+				wshshell.Run "c:\tools\isacopy.vbs", 1, true
+				wscript.Quit
+			end if
+		end if
+	Next
+resp = Msgbox ("Please insert the ISA Server 2000 Enterprise Edition compact disk into the CD-ROM drive." & chr(10) & "After you have inserted the CD, click OK. If the ISA Server 2000 setup window appears, close that window.", vbOKCancel)
+loop
+
+msgbox "Setup cannot copy ISA Server source files. After the automated setup finishes, complete" & chr(10) & "the installation of the instructor computer by copying the entire contents of the ISA Server compact disc" & chr(10) & "to d:\isa2000 on the instructor computer"
+wscript.quit
+

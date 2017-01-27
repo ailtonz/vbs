@@ -1,0 +1,29 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+strSuperClass = "CIM_ManagedSystemElement"
+iFlags = 0
+vClassCount = 0
+vMethodCount = 0
+
+For Each oSubClass in GetObject("WinMgmts:").SubclassesOf(strSuperClass,iFlags)
+	If Left(oSubClass.Path_.RelPath,5) = "Win32" Then
+		vClassCount = vClassCount + 1
+		wscript.Echo oSubClass.Path_.RelPath
+		For Each oMethod in oSubClass.methods_
+			vMethodCount = vMethodCount + 1
+			wscript.Echo "    |--- " & oMethod.name
+		Next
+	End If
+Next
+strMsg = "There were " & cStr(vClassCount)& " Win32 Classes," & vbcrlf
+strMsg = strMsg & cStr(vmethodCount) & " Methods " & vbcrlf
+MsgBox strMsg,vbInformation,"Win32_Classes under " & strSuperClass
+

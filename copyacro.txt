@@ -1,0 +1,36 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+Dim fso, d, dc, s, n, WshShell
+  Set fso = CreateObject("Scripting.FileSystemObject")
+  Set dc = fso.Drives
+
+do until foundCD = true
+	  For Each d in dc
+		 If d.IsReady Then
+		setuppath = d.DriveLetter & ":\win98\win98_69.cab"
+		if fso.FileExists(setuppath) then
+		   source = d.DriveLetter & ":\win98\*.*"
+		   dest = " c:\setup\win98src\"
+		   args = "/E /H /Y"
+			  set WshShell = CreateObject("WScript.Shell")
+			  foundCD = True
+			  fso.CreateFolder "c:\Setup\win98src\"
+			  WshShell.Run "xcopy " & source & dest & args, 0, True
+		   Exit For
+		end if
+		end if
+	  Next
+	  if foundCD = false then 
+		msgbox "Please Insert the 'Windows 98 Second Edition Compact Disc' into any cdrom drive.", VBOkOnly + VBSystemModal ,"Automated Classroom Setup"
+	  end if
+loop
+

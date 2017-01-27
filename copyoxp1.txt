@@ -1,0 +1,57 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim fso, d, dc, s, n, WshShell, vResponse
+  Set fso = CreateObject("Scripting.FileSystemObject")
+  Set dc = fso.Drives
+
+fso.CreateFolder "c:\FLATS\MSOXP\"
+
+do until foundCD = true
+	  For Each d in dc
+		 If d.IsReady Then
+			 '##SET VARIABLES TO DIRECTORIES OF MSDN VERSION OR
+			 '##THE RETAIL VERSION AND GET FILES FROM FIRST FOUND
+		     setUpPath = d.DriveLetter & ":\OWC10.MSI"
+		     setUpPath2 = d.DriveLetter & ":\OWC10.MSIg"
+		     if (fso.FileExists(setUpPath)) then
+             	vResponse  = d.DriveLetter & ":\setup.exe /a COMPANYNAME=NWTRADERS INSTALLLOCATION=\\London\Flats\MSOXP\"			
+               source = d.DriveLetter & ":\*.* "
+			   dest = " C:\FLATS\MSOXP\"
+				args = "/E /H /Y"		
+				   set WshShell = CreateObject("WScript.Shell")
+				   foundCD = True
+				   If fso.FileExists(d.DriveLetter & ":\proplus.msi") Then
+				   		WshShell.Run vResponse, 0, True
+				   	Else
+				   		WshShell.Run "xcopy " & source & dest & args, 0, True
+				   	End if
+				   Exit For
+			 end if
+				   
+			if (fso.FileExists(setUpPath2)) then
+		     	source = d.DriveLetter & ":\*.* "			
+			   dest = " C:\FLATS\MSOXP\ "
+				args = "/E /H /Y"		
+				   set WshShell = CreateObject("WScript.Shell")
+				   foundCD = True
+				   WshShell.Run "xcopy " & source & dest & args, 0, True
+				   Exit For			
+			end if
+			
+		 end if
+	  Next
+	  if foundCD = false Then 
+	  	
+		MsgBox "Please Insert the 'Microsoft Office XP Professional with Front Page' compact disc into any cdrom drive.", vbOkOnly + VBSystemModal ,"Automated Classroom Setup"
+		
+	  end if
+loop
+

@@ -1,0 +1,19 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' configie.vbs
+'
+' This script configures Internet Explorer.
+
+set wshshell = wscript.CreateObject("wscript.shell")
+
+'Set the default Start Page to \\LONDON\labfiles\browser files\index.html
+WshShell.RegWrite "HKCU\Software\Microsoft\Internet Explorer\Main\Start Page", "\\LONDON\labfiles\browser_files\index.html" ,"REG_SZ"
+

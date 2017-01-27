@@ -1,0 +1,131 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' cfgnic1.vbs
+'
+' Configures the Local Area Connection network interface card (NIC)
+
+sFind = "local area connection"
+sComputer = "."   ' use "." for local computer
+
+'Constants for WMI StdRegProv
+'Const HKCR = &H80000000
+'Const HKCU = &H80000001
+Const HKLM = &H80000002
+
+Const NetBase = "SYSTEM\CurrentControlSet\Control\Network\"
+
+set oNet = CreateObject("wscript.network")
+ServerStr = LCase(oNet.ComputerName)
+Select Case ServerStr
+	Case "vancouver"  sIPAddress = "1"
+	Case "denver"     sIPAddress = "2"
+	Case "perth"      sIPAddress = "3"
+	Case "brisbane"   sIPAddress = "4"
+	Case "lisbon"     sIPAddress = "5"
+	Case "bonn"       sIPAddress = "6"
+	Case "lima"       sIPAddress = "7"
+	Case "santiago"   sIPAddress = "8"
+	Case "bangalore"  sIPAddress = "9"
+	Case "singapore"  sIPAddress = "10"
+	Case "casablanca" sIPAddress = "11"
+	Case "tunis"      sIPAddress = "12"
+	Case "acapulco"   sIPAddress = "13"
+	Case "miami"      sIPAddress = "14"
+	Case "auckland"   sIPAddress = "15"
+	Case "suva"       sIPAddress = "16"
+	Case "stockholm"  sIPAddress = "17"
+	Case "moscow"     sIPAddress = "18"
+	Case "caracas"    sIPAddress = "19"
+	Case "montevideo" sIPAddress = "20"
+	Case "manila"     sIPAddress = "21"
+	Case "tokyo"      sIPAddress = "22"
+	Case "khartoum"   sIPAddress = "23"
+	Case "nairobi"    sIPAddress = "24"
+	Case Else MsgBox "Invalid student computer name."
+End Select
+
+Classroom = getclsrm
+
+' If the IP address is odd then use that same address for the DNS server
+If (CInt(sIPAddress) Mod 2) = 1 Then
+	IPQuad4 = sIPAddress
+Else
+	IPQuad4 = CStr(CInt(sIPAddress) - 1)
+End If
+
+On Error Resume Next
+
+Set oReg=GetObject("winmgmts:{impersonationLevel=impersonate}!\\" _
+  & sComputer & "\root\default:StdRegProv")
+
+' Get adapter collection
+Set oAdapters = GetObject("winmgmts:").ExecQuery("SELECT * FROM Win32_NetworkAdapterConfiguration")
+
+' Get all subkeys under NetBase in an array
+iRC = oReg.EnumKey(HKLM, NetBase, aRegKeys)
+
+' Finding adapter(s) with connection name "Local Area Connection"
+If (Err.Number = 0) And (iRC = 0) Then
+  On Error Goto 0
+  For Each oAdapter In oAdapters
+    sSettingID = oAdapter.SettingID
+    ' Loop through all registry keys
+    For i = 0 To Ubound(aRegKeys)
+      sKeyName = NetBase & aRegKeys(i) & "\" _
+                 & sSettingID & "\Connection"
+      oReg.GetStringValue HKLM, sKeyName, "Name", sValue
+      ' Was a name found?
+      If LCase(sValue) = sFind Then
+	oReg.SetStringValue HKLM, sKeyName, "Name", sNewName
+	set wshshell = wscript.createobject("wscript.shell")
+
+	' Disable DHCP
+	wshshell.run "c:\moc\setup\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & _
+		sSettingID & " /v EnableDHCP /t REG_DWORD /d 0 /f", 6, true
+
+	' Set the IP address
+	wshshell.run "c:\moc\setup\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & _
+		sSettingID & " /v IPAddress /t REG_MULTI_SZ /d 192.168." & Classroom & "." & sIPAddress & " /f", 6, true
+
+	' Set the subnet mask
+	wshshell.run "c:\moc\setup\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\interfaces\" & _
+		sSettingID & " /v SubNetMask /t REG_MULTI_SZ /d 255.255.255.0 /f", 6, true
+
+	' Set the DNS server
+	wshshell.run "c:\moc\setup\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\interfaces\" & _
+		sSettingID & " /v NameServer /t REG_SZ /d 192.168." & Classroom & "." & IPQuad4 & " /f", 6, true
+
+        Exit For
+      End If
+    Next
+  Next
+End If
+
+WScript.Quit 0
+
+
+'''''''''''''''''''''''''''
+'' Retrieve classroom number
+'''''''''''''''''''''''''''
+private function getclsrm
+Dim fso, fl, x, lgn
+	set fso = createobject("scripting.filesystemobject")
+
+	set fl = fso.OpenTextFile ("c:\moc\setup\mocset\mocset2.cmd")
+	while left (x,13) <> "set classroom"
+		x = fl.readline
+	wend
+	fl.close
+	rtrim x
+	lgn = len(x)
+	getclsrm = left(right(x,lgn-14),1)
+end function
+

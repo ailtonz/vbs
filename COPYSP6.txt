@@ -1,0 +1,67 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+dim fso, d, dc, dl, run
+set wshshell=wscript.createobject("wscript.shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+set dc = fso.drives
+fso.CreateFolder ("d:\sp2")
+wshshell.Run "net share sp2=d:\sp2", 6, true
+do until resp=vbcancel
+For each d in dc
+	set dl = fso.getdrive(d)
+	lookfor=dl & "\w2ksp2.exe"
+	if dl.isready then
+	if (fso.FileExists(lookfor)) then
+	Set ts = fso.CreateTextFile("c:\tools\sp2copy.vbs", True)
+	ts.WriteLine "Set oSHApp = CreateObject(" & chr(34) & "Shell.Application" & chr(34) & ")" 
+	ts.writeline "sSrc = " & chr(34) & dl & "\w2ksp2.exe" & chr(34)
+	ts.writeline "sDest = " & chr(34) & "d:\sp2" & chr(34)
+	ts.writeline "oSHApp.Namespace(sDest).CopyHere sSrc, &H10&"
+	ts.writeline "Set oSHApp = nothing"
+	ts.writeline "WScript.Quit"
+	ts.Close
+	WshShell.run "c:\tools\sp2copy.vbs", 1, true
+	wscript.quit
+	end if
+	End If
+Next
+
+resp=Msgbox ("Please insert the compact disc containing Windows 2000 Advanced Server, Service Pack 2 into the CD drive" & CHR(10) & "To enter a path to Service Pack 2, click Cancel", vbOKCancel)
+loop
+
+Do until resp1 = vbcancel
+	ttl = "2088a Automated Setup"
+	msg1 = "Please enter the path to the W2KSP2.EXE file."
+	loc = inputbox(msg1,ttl)
+	if right(loc,1)<>"\" then
+		loc1 = loc + "\"
+	end if
+	if fso.FileExists(loc & "\w2ksp2.exe") then
+		Set ts = fso.CreateTextFile("c:\tools\sp2copy.vbs", True)
+		ts.WriteLine "Set oSHApp = CreateObject(" & chr(34) & "Shell.Application" & chr(34) & ")" 
+		ts.writeline "sSrc = " & chr(34) & loc1 & "*.*" & chr(34)
+		ts.writeline "sDest = " & chr(34) & "d:\sp2" & chr(34)
+		ts.writeline "oSHApp.Namespace(sDest).CopyHere sSrc, &H10&"
+		ts.writeline "WScript.Quit"
+		ts.Close
+		WshShell.run "c:\tools\sp2copy.vbs", 1, true
+		wscript.quit
+		else
+		msg2 = "This location does not appear to contain the source file for Service Pack 2" & chr(10) & chr(10)
+		msg2 = msg2 + "To enter a new path click OK. Ensure that the path entered is the path" & chr(10) 
+		msg2 = msg2 + "to W2KSP2.EXE." & chr(10) & chr(10) 
+		msg2 = msg2 + "To cancel and copy files manually after the instructor computer setup" & chr(10)
+		msg2 = msg2 + "has completed, click Cancel" & chr(10)
+		resp1 = msgbox(msg2, vbokcancel)
+	end if
+Loop
+wscript.quit
+

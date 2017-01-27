@@ -1,0 +1,753 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'The Configurations.vbs file creates organizations, document definitions, ports, and channels. These messaging services are 'required to complete the labs in Module 07.
+ 
+'Object variables
+Dim objConfig, objOrganization, objDocument, objPort, objPort2, objPort3, objPort4, objPort5, objPort6, objDocument2, objDocument3, objDocument4, objOrganization2, objOrganization3
+Dim objADO
+	
+Const BIZTALK_TRANSPORT_TYPE_FILE = 256
+Const BIZTALK_TRANSPORT_TYPE_MSMQ = 128
+
+'Server Name
+ strServerName = SetGetEnvVar("PROCESS", "COMPUTERNAME", "localhost", False)
+'------------------------------------------------------------------------------------
+
+'Database  variables
+Dim idSourceOrg, idSourceAlias, idDocument, idDocument2, idDocument3, idDocument4, iddestOrg, iddestAlias, iddestOrg2, iddestAlias2, idPort, idPort2, idPort3, idPort4, idPort5, idPort6
+
+'   Create the configuration object. This is the root object by which all other 
+'   objects are created.
+
+    Set objConfig = CreateObject("BizTalk.BizTalkConfig")
+    If err.number <> 0 then Wscript.Echo "[FAIL] Failed Creating Config Object with error - " & err.description
+
+   Set objOrganization = objConfig.CreateOrganization()
+
+    objOrganization.Name = "Northwind Traders"
+    idSourceOrg = objOrganization.Create
+
+'   Check to see if the organization already exists, then clear the error, load
+'   the existing , and continue
+'------------------------------------------------------------------------------------
+     On Error Resume Next
+    if err.number = -1061154272 then 
+    	Set objADO = objConfig.Organizations
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Northwind Traders" then
+    		idSourceOrg = objADO.fields("id").Value
+    		objOrganization.Load idSourceOrg
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    	
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Source Organization with error - " & err.description
+        Wscript.Quit
+    End If
+    
+    idSourceAlias = objOrganization.GetDefaultAlias()
+
+     Set objOrganization2 = objConfig.CreateOrganization()
+    
+    objOrganization2.Name = "LitWare Inc"
+    iddestOrg = objOrganization2.Create
+
+'   Check to see if the organization already exists, then clear the error, load
+'   the existing , and continue
+'------------------------------------------------------------------------------------
+    
+    if err.number = -1061154272 then 
+    	Set objADO = objConfig.Organizations
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "LitWare Inc" then
+    		iddestOrg = objADO.fields("id").Value
+    		objOrganization2.Load iddestOrg
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    	
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Source Organization with error - " & err.description
+        Wscript.Quit
+    End If
+    
+    iddestAlias = objOrganization2.GetDefaultAlias()
+
+
+Set objOrganization3 = objConfig.CreateOrganization()
+    
+    objOrganization3.Name = "Coast Appliances"
+    iddestOrg2 = objOrganization3.Create
+
+'   Check to see if the organization already exists, then clear the error, load
+'   the existing , and continue
+'------------------------------------------------------------------------------------
+    
+    if err.number = -1061154272 then 
+    	Set objADO = objConfig.Organizations
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Coast Appliances" then
+    		iddestOrg2 = objADO.fields("id").Value
+    		objOrganization3.Load iddestOrg2
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    	
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Source Organization with error - " & err.description
+        Wscript.Quit
+    End If
+    
+    iddestAlias2 = objOrganization3.GetDefaultAlias()
+	Set objOrganization = Nothing
+	Set objOrganization2 = Nothing
+	Set objOrganization3 = Nothing
+'------------------------------------------------------------------------------------
+Set objDocument = objConfig.CreateDocument()
+    
+'------------------------------------------------------------------------------------
+'   Create the RequiredOrder document definition
+'------------------------------------------------------------------------------------
+    objDocument.Name = "RequiredOrder"
+    objDocument.Reference = "http://" & strServerName & "/BiztalkServerRepository/DocSpecs/Microsoft/POReq.xml"
+    idDocument = objDocument.Create
+    
+'------------------------------------------------------------------------------------
+'  Check to see if document already exists. If found, clear the error and continue
+'------------------------------------------------------------------------------------
+    if err.number = -1061154262 then 
+    	Set objADO = objConfig.Documents
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "RequiredOrder" then
+    		idDocument = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Document with error - " & err.description
+        Wscript.Quit        
+    End If    
+    
+    Set objDocument = Nothing
+    
+'------------------------------------------------------------------------------------    
+
+
+Set objDocument2 = objConfig.CreateDocument()
+    
+'------------------------------------------------------------------------------------
+'   Create the PurchaseOrder document
+'------------------------------------------------------------------------------------
+    objDocument2.Name = "PurchaseOrder"
+    objDocument2.Reference = "http://" & strServerName & "/BiztalkServerRepository/DocSpecs/Microsoft/PurchaseOrder.xml"
+    idDocument2 = objDocument2.Create
+    
+'------------------------------------------------------------------------------------
+'  Check to see if document already exists. If found, clear the error and continue
+'------------------------------------------------------------------------------------
+    if err.number = -1061154262 then 
+    	Set objADO = objConfig.Documents
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "PurchaseOrder" then
+    		idDocument2 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Document with error - " & err.description
+        Wscript.Quit        
+    End If    
+    
+    Set objDocument2 = Nothing
+    
+
+Set objDocument3 = objConfig.CreateDocument()
+    
+'------------------------------------------------------------------------------------
+'   Create the Invoice document
+'------------------------------------------------------------------------------------
+    objDocument3.Name = "Invoice"
+    objDocument3.Reference = "http://" & strServerName & "/BiztalkServerRepository/DocSpecs/Microsoft/Invoice.xml"
+    idDocument3 = objDocument3.Create
+    
+'------------------------------------------------------------------------------------
+'  Check to see if document already exists. If found, clear the error and continue
+'------------------------------------------------------------------------------------
+    if err.number = -1061154262 then 
+    	Set objADO = objConfig.Documents
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Invoice" then
+    		idDocument3 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Document with error - " & err.description
+        Wscript.Quit        
+    End If    
+    
+    Set objDocument3 = Nothing
+
+
+Set objDocument4 = objConfig.CreateDocument()
+    
+'------------------------------------------------------------------------------------
+'   Create the Payment document
+'------------------------------------------------------------------------------------
+    objDocument4.Name = "Payment"
+    objDocument4.Reference = "http://" & strServerName & "/BiztalkServerRepository/DocSpecs/Microsoft/Payment.xml"
+    idDocument4 = objDocument4.Create
+    
+'------------------------------------------------------------------------------------
+'  Check to see if document already exists. If found, clear the error and continue
+'------------------------------------------------------------------------------------
+    if err.number = -1061154262 then 
+    	Set objADO = objConfig.Documents
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Payment" then
+    		idDocument4 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Document with error - " & err.description
+        Wscript.Quit        
+    End If    
+    
+    Set objDocument4 = Nothing
+
+
+
+
+'------------------------------------------------------------------------------------
+'   Use the configuration object to get a poitner to the Port object
+'------------------------------------------------------------------------------------
+    Set objPort = objConfig.CreatePort()    
+    
+'------------------------------------------------------------------------------------
+'   Create the Port object and set up for local file submit 
+'------------------------------------------------------------------------------------
+    objPort.Name = "LitWare Inc PO"
+    objPort.DestinationEndpoint.Organization = iddestOrg
+    objPort.DestinationEndpoint.Alias = iddestAlias    
+    objPort.PrimaryTransport.Type = BIZTALK_TRANSPORT_TYPE_FILE
+    objPort.PrimaryTransport.Address = "file://c:\LitWare\PO\PO%tracking_id%.xml"
+    idPort = objPort.Create
+'------------------------------------------------------------------------------------
+'   Check to see if the Port already exists. If found, clear the error and
+'   continue
+'------------------------------------------------------------------------------------
+
+    if err.number = -1061154236 then 
+    	Set objADO = objConfig.Ports
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "LitWare Inc PO" then
+    		idPort = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    End If        
+    
+    Set objPort = Nothing
+
+
+    Set objPort2 = objConfig.CreatePort()    
+    
+'------------------------------------------------------------------------------------
+'   Create the Port object and set up for local file submit 
+'------------------------------------------------------------------------------------
+    objPort2.Name = "Coast Appliances PO"
+    objPort2.DestinationEndpoint.Organization = iddestOrg2
+    objPort2.DestinationEndpoint.Alias = iddestAlias2    
+    objPort2.PrimaryTransport.Type = BIZTALK_TRANSPORT_TYPE_FILE
+    objPort2.PrimaryTransport.Address = "file://c:\Coast Appliances\PO\PO%tracking_id%.xml"
+    idPort2 = objPort2.Create
+'------------------------------------------------------------------------------------
+'   Check to see if the Port already exists. If found, clear the error and
+'   continue
+'------------------------------------------------------------------------------------
+
+    if err.number = -1061154236 then 
+    	Set objADO = objConfig.Ports
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Coast Appliances PO" then
+    		idPort2 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    End If        
+    
+    Set objPort2 = Nothing
+
+
+
+'------------------------------------------------------------------------------------
+'   Use the configuration object to get a poitner to the Port object
+'------------------------------------------------------------------------------------
+    Set objPort3 = objConfig.CreatePort()    
+    
+'------------------------------------------------------------------------------------
+'   Create the Port object and set up for local file submit 
+'------------------------------------------------------------------------------------
+    objPort3.Name = "Coast Appliances Invoice"
+    objPort3.DestinationEndpoint.Organization = idSourceOrg
+    objPort3.DestinationEndpoint.Alias = idSourceAlias    
+    objPort3.PrimaryTransport.Type = BIZTALK_TRANSPORT_TYPE_MSMQ
+    objPort3.PrimaryTransport.Address = "DIRECT=OS:.\private$\Invoice_For_Home_Appliances"
+    idPort3 = objPort3.Create
+'------------------------------------------------------------------------------------
+'   Check to see if the Port already exists. If found, clear the error and
+'   continue
+'------------------------------------------------------------------------------------
+
+    if err.number = -1061154236 then 
+    	Set objADO = objConfig3.Ports
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Coast Appliances Invoice" then
+    		idPort3 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    End If        
+    
+    Set objPort3 = Nothing
+
+
+
+'------------------------------------------------------------------------------------
+'   Use the configuration object to get a poitner to the Port object
+'------------------------------------------------------------------------------------
+    Set objPort4 = objConfig.CreatePort()    
+    
+'------------------------------------------------------------------------------------
+'   Create the Port object and set up for local file submit 
+'------------------------------------------------------------------------------------
+    objPort4.Name = "LitWare Inc Invoice"
+    objPort4.DestinationEndpoint.Organization = idSourceOrg
+    objPort4.DestinationEndpoint.Alias = idSourceAlias    
+    objPort4.PrimaryTransport.Type = BIZTALK_TRANSPORT_TYPE_MSMQ
+    objPort4.PrimaryTransport.Address = "DIRECT=OS:.\private$\Invoice_For_Electronic_Goods"
+    idPort4 = objPort4.Create
+'------------------------------------------------------------------------------------
+'   Check to see if the Port already exists. If found, clear the error and
+'   continue
+'------------------------------------------------------------------------------------
+
+    if err.number = -1061154236 then 
+    	Set objADO = objConfig3.Ports
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "LitWare Inc Invoice" then
+    		idPort4 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    End If        
+    
+    Set objPort4 = Nothing
+
+
+
+'------------------------------------------------------------------------------------
+'   Use the configuration object to get a poitner to the Port object
+'------------------------------------------------------------------------------------
+    Set objPort5 = objConfig.CreatePort()    
+    
+'------------------------------------------------------------------------------------
+'   Create the Port object and set up for local file submit 
+'------------------------------------------------------------------------------------
+    objPort5.Name = "LitWare Inc Payment"
+    objPort5.DestinationEndpoint.Organization = iddestOrg
+    objPort5.DestinationEndpoint.Alias = iddestAlias    
+    objPort5.PrimaryTransport.Type = BIZTALK_TRANSPORT_TYPE_FILE
+    objPort5.PrimaryTransport.Address = "file://c:\LitWare\Payment\Payment%tracking_id%.xml"
+    idPort5 = objPort5.Create
+'------------------------------------------------------------------------------------
+'   Check to see if the Port already exists. If found, clear the error and
+'   continue
+'------------------------------------------------------------------------------------
+
+    if err.number = -1061154236 then 
+    	Set objADO = objConfig5.Ports
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "LitWare Inc Payment" then
+    		idPort5 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    End If        
+    
+    Set objPort5 = Nothing
+
+
+
+
+'------------------------------------------------------------------------------------
+'   Use the configuration object to get a poitner to the Port object
+'------------------------------------------------------------------------------------
+    Set objPort6 = objConfig.CreatePort()    
+    
+'------------------------------------------------------------------------------------
+'   Create the Port object and set up for local file submit 
+'------------------------------------------------------------------------------------
+    objPort6.Name = "Coast Appliances Payment"
+    objPort6.DestinationEndpoint.Organization = iddestOrg2
+    objPort6.DestinationEndpoint.Alias = iddestAlias2    
+    objPort6.PrimaryTransport.Type = BIZTALK_TRANSPORT_TYPE_FILE
+    objPort6.PrimaryTransport.Address = "file://c:\Coast Appliances\Payment\Payment%tracking_id%.xml"
+    idPort6 = objPort6.Create
+'------------------------------------------------------------------------------------
+'   Check to see if the Port already exists. If found, clear the error and
+'   continue
+'------------------------------------------------------------------------------------
+
+    if err.number = -1061154236 then 
+    	Set objADO = objConfig6.Ports
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Coast Appliances Payment" then
+    		idPort6 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    End If        
+    
+    Set objPort6 = Nothing
+
+'----------------------------------------------------------------------------------------
+'Creating the channel
+'----------------------------------------------------------------------------------------
+Dim channel
+Dim idChannel
+Set channel = objConfig.CreateChannel()
+channel.Name = "Channel For PO To LitWare"
+channel.SourceEndpoint.Organization = idSourceOrg
+channel.Port = idPort
+channel.InputDocument = idDocument
+channel.OutputDocument = idDocument2
+channel.MapReference = "http://"  & strServerName &"/BizTalkServerRepository/Maps/Microsoft/POMap.xml"
+idChannel = channel.Create 
+
+if err.number = -1061154236 then 
+    	Set objADO = channel.Channels
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Channel For PO To LitWare" then
+    		idChannel = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    End If  
+
+Set channel = Nothing
+
+
+Dim channel2
+Dim idChannel2
+Set channel2 = objConfig.CreateChannel()
+channel2.Name = "Channel For PO To Coast Appliances"
+channel2.SourceEndpoint.Organization = idSourceOrg
+channel2.Port = idPort2
+channel2.InputDocument = idDocument
+channel2.OutputDocument = idDocument2
+channel2.MapReference = "http://"  & strServerName &"/BizTalkServerRepository/Maps/Microsoft/POMap.xml"
+idChannel2 = channel2.Create 
+
+if err.number = -1061154236 then 
+    	Set objADO = channel2.Channels
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Channel For PO To Coast Appliances" then
+    		idChannel2 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    End If  
+
+Set channel2 = Nothing
+
+
+
+Dim channel3
+Dim idChannel3
+Set channel3 = objConfig.CreateChannel()
+channel3.Name = "Channel For (Electronic Goods) Invoice To Northwind Traders"
+channel3.SourceEndpoint.Organization = iddestOrg
+channel3.Port = idPort4
+channel3.InputDocument = idDocument2
+channel3.OutputDocument = idDocument3
+channel3.MapReference = "http://"  & strServerName &"/BizTalkServerRepository/Maps/Microsoft/POToInvoiceMap.xml"
+idChannel3 = channel3.Create 
+
+if err.number = -1061154236 then 
+    	Set objADO = channel3.Channels
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Channel For (Electronic Goods) Invoice To Northwind Traders" then
+    		idChannel3 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    End If  
+
+Set channel3 = Nothing
+
+
+
+Dim channel4
+Dim idChannel4
+Set channel4 = objConfig.CreateChannel()
+channel4.Name = "Channel For (Home Appliances) Invoice To Northwind Traders"
+channel4.SourceEndpoint.Organization = iddestOrg2
+channel4.Port = idPort3
+channel4.InputDocument = idDocument2
+channel4.OutputDocument = idDocument3
+channel4.MapReference = "http://" & strServerName &"/BizTalkServerRepository/Maps/Microsoft/POToInvoiceMap.xml"
+idChannel4 = channel4.Create 
+
+if err.number = -1061154236 then 
+    	Set objADO = channel4.Channels
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Channel For (Home Appliances) Invoice To Northwind Traders" then
+    		idChannel4 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    End If  
+
+Set channel4 = Nothing
+
+
+Dim channel5
+Dim idChannel5
+Set channel5 = objConfig.CreateChannel()
+channel5.Name = "Channel For Payment To LitWare"
+channel5.SourceEndpoint.Organization = idSourceOrg
+channel5.Port = idPort5
+channel5.InputDocument = idDocument3
+channel5.OutputDocument = idDocument4
+channel5.MapReference = "http://" & strServerName &"/BizTalkServerRepository/Maps/Microsoft/InvoiceToPaymentMap.xml"
+idChannel5 = channel5.Create 
+
+if err.number = -1061154236 then 
+    	Set objADO = channel5.Channels
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Channel For Payment To LitWare" then
+    		idChannel5 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    End If  
+
+Set channel5 = Nothing
+
+
+
+Dim channel6
+Dim idChannel6
+Set channel6 = objConfig.CreateChannel()
+channel6.Name = "Channel For Payment To Coast Appliances"
+channel6.SourceEndpoint.Organization = idSourceOrg
+channel6.Port = idPort6
+channel6.InputDocument = idDocument3
+channel6.OutputDocument = idDocument4
+channel6.MapReference = "http://" & strServerName &"/BizTalkServerRepository/Maps/Microsoft/InvoiceToPaymentMap.xml"
+idChannel6 = channel6.Create 
+
+if err.number = -1061154236 then 
+    	Set objADO = channel6.Channels
+    	
+    	do while not objADO.EOF
+    	    if objADO.fields("Name").Value = "Channel For Payment To Coast Appliances" then
+    		idChannel6 = objADO.fields("id").Value
+    		exit do
+    	    end if
+    	   objADO.MoveNext
+    	loop
+    	err.clear
+    end if
+    
+    If err.number <> 0 then 
+        Wscript.Echo "[FAIL] Failed Creating Port with error - " & err.description
+        Wscript.Quit        
+    else
+    	Wscript.Echo "[PASS] Configuration for Lab07.2 completed successfully"
+    End If  
+
+Set channel6 = Nothing
+'------------------------------------------------------------------------------------    
+
+'-------------------------------------------------------------------------------------------
+' Fail() will always report a failure and exit the script
+'-------------------------------------------------------------------------------------------
+Sub Fail(strScope)
+	WScript.Echo "[FAIL] " & SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False) & ":" & strScript & ": " & strScope
+	WScript.Quit
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' Pass() will report pass
+'-------------------------------------------------------------------------------------------
+Sub Pass(strScope)
+	WScript.Echo "[PASS] " & SetGetEnvVar("PROCESS", "ComputerName", "DEFAULTSERVER", False) & ":" & strScript & ": " & strScope
+End Sub
+
+'-------------------------------------------------------------------------------------------
+' FailOnError() will call Fail() on Error
+'-------------------------------------------------------------------------------------------
+Sub FailOnError(strScope)
+	If Err.Number <> 0 Then
+		Fail strScope & " Error: x" & Hex(Err.Number) & " Description: " & Err.Description & " Source: " & Err.Source
+		Err.Clear
+	End If
+End Sub   
+
+'-------------------------------------------------------------------------------------------
+' Set or get environment variables
+'-------------------------------------------------------------------------------------------
+Function SetGetEnvVar(strType, strName, strDefaultValue, bSet)
+	On Error Resume Next
+	Dim wshShell, wshSysEnv
+	SetGetEnvVar = strDefaultValue
+	If (TypeName(strName) <> "String") Or IsEmpty(strName) Or Len(strName) = 0 Or (TypeName(strType) <> "String") Or IsEmpty(strType) Or Len(strType) = 0 Then
+		FailOnError "SetGetEnvVar().CheckParameters"
+		Exit Function
+	End If
+	Set wshShell = CreateObject("WScript.Shell")
+	Set wshSysEnv = wshShell.Environment(strType)
+	FailOnError "SetGetEnvVar().SetwshSysEnv"
+	If bSet Then
+		wshSysEnv(strName) = strDefaultValue
+		FailOnError "SetGetEnvVar().Set_wshSysEnv(" & strName & ")"
+	Else
+		SetGetEnvVar = wshSysEnv(strName)
+	End If
+	If SetGetEnvVar = "" Then
+		SetGetEnvVar = strDefaultValue
+	End If
+End Function
+

@@ -1,0 +1,36 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+Dim fso, d, dc, s, n, WshShell
+  Set fso = CreateObject("Scripting.FileSystemObject")
+  Set dc = fso.Drives
+
+do until foundCD = true
+	  For Each d in dc
+		 If d.IsReady Then
+		setuppath = d.DriveLetter & ":\i386\update\update.exe"
+		if fso.FileExists(setuppath) then
+		   source = d.DriveLetter & ":\*.*"
+		   dest = " d:\nt40sp6\"
+		   args = "/E /H /Y"
+			  set WshShell = CreateObject("WScript.Shell")
+			  foundCD = True
+			  fso.CreateFolder "d:\nt40sp6\"
+			  WshShell.Run "xcopy " & source & dest & args, 0, True
+		   Exit For
+		end if
+		end if
+	  Next
+	  if foundCD = false then 
+		msgbox "Please Insert the Microsoft Windows NT 4 Service Pack 6a compact disc into any cdrom drive.", VBOkOnly + VBSystemModal ,"Automated Classroom Setup"
+	  end if
+loop
+

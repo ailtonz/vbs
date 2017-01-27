@@ -1,0 +1,163 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Script to create users in the Active Directory
+' 
+' This script reads user names and attributes from the file called users.txt
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+wscript.echo "Script starting. Please click OK to continue."
+
+DIM arrRecord
+Const ForReading = 1
+
+
+''''''''''''''''''''''''''''''''''''''''''''''''
+' Determine the LDAP path for your domain
+' Nothing in this section needs to be customized
+''''''''''''''''''''''''''''''''''''''''''''''''
+
+Set Root = GetObject("LDAP://RootDSE")
+DomainPath = Root.Get("DefaultNamingContext")
+
+
+''''''''''''''''''''''''''''''''''''''''''''''''
+' Get the pointer to your domain object
+' Nothing in this section needs to be customized
+''''''''''''''''''''''''''''''''''''''''''''''''
+
+Set Domain = GetObject("LDAP://" & DomainPath)
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Create Top Level OU
+' This section not necessary for creating users
+' Replace "Human Resources" in both places with your OU name
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Set ou_HR = Domain.Create("organizationalUnit", "OU=Human Resources")
+ou_HR.Put "Description", "Human Resources"
+ou_HR.SetInfo
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' The file system object is your entry point into the file system
+' Nothing in this section needs to be customized
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+set fso = CreateObject ("Scripting.FileSystemObject")
+
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Get the object to the C:\ADSI\users.txt text file
+' Name and location of text file can be altered
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Set tsTextFile = fso.OpenTextFile ("C:\ADSI\users.txt", ForReading, False)
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Begin reading the input file and loop until you reach EOF
+'
+' Read a line in the file
+'
+' Nothing in this section needs to be customized
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+While Not tsTextFile.AtEndOfStream    ' START OF LOOP
+
+ strRecord = tsTextFile.ReadLine
+
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Parse the line into string segments using the colon as a delimiter
+'
+' (You can change the delimiter)
+'
+' Put each string segment into an array named arrRecord
+'
+' The first string segment is referenced as arrRecord(0)
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+ arrRecord = Split (strRecord, ":")
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' create the user in the Human Resources OU
+' Nothing in this section needs to be customized
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+ Set adsUser = ou_HR.Create("user", "CN=" & arrRecord(0))
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Store the sAMAccountName and userPrincipalName
+' attributes for each user object
+' Nothing in this section needs to be customized 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+ adsUser.Put "sAMAccountName",  arrRecord(0)
+ adsUser.Put "userPrincipalName", arrRecord(0) 
+ adsUser.SetInfo
+
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Enable the user account which is disabled by default
+' 
+' Set additional attributes listed in the text file
+' 
+' In this example, the Description attribute will be
+' filled by the second (1) string segment
+' and the Display Name attribute is taken from the
+' third (2) string segment
+' 
+' Customize this section to add/change attributes
+' populated by the text file
+''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+ adsUser.AccountDisabled = False
+ adsUser.Title = arrRecord(1)
+ adsUser.DisplayName = arrRecord(2)
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''
+' SetInfo flushes the attributes in cache to disk
+' Nothing in this section needs to be customized
+'''''''''''''''''''''''''''''''''''''''''''''''''
+
+ adsUser.SetInfo
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Reset adsUser in preparation for the next user object
+' Nothing in this section needs to be customized
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+ Set adsUser = Nothing
+Wend                                   ' END OF LOOP
+
+
+''''''''''''''''''''''''''''''''''''''''''''''''
+' Close the text file
+' Nothing in this section needs to be customized
+''''''''''''''''''''''''''''''''''''''''''''''''
+
+tsTextFile.Close
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Finished dialog box
+' Nothing in this section needs to be customized
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+wscript.echo "Users created.", Chr(10),Chr(10),"Please click OK to finish."
+

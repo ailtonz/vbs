@@ -1,0 +1,115 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+On Error Resume Next
+
+set fso = createobject("scripting.filesystemobject")
+set fl = fso.Opentextfile("C:\tools\usrinfo.txt")
+dim lastName(24)
+dim logonName(24)
+dim firstName
+firstName = "Domain"
+'	msgbox "firstName = " & firstName
+dim password
+password = "dompass"
+'	msgbox "Password = " & password
+
+
+x=0
+done = 0
+Do while done = 0
+	ln = fl.ReadLine
+		if ln = "end" then
+			done = 1
+		else
+			a = instr(ln,",")
+			last = left(ln,a-1)
+
+			lgn = len(ln)
+			logname = right(ln,lgn-9)
+
+			lastName(x) = last
+'		   msgbox "lastName = " & lastName(x)
+			logonName(x) = logname
+'		   msgbox "logonName = " & logonName(x)
+			x = x+1
+		end if
+loop
+
+
+
+'--Set the LDAP path for the domain
+Set Root = GetObject("LDAP://RootDSE")
+DomainPath = Root.Get("DefaultNamingContext")
+Set Domain = GetObject("LDAP://" & DomainPath)
+Set UsrContainer = Domain.GetObject("container", "CN=Users")
+
+
+'--Create Student Users in the Active Directory
+y=0
+done=0
+do while done = 0
+	if lastName(y) = "" then
+		done = 1
+	else
+
+		Set usr = UsrContainer.Create("user", "CN=Domain " & lastName(y))
+		usr.Put "samAccountName", logonName(y)
+		usr.Put "userPrincipalName", logonName(y) & "@nwtraders.msft" 
+		usr.Put "givenName", firstName
+		usr.Put "sn", lastName(y)
+		usr.Put "displayName", firstName & " " & lastName(y)
+		usr.SetInfo
+
+
+		'--Now that the user is created, reset the user's password and
+		'--enable its account
+		usr.SetPassword password
+		usr.AccountDisabled = False
+		usr.SetInfo
+	y = y+1
+	end if
+loop
+
+
+
+'--Create a Student Administrator account
+Set usr = UsrContainer.Create("user", "CN=Domain Admin")
+usr.Put "samAccountName", "DomAdmin"
+usr.Put "userPrincipalName", "DomAdmin@nwtraders.msft" 
+usr.Put "givenName", "Domain"
+usr.Put "sn", "Admin"
+usr.Put "displayName", "Domain Admin"
+usr.SetInfo
+
+'--Set Group Memberships
+Dim Grp
+Dim Usr
+Set Grp = GetObject("WinNT://nwtraders.msft/Administrators,group")
+Set Usr = GetObject("WinNT://nwtraders.msft/DomAdmin,user")
+Grp.Add(Usr.ADsPath)
+Set Grp = GetObject("WinNT://nwtraders.msft/Domain Admins,group")
+Set Usr = GetObject("WinNT://nwtraders.msft/DomAdmin,user")
+Grp.Add(Usr.ADsPath)
+
+
+
+'--Now that the user is created, reset the user's password and
+'--enable its account
+usr.SetPassword password
+usr.AccountDisabled = False
+usr.SetInfo
+
+
+'--Create an Organizational Unit (OU) for the Student Computers
+ouPath = "OU=Lab9B Computers," & domainPath
+Set ou = Domain.Create("organizationalUnit", "OU=Lab9B Computers")
+ou.SetInfo
+

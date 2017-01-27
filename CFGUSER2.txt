@@ -1,0 +1,31 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'CFGSQL.VBS
+'
+'This script configures SQL Server MTS Support
+
+Dim oSqlServer, sName, wshNet
+
+	'Get computer name to keep generic
+Set wshNet = CreateObject("WScript.Network")
+sName = wshNet.ComputerName
+
+	'Create SQL Server object
+Set oSqlServer = CreateObject("SQLDMO.SQLServer")
+oSqlServer.LoginSecure = true
+oSqlServer.Connect sName
+
+	'Configure SQL Server MTS support
+oSqlServer.Configuration.ConfigValues("remote proc trans").CurrentValue = 1
+oSqlServer.Configuration.ReconfigureWithOverride
+
+set oSqlServer = nothing
+
