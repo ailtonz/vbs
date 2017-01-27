@@ -1,0 +1,17 @@
+###
+###
+###
+### Category1 : Active Directory
+### Category2 : OUs
+### Category3 : 
+### Description : Removes the COM+ partition link set assigned to the Sales OU in Active Directory.
+###
+###
+###
+Const ADS_PROPERTY_CLEAR = 1 
+
+Set objContainer = GetObject _
+  ("LDAP://ou=Sales,dc=NA,dc=fabrikam,dc=com")
+ 
+objContainer.PutEx ADS_PROPERTY_CLEAR, "msCOM-UserPartitionSetLink", 0
+objContainer.SetInfo

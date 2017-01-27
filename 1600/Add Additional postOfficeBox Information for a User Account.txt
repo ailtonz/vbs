@@ -1,0 +1,17 @@
+###
+###
+###
+### Category1 : Active Directory
+### Category2 : User Accounts
+### Category3 : Modifying User Account Properties
+### Description : Appends new entries to the postOfficeBox attribute of an Active Directory user account. This operation adds the new post office boxes without deleting any existing entries.
+###
+###
+###
+Const ADS_PROPERTY_APPEND = 3 
+ 
+Set objUser = GetObject _
+   ("LDAP://cn=MyerKen,ou=Management,dc=NA,dc=fabrikam,dc=com") 
+
+objUser.PutEx ADS_PROPERTY_APPEND, "postOfficeBox", Array("2225","2226")
+objUser.SetInfo

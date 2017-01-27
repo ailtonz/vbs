@@ -1,0 +1,16 @@
+###
+###
+###
+### Category1 : Scripting Techniques
+### Category2 : Text Files
+### Category3 : 
+### Description : Demonstration script that uses the FileSystemObject's GetTempName method to generate random file names. Script must be run on the local computer.
+###
+###
+###
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+
+For i = 1 to 10
+    strTempFile = objFSO.GetTempName
+    Wscript.Echo strTempFile
+Next

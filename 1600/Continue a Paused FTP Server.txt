@@ -1,0 +1,14 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 5.x
+### Category3 : FTP Sites
+### Description : Continues a paused FTP server named MSFTPSVC/1.
+###
+###
+###
+strComputer = "LocalHost"
+Set objIIS = GetObject("IIS://" & strComputer & "/MSFTPSVC/1")
+
+objIIS.Continue

@@ -1,0 +1,15 @@
+###
+###
+###
+### Category1 : Active Directory
+### Category2 : OUs
+### Category3 : 
+### Description : Assigns the user account AkersKim as manager of the Sales OU in Active Directory.
+###
+###
+###
+Set objContainer = GetObject _
+  ("LDAP://ou=Sales,dc=NA,dc=fabrikam,dc=com")
+ 
+objContainer.Put "managedBy", "cn=AkersKim,ou=Sales,dc=NA,dc=fabrikam,dc=com"
+objContainer.SetInfo

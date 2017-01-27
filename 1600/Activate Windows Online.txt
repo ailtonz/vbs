@@ -1,0 +1,20 @@
+###
+###
+###
+### Category1 : Desktop Management
+### Category2 : Windows Activation
+### Category3 : 
+### Description : Uses the online method to activate Windows. Requires an active Internet connection.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+Set colWindowsProducts = objWMIService.ExecQuery _
+    ("Select * from Win32_WindowsProductActivation")
+
+For Each objWindowsProduct in colWindowsProducts
+    objWindowsProduct.ActivateOnline()
+Next

@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : Active Directory
+### Category2 : OUs
+### Category3 : 
+### Description : Modifies the attribute values found on the General Properties page in Active Directory Users and Computers for an OU named Sales.
+###
+###
+###
+Const ADS_PROPERTY_CLEAR = 1 
+
+Set objContainer = GetObject _
+  ("LDAP://ou=Sales,dc=NA,dc=fabrikam,dc=com")
+ 
+objContainer.PutEx ADS_PROPERTY_CLEAR, "description", 0
+objContainer.PutEx ADS_PROPERTY_CLEAR, "street", 0
+objContainer.PutEx ADS_PROPERTY_CLEAR, "l", 0
+objContainer.PutEx ADS_PROPERTY_CLEAR, "st", 0
+objContainer.PutEx ADS_PROPERTY_CLEAR, "postalCode", 0
+objContainer.PutEx ADS_PROPERTY_CLEAR, "c", 0
+objContainer.SetInfo

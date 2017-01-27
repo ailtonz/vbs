@@ -1,0 +1,17 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 5.x
+### Category3 : Basic Administration
+### Description : Backs up the metabase to a file named ScriptedBackup.
+###
+###
+###
+Const MD_BACKUP_HIGHEST_VERSION = &HFFFFFFFF
+Const MD_BACKUP_OVERWRITE = 1
+
+strComputer = "LocalHost"
+Set objComputer = GetObject("IIS://" & strComputer & "")
+objComputer.Backup "ScriptedBackup", MD_BACKUP_HIGHEST_VERSION,_
+     MD_BACKUP_OVERWRITE

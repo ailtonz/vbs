@@ -1,0 +1,42 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Option Explicit 
+Dim oFSO, oSHL, sSrc, sDst
+Dim tmp, p1, p2, p3, p4, p5 
+Dim sMyApp 'Nome do aplicativo
+Dim sExt 'Extensão do arquivo 
+
+sSrc = "c:\TuaPasta\" 
+sDst = "c:\TuaPasta\Backup\" 
+sMyApp = "TeuArquivo"
+sExt = ".MDB" 
+
+On Error Resume Next 
+Err.clear 
+
+Set oFSO = CreateObject("Scripting.FileSystemObject") 
+Set oSHL = CreateObject("WScript.Shell") 
+
+p1 = Right("00" & Year(Now()), 2)
+p2 = Right("00" & Month(Now()), 2) 
+p3 = Right("00" & Day(Now()), 2) 
+p4 = Right("00" & Hour(now()), 2) 
+p5 = Right("00" & Minute(Now()), 2) 
+ 
+tmp = ("_" & p1 & p2 & p3 & "_" & p4 & p5) 
+
+oFSO.CopyFile sSrc & sMyApp & sExt, sDst & sMyApp & tmp & sExt, True 
+
+If Err <> 0 Then 
+   MsgBox "Error:" & Err 
+Else 
+   oSHL.Popup "Backup completo", 1 ,"Backup", 0 + 64 
+End If

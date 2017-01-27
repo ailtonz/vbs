@@ -1,0 +1,35 @@
+###
+###
+###
+### Category1 : Virtual Server
+### Category2 : Virtual Server Client Information
+### Category3 : 
+### Description : Clicks a mouse button inside a virtual machine named Windows 2000.
+###
+###
+###
+On Error Resume Next
+
+Set objVS = CreateObject("VirtualServer.Application")
+Set objVM = objVS.FindVirtualMachine("Windows 2000 Server")
+
+Set objMouse = objVM.Mouse
+errReturn = objMouse.Click(2)
+###
+###
+###
+### Category1 : Virtual Server
+### Category2 : Virtual Server Client Information
+### Category3 : 
+### Description : Clicks the left mouse button in a virtual machine named Windows 2000 Server.
+###
+###
+###
+On Error Resume Next
+
+Set objVS = CreateObject("VirtualServer.Application")
+Set objVM = objVS.FindVirtualMachine("Windows 2000 Server")
+
+Set objMouse = objVM.Mouse
+errReturn = objMouse.SetButton(1, TRUE)
+Wscript.Echo errReturn

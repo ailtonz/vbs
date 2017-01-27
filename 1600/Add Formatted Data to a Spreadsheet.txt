@@ -1,0 +1,18 @@
+###
+###
+###
+### Category1 : Microsoft Office
+### Category2 : Microsoft Excel
+### Category3 : 
+### Description : Demonstration script that adds the words "test value" to a new spreadsheet, then formats the cell containing the value.
+###
+###
+###
+Set objExcel = CreateObject("Excel.Application")
+
+objExcel.Visible = True
+objExcel.Workbooks.Add
+objExcel.Cells(1, 1).Value = "Test value"
+objExcel.Cells(1, 1).Font.Bold = TRUE
+objExcel.Cells(1, 1).Font.Size = 24
+objExcel.Cells(1, 1).Font.ColorIndex = 3

@@ -1,0 +1,14 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 5.x
+### Category3 : Web Sites
+### Description : Continues a paused Web server named W3SVC/2142295254 on an IIS server.
+###
+###
+###
+strComputer = "LocalHost"
+Set objIIS = GetObject("IIS://" & strComputer & "/W3SVC/2142295254")
+
+objIIS.Continue

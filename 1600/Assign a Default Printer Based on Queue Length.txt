@@ -1,0 +1,34 @@
+###
+###
+###
+### Category1 : Printing
+### Category2 : Client-Side Printing
+### Category3 : 
+### Description : Examines all the print queues on a computer, and sets the default printer to the queue with the fewest documents.
+###
+###
+###
+intSmallestQueue = 1000
+
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+Set colPrintQueues =  objWMIService.ExecQuery _
+    ("Select * from Win32_PerfFormattedData_Spooler_PrintQueue " _
+        & "Where Name <> '_Total'")
+
+For Each objPrintQueue in colPrintQueues
+    intCurrentQueue = objPrintQueue.Jobs + objPrintQueue.JobsSpooling
+    If intCurrentQueue <= intSmallestQueue Then
+        strNewDefault = objPrintQueue.Name
+        intSmallestQueue = intCurrentQueue
+    End If
+Next
+
+Set colInstalledPrinters =  objWMIService.ExecQuery _
+    ("Select * from Win32_Printer Where Name = '" & strNewDefault & "'")
+
+For Each objPrinter in colInstalledPrinters
+    objPrinter.SetDefaultPrinter()
+Next

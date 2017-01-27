@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : Terminal Services
+### Category2 : Terminal Service User Accounts
+### Category3 : 
+### Description : Adds a new Terminal Service account for fabrikam\bob, giving this account guest access rights.
+###
+###
+###
+Const GUEST_ACCESS = 0
+ 
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+Set colItems = objWMIService.ExecQuery _
+    ("Select * from Win32_TSPermissionsSetting")
+
+For Each objItem in colItems
+    errResult = objItem.AddAccount("fabrikam\bob", GUEST_ACCESS)
+Next
