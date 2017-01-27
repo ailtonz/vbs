@@ -1,0 +1,14 @@
+###
+###
+###
+### Category1 : Virtual Server
+### Category2 : Virtual Networks
+### Category3 : 
+### Description : Locates a virtual network named Scripted Network.
+###
+###
+###
+On Error Resume Next
+
+Set objVS = CreateObject("VirtualServer.Application")
+Set objNetwork = objVS.FindVirtualNetwork("Scripted Network")

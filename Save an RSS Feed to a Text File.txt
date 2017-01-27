@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : Scripting Techniques
+### Category2 : Retrieving Internet Resources
+### Category3 : 
+### Description : Sample script that connects to a Web site that supports RSS feeds and then saves the returned data to an XML file named C:\Scripts\Scripting_guys.xml.
+###
+###
+###
+Const ForWriting = 2
+
+strURL="http://blogs.msdn.com/gstemp/Rss.aspx"
+Set objHTTP = CreateObject("MSXML2.XMLHTTP") 
+Call objHTTP.Open("GET", strURL, FALSE) 
+objHTTP.Send
+
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set objFile = objFSO.CreateTextFile _
+    ("C:\Scripts\scripting_guys.xml", ForWriting)
+objFile.Write objHTTP.ResponseText
+objFile.Close

@@ -1,0 +1,20 @@
+###
+###
+###
+### Category1 : Printing
+### Category2 : Print Servers, Queues, and Print Jobs
+### Category3 : 
+### Description : Resumes a paused printer.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+Set colInstalledPrinters =  objWMIService.ExecQuery _
+    ("Select * from Win32_Printer Where Name = 'ArtDepartmentPrinter'")
+
+For Each objPrinter in colInstalledPrinters 
+    ObjPrinter.Resume()
+Next

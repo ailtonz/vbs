@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 6.0
+### Category3 : Applications and Application Pools
+### Description : Demonstration script that restarts the application in the W3SVC/2142295254/root/aspnet_client_folder Web directory.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject _
+    ("winmgmts:{authenticationLevel=pktPrivacy}\\" _
+        & strComputer & "\root\microsoftiisv2")
+
+Set colItems = objWMIService.ExecQuery _
+    ("Select * From IIsWebDirectory Where Name = " & _
+        "'W3SVC/2142295254/root/aspnet_client_folder'")
+
+For Each objItem in colItems
+   objItem.ASPAppRestart
+Next

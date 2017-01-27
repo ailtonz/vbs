@@ -1,0 +1,12 @@
+###
+###
+###
+### Category1 : Networking
+### Category2 : Windows Firewall
+### Category3 : 
+### Description : Restore the Windows Firewall default settings.
+###
+###
+###
+Set objFirewall = CreateObject("HNetCfg.FwMgr")
+objFirewall.RestoreDefaults()

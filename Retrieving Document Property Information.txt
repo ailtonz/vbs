@@ -1,0 +1,55 @@
+###
+###
+###
+### Category1 : Storage
+### Category2 : Files
+### Category3 : 
+### Description : Lists the summary information properties for a document named C:\Scripts\Test.doc.
+###
+###
+###
+Set objPropertyReader = CreateObject("DSOleFile.PropertyReader")
+Set objDocument = objPropertyReader.GetDocumentProperties _
+    ("C:\Scripts\Test.doc")
+
+Wscript.Echo "Application name: " & objDocument.AppName
+Wscript.Echo "Author: " & objDocument.Author
+Wscript.Echo "Byte count: " & objDocument.ByteCount
+Wscript.Echo "Category: " & objDocument.Category
+Wscript.Echo "Character count: " & objDocument.CharacterCount
+Wscript.Echo "Character count with spaces: " & _
+    objDocument.CharacterCountWithSpaces
+Wscript.Echo "CLSID: " & objDocument.CLSID
+Wscript.Echo "Comments: " & objDocument.Comments
+Wscript.Echo "Company: " & objDocument.Company
+Set colCustomProperties = objDocument.CustomProperties
+For Each strProperty in colCustomProperties
+    Wscript.Echo vbTab & strProperty.Name & ": " & strProperty.Value
+Next
+Wscript.Echo "Date created: " & objDocument.DateCreated
+Wscript.Echo "Date last printed: " & objDocument.DateLastPrinted
+Wscript.Echo "Date last saved: " & objDocument.DateLastSaved
+Wscript.Echo "Has macros: " & objDocument.HasMacros
+Wscript.Echo "Hidden slides: " & objDocument.HiddenSlides
+Wscript.Echo "Icon: " & objDocument.Icon
+Wscript.Echo "Is read only: " & objDocument.IsReadOnly
+Wscript.Echo "Keywords" & objDocument.Keywords
+Wscript.Echo "Last edited by: " & objDocument.LastEditedBy
+Wscript.Echo "Line count: " & objDocument.LineCount
+Wscript.Echo "Location: " & objDocument.Location
+Wscript.Echo "Manager: " & objDocument.Manager
+Wscript.Echo "Multimedia clips: " & objDocument.MultimediaClips
+Wscript.Echo "Name: " & objDocument.Name
+Wscript.Echo "Page count: " & objDocument.PageCount
+Wscript.Echo "Paragraph count: " & objDocument.ParagraphCount
+Wscript.Echo "Presentation format: " & objDocument.PresentationFormat
+Wscript.Echo "Presentation notes: " & objDocument.PresentationNotes
+Wscript.Echo "ProgID: " & objDocument.ProgID
+Wscript.Echo "Revision number: " & objDocument.RevisionNumber
+Wscript.Echo "Slide count: " & objDocument.SlideCount
+Wscript.Echo "Subject: " & objDocument.Subject
+Wscript.Echo "Template: " & objDocument.Template
+Wscript.Echo "Thumbnail: " & objDocument.Thumbnail
+Wscript.Echo "Title: " & objDocument.Title
+Wscript.Echo "Version: " & objDocument.Version
+Wscript.Echo "Word count: " & objDocument.WordCount

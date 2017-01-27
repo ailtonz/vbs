@@ -1,0 +1,29 @@
+###
+###
+###
+### Category1 : Scripting Techniques
+### Category2 : Working with Databases
+### Category3 : 
+### Description : Demonstration script that retrieves data from a database and then saves that data in XML format.
+###
+###
+###
+Const adOpenStatic = 3
+Const adLockOptimistic = 3
+Const adPersistXML = 1
+
+Set objConnection = CreateObject("ADODB.Connection")
+Set objRecordSet = CreateObject("ADODB.Recordset")
+
+objConnection.Open _
+    "Provider= Microsoft.Jet.OLEDB.4.0; " & _
+        "Data Source=eventlogs.mdb" 
+objRecordSet.Open "SELECT * FROM EventTable" , _
+    objConnection, adOpenStatic, adLockOptimistic
+
+objRecordSet.MoveFirst 
+
+objRecordSet.Save "output.xml", adPersistXML
+
+objRecordSet.Close
+objConnection.Close
