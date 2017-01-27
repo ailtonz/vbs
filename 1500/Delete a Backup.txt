@@ -1,0 +1,36 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 6.0
+### Category3 : Basic Administration
+### Description : Deletes a metabase backup named ScriptedBackup.
+###
+###
+###
+Const BACKUP_VERSION = 0
+
+strComputer = "."
+Set objWMIService = GetObject _
+    ("winmgmts:{authenticationLevel=pktPrivacy}\\" _
+        & strComputer & "\root\microsoftiisv2")
+
+Set objComputer = _
+    objWMIService.Get("IIsComputer.Name='LM'")
+
+objComputer.DeleteBackup "ScriptedBackup", BACKUP_VERSION
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 5.x
+### Category3 : Basic Administration
+### Description : Deletes version 0 of the backup file named ScriptedBackup.
+###
+###
+###
+Const BACKUP_VERSION = 0
+
+strComputer = "LocalHost"
+Set objComputer = GetObject("IIS://" & strComputer & "")
+objComputer.DeleteBackup "ADSIBackup", BACKUP_VERSION

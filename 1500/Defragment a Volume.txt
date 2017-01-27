@@ -1,0 +1,20 @@
+###
+###
+###
+### Category1 : Storage
+### Category2 : Disk Drives and Volumes
+### Category3 : Physical and Logical Disks
+### Description : Defragments volume D on a computer. If you modify this script to defragment a different volume (such as X), note that your WQL query must specify the drive letter followed by a colon and then followed by two  slashes. Thus volume X would be listed as X:\\.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+Set colVolumes = objWMIService.ExecQuery _
+    ("Select * from Win32_Volume Where Name = 'D:\\'")
+
+For Each objVolume in colVolumes
+     errResult = objVolume.Defrag()
+Next

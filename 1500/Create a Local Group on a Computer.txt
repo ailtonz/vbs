@@ -1,0 +1,14 @@
+###
+###
+###
+### Category1 : Other Directory Services
+### Category2 : Local Computer and NT 4 Accounts
+### Category3 : Groups
+### Description : Creates a local group named FinanceUsers on a computer named atl-ws-01.
+###
+###
+###
+strComputer = "atl-ws-01"
+Set colAccounts = GetObject("WinNT://" & strComputer & "")
+Set objUser = colAccounts.Create("group", "FinanceUsers")
+objUser.SetInfo

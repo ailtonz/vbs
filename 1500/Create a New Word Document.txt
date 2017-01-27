@@ -1,0 +1,13 @@
+###
+###
+###
+### Category1 : Microsoft Office
+### Category2 : Microsoft Word
+### Category3 : 
+### Description : Demonstration script that creates and displays a new Microsoft Word document.
+###
+###
+###
+Set objWord = CreateObject("Word.Application")
+objWord.Visible = True
+Set objDoc = objWord.Documents.Add()

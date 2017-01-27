@@ -1,0 +1,15 @@
+###
+###
+###
+### Category1 : Other Directory Services
+### Category2 : ADAM
+### Category3 : Creating, Deleting, and Modifying Objects
+### Description : Creates an ADAM container named Users.
+###
+###
+###
+On Error Resume Next
+
+Set objDomain = GetObject("LDAP://localhost:389/dc=fabrikam,dc=com")
+Set objOU = objDomain.Create("container", "cn=Users")
+objOU.SetInfo

@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : Scripting Techniques
+### Category2 : WMI
+### Category3 : 
+### Description : Creates a permanent event filter for monitoring changes in service status.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\default")
+
+strFilterQuery = "Select * from __InstanceModificationEvent within 3 " & _
+    "where TargetInstance isa 'Win32_Service'"
+Set objFilterClass = objWMIService.get("__EventFilter")
+Set objFilter = objFilterClass.SpawnInstance_
+objFilter.Name = "Service Monitor Filter"
+objFilter.QueryLanguage = "wql"
+objFilter.Query = strFilterQuery
+objFilter.Put_

@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : Active Directory
+### Category2 : User Accounts
+### Category3 : User Account Management
+### Description : Demonstration script that creates 1,000 user accounts (named UserNo1, UserNo2, UserNo3, etc.) in the Users container in Active Directory. The script is useful for test scenarios that require multiple user accounts.
+###
+###
+###
+Set objRootDSE = GetObject("LDAP://rootDSE")
+
+Set objContainer = GetObject("LDAP://cn=Users," & _
+    objRootDSE.Get("defaultNamingContext"))
+ 
+For i = 1 To 1000
+    Set objLeaf = objContainer.Create("User", "cn=UserNo" & i)
+    objLeaf.Put "sAMAccountName", "UserNo" & i
+    objLeaf.SetInfo
+Next
+ 
+WScript.Echo "1000 Users created."

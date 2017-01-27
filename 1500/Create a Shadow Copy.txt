@@ -1,0 +1,19 @@
+###
+###
+###
+### Category1 : Shadow Copy
+### Category2 : 
+### Category3 : 
+### Description : Creates a client-accessible shadow copy for drive C.
+###
+###
+###
+Const VOLUME = "C:\"
+Const CONTEXT = "ClientAccessible"
+ 
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+Set objShadowStorage = objWMIService.Get("Win32_ShadowCopy")
+errResult = objShadowStorage.Create(VOLUME, CONTEXT, strShadowID)

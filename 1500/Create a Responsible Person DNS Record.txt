@@ -1,0 +1,27 @@
+###
+###
+###
+### Category1 : Networking
+### Category2 : DNS Server
+### Category3 : DNS Records
+### Description : Creates a responsible person (RP) record on a DNS server.
+###
+###
+###
+strDNSServer = "atl-dc-03.fabrikam.com"
+strContainer = "fabrikam.com"
+strOwner = "atl-srv-01.fabrikam.com"
+intRecordClass = 1
+intTTL = 600 
+strRPMAilbox = "admin.fabrikam.com"
+strText = "Network Administrator, (555) 555-1219"
+ 
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & _
+        "\root\MicrosoftDNS")
+
+Set objItem = objWMIService.Get("MicrosoftDNS_RPType")
+errResult = objItem.CreateInstanceFromPropertyData _
+    (strDNSServer, strContainer, strOwner, intRecordClass, _
+        intTTL, strRPMailbox, strText)

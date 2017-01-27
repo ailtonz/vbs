@@ -1,0 +1,20 @@
+###
+###
+###
+### Category1 : Active Directory
+### Category2 : Groups
+### Category3 : 
+### Description : Creates a global Active Directory security group named HR-Employees.
+###
+###
+###
+Const ADS_GROUP_TYPE_GLOBAL_GROUP = &h2
+Const ADS_GROUP_TYPE_SECURITY_ENABLED = &h80000000
+
+Set objOU = GetObject("LDAP://ou=HR,dc=NA,dc=fabrikam,dc=com")
+Set objGroup = objOU.Create("Group", "cn=HR-Employees")
+
+objGroup.Put "sAMAccountName", "HRStaff"
+objGroup.Put "groupType", ADS_GROUP_TYPE_GLOBAL_GROUP Or _
+    ADS_GROUP_TYPE_SECURITY_ENABLED
+objGroup.SetInfo

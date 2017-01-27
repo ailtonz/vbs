@@ -1,0 +1,14 @@
+###
+###
+###
+### Category1 : Active Directory
+### Category2 : User Accounts
+### Category3 : User Account Management
+### Description : Creates a contact account named MyerKen in the Management organizational unit in a hypothetical domain named fabrikam.com.
+###
+###
+###
+Set objOU = GetObject("LDAP://OU=management,dc=fabrikam,dc=com")
+
+Set objUser = objOU.Create("contact", "cn=MyerKen")
+objUser.SetInfo
