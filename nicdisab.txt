@@ -1,0 +1,67 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set wshshell = wscript.createobject("wscript.shell")
+Set wshNet   = CreateObject("WScript.Network")
+computername = wshNet.ComputerName
+computername = LCase(computername)
+
+Set IPConfigSet = GetObject("winmgmts:").ExecQuery ("select IPAddress, settingID from Win32_NetworkAdapterConfiguration where IPenabled=TRUE")
+for each j in IpConfigSet
+	if Not IsNull(j.ipaddress) then
+		addr = j.ipaddress(i)
+		if left (addr,7) = "192.168" then
+                        thirdPeriodPos = InStrRev(addr, ".")
+                        secondPeriodPos = InStrRev(addr, ".", thirdPeriodPos - 1)
+			thirdquadofip2 = Mid(addr, secondPeriodPos + 1, thirdPeriodPos - secondPeriodPos - 1)
+                        fourthquadofip2 = Mid(addr, thirdPeriodPos + 1)
+			if (thirdquadofip2 >= "100" And thirdquadofip2 <= "112") and _
+			   (fourthquadofip2 >= "1" And fourthquadofip2 <= "2") then
+				saveaddr = addr
+				clsrm = getclsrm
+                        	if computername = "glasgow" then
+					fourthquadofip1 = 100
+				else
+					fourthquadofip1 = (thirdquadofip2 * 2) + fourthquadofip2 - 102
+				end if
+			end if
+		end if
+	end if
+next
+
+for each j in IPConfigSet
+	if j.ipaddress(i) <> saveaddr then
+		y = j.settingID(i)
+		chgip clsrm,y,fourthquadofip1
+		wscript.quit
+	end if
+next
+		
+private sub chgip (clsrm,y,fourthquad)
+	wshshell.run "c:\moc\setup\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v EnableDHCP /t REG_DWORD /d 0 /f", 0, true
+	wshshell.run "c:\moc\setup\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v IPAddress /t REG_MULTI_SZ /d 192.168." & clsrm & "." & fourthquad & " /f", 0, true
+	wshshell.run "c:\moc\setup\reg add HKLM\System\CurrentControlSet\Services\Tcpip\Parameters\interfaces\" & y & " /v SubNetMask /t REG_MULTI_SZ /d 255.255.255.0 /f", 0, true
+	wshshell.run "c:\moc\setup\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v NameServer /t REG_SZ /d 192.168." & clsrm & ".200 /f", 0, true 'reg entry to set DNS
+	wshshell.run "c:\moc\setup\reg add HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" & y & " /v Domain /t REG_SZ /d nwtraders.msft /f", 0, true 'reg entry to set gateway
+end sub
+
+private function getclsrm
+	set fso = createobject("scripting.filesystemobject")
+	set fl = fso.OpenTextFile ("c:\moc\setup\mocset\mocset2.cmd")
+	while left (x,13) <> "set classroom"
+		x = fl.readline
+	wend
+	fl.close
+	rtrim x
+	lgn = len(x)
+	getclsrm = left(right(x,lgn-14),1)
+end function
+	
+

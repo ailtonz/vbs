@@ -1,0 +1,31 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' northapp.vbs
+'
+' This script configures the NorthwindCE 2556 Sample Application
+
+set wshshell = wscript.CreateObject("wscript.shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+CurrDir = wshshell.CurrentDirectory
+set onet = CreateObject("wscript.network")
+
+'Get the name of the computer
+CompName = ucase(onet.ComputerName)
+
+'Temporarily set the working directory to C:\Program Files\Msdntrain\2556\Labfiles\Database
+wshshell.CurrentDirectory = "C:\Program Files\Msdntrain\2556\Labfiles\Database"
+
+'Run SetupRepl.bat
+wshshell.run "SetupRepl.bat SnapShot sa SQL$AdminPwd " & CompName, 0, true
+
+'Restore the working directory
+wshshell.CurrentDirectory = CurrDir
+

@@ -1,0 +1,79 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim IE, fso, MyFile
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+set wshshell = wscript.CreateObject("wscript.shell")
+ie.left=0
+ie.top=0
+ie.height=600
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\moc\setup\mocbhtml\moccust2.htm"
+ie.visible=1
+
+'Wait for London to be available
+done = 0
+while done = 0
+	if fso.FolderExists("\\london\setup") then
+		done = 1
+	else
+		wscript.sleep 5000
+	end if
+wend
+
+'set mocfinb.vbs to run after reboot
+if fso.FileExists ("c:\moc\setup\mocfinb.vbs") then
+	set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+	fn = "runnext.vbs"
+	set nxt = fso.getfile("c:\moc\setup\mocfinb.vbs")
+	set fl = fso.createtextfile(strt & "\" & fn, true)
+	fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+	fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+	fl.Close
+else
+	set MyFile = fso.GetFile("C:\Documents and Settings\All Users\Start Menu\Programs\Startup\runnext.vbs")
+	MyFile.Delete
+end if
+
+' Create the Internet Explorer shortcuts
+wshshell.Run "c:\moc\setup\ieshorts.vbs", 6, true
+
+'Install the Macromedia Flash 6.0 Plug-in
+ie.Navigate "file:///c:\moc\setup\mocbhtml\moccust2.htm"
+WshShell.run "C:\moc\setup\Flash6A.exe /Q", 6, true
+
+'Install the Student Lab Files
+ie.Navigate "file:///c:\moc\setup\mocbhtml\moccust3.htm"
+WshShell.Run "c:\moc\setup\AllFiles.exe /auto" , 6, true
+'Give Everyone Full Control on the Lab Answers folder
+wshshell.run "c:\windows\system32\cacls " & chr(34) & "C:\Documents and Settings\All Users\Desktop\Lab Answers" & chr(34) & " /e /g " & chr(34) & "Everyone" & chr(34) & ":f", 0, true
+
+'Configure Internet Explorer
+ie.Navigate "file:///c:\moc\setup\mocbhtml\moccust4.htm"
+WshShell.run "C:\moc\setup\cfgie.vbs", 6, true
+
+'Install Administrative Tools
+ie.Navigate "file:///c:\moc\setup\mocbhtml\moccust5.htm"
+wshshell.Run "C:\Windows\System32\Adminpak.msi /Q", 1, true
+
+'verify that the NIC is configured correctly
+WshShell.run "c:\moc\setup\cfgnic1.vbs", 6, true
+
+'Set the wallpaper now that we're logged into the domain
+WshShell.run "c:\setup\images\display.vbs", 6, true
+
+'Reboot the machine
+WshShell.run "c:\tools\reboot.cmd", 6, true
+

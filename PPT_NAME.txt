@@ -1,0 +1,75 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' popad.vbs
+'
+' This script populates Active Directory on the student computer
+
+Option Explicit
+
+Dim WSHShell, strDomain, strBase, strFullDomain
+Dim odomDomain, oNet, strServer
+Dim oouDomCtrlrs, oouHQ, oouBO
+
+Const ADSI_TYPE_CONT  = "container"
+Const ADSI_TYPE_GROUP = "group"
+Const ADSI_TYPE_OU    = "organizationalUnit"
+Const ADSI_TYPE_USER  = "user"
+Const ADSI_TYPE_COMP  = "computer"
+
+Set WSHShell = WScript.CreateObject("wscript.shell")
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Establish computer's domain name
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+set oNet = CreateObject("wscript.network")
+strServer = LCase(oNet.ComputerName)
+Select Case strServer
+' 	Case "london"     strDomain = "nwtraders"
+'	Case "glasgow"    strDomain = "contoso"
+	Case "vancouver"  strDomain = "adatum"
+	Case "perth"      strDomain = "fabrikam"
+	Case "lisbon"     strDomain = "lucernpublish"
+	Case "lima"       strDomain = "litwareinc"
+	Case "bangalore"  strDomain = "tailspintoys"
+	Case "casablanca" strDomain = "wingtiptoys"
+	Case "acapulco"   strDomain = "thephonecompany"
+	Case "auckland"   strDomain = "cpandl"
+	Case "stockholm"  strDomain = "adventureworks"
+	Case "caracas"    strDomain = "blueyonderair"
+	Case "manila"     strDomain = "woodgrovebank"
+	Case "khartoum"   strDomain = "treyresearch"
+	Case Else MsgBox "Invalid student computer name."
+End Select
+
+strBase = "msft"
+strFullDomain = strDomain & "." & strBase
+
+'MsgBox("Domain:  " & strFullDomain)
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Headquarters organizational unit 
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set odomDomain = GetObject("LDAP://" & strFullDomain)
+Set oouDomCtrlrs = odomDomain.GetObject(ADSI_TYPE_OU, "OU=Domain Controllers")
+Set oouHQ = oouDomCtrlrs.Create(ADSI_TYPE_OU, "OU=Headquarters")
+oouHQ.SetInfo
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Branch Office organizational unit 
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set oouBO = oouDomCtrlrs.Create(ADSI_TYPE_OU, "OU=Branch Office")
+oouBO.SetInfo
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Move the domain controller computer object into the Headquarters organizational unit 
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+oouHQ.MoveHere "LDAP://CN=" & UCase(strServer) & ",OU=Domain Controllers,DC=" & strDomain & ",DC=" & strBase, VBNullString
+

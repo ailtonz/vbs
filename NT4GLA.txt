@@ -1,0 +1,54 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim objnet, wshShell, fso, ie, url
+Set objNet = WScript.CreateObject("WScript.Network")
+Set WshShell = WScript.CreateObject("WScript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+url = "file:///c:/moc/setup/html/NT4CUST.HTM?Step="
+ie.left=0
+ie.top=0
+ie.height=570
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate url & 1
+ie.visible=1
+
+WScript.Sleep 5000
+
+'set wallpaper
+WshShell.run "c:\setup\images\display.vbs", 6, true
+
+'convert d to ntfs
+wshShell.Run "c:\tools\convertd.cmd", 6, True
+
+'Prepare ADMT
+ie.navigate url & 2
+'wshShell.Run "c:\tools\ADMTPrep.vbs", 6, True
+
+'creating users and groups
+ie.navigate url & 3
+WshShell.run "c:\moc\setup\nt4gla.vbs", 6, true
+WshShell.run "c:\moc\setup\nt4mel.vbs", 6, true
+
+'setting share & directory permissions
+wshShell.Run "c:\tools\perm_s.cmd", 6, True
+wshShell.Run "c:\tools\perm_f.cmd", 6, True
+
+wshShell.Run "c:\tools\autolog0.vbs", 6, True
+
+ie.navigate url & 4
+'reboots
+'wshShell.Run("c:\tools\reboot.cmd"), 6, true
+

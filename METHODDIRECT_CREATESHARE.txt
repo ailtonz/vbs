@@ -1,0 +1,45 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+On Error Resume Next
+Dim StrDisk, strName, Finished
+Set objRemoteSvc = GetObject("WinMgmts:\\servername")
+
+Set sink = wscript.CreateObject("WbemScripting.SWbemSink","SINK_")
+'We expect this remote fetch to be slow so we will run it 'offline'
+retVal = objRemoteSvc.instancesOfasync( sink,"Win32_Share")
+
+'Now we carry on with some other work
+DO Until finished = True
+		' pointless task 
+		LoopCount = LoopCount + 1
+		Set objDisk_C = GetObject("WinMgmts:Win32_LogicalDisk.DeviceID='C:'")
+		strDisk = strDisk & loopcount & ":  " & int((objDisk_C.freeSpace/loopcount)) & vbcrlf
+Loop
+Wscript.echo "The Async Task to List Shares " & vbcrlf & _
+			"-------------------------------------" & vbcrlf & _
+			strName & vbcrlf & _
+			"-------------------------------------" & vbcrlf & _
+			" The Loop Count was " & LoopCount
+			
+Wscript.Echo "The Second Task" & vbcrlf & _
+			"---------------------" & vbcrlf & strDisk
+
+Wscript.Quit
+'------------------- only subroutines below this line ---------------------------
+Sub SINK_OnCompleted(iHResult, objErrorObject, objAsyncContext)
+    finished = True
+End Sub
+
+Sub SINK_OnObjectReady(objObject, objAsyncContext)
+	strName = strName & _
+		" Folder " & objObject.Path & " is shared as " &  objObject.name  & vbcrlf
+End Sub
+

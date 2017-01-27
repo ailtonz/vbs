@@ -1,0 +1,66 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' modhtm.vbs
+'
+' This script copies default.htm from the c:\moc\2810\labfiles\setup directory to C:\Inetpub\wwwroot\.
+' It then edits the file to replace 'XXX' with the proper computer name.
+
+Dim fso, computername, wshNet
+Dim FileContents
+Const ForReading = 1, ForWriting = 2, ForAppending = 8 
+
+'''' Step 1, copy the file
+set fso      = CreateObject("Scripting.FileSystemObject")
+fso.CopyFile "c:\moc\2810\labfiles\setup\default.htm", "C:\Inetpub\wwwroot\default.htm"
+
+
+'''' Step 2, remove any file attributes (readonly)
+Set file = fso.GetFile("C:\Inetpub\wwwroot\default.htm")
+file.Attributes  = 0
+
+
+'''' Step 3, get the computer name
+Set wshNet   = CreateObject("WScript.Network")
+computername = wshNet.ComputerName
+
+
+'''' Step 4, read the file contents
+Set default = fso.OpenTextFile ("c:\inetpub\wwwroot\default.htm", ForReading, True)
+FileContents = default.ReadAll
+default.close
+
+
+'''' Step 5, replace the string with the computer name
+SearchAndReplace FileContents, "XXX", computername
+
+
+'''' Step 6, write the new stuff back to the file
+Set default = fso.OpenTextFile ("c:\inetpub\wwwroot\default.htm", ForWriting, True)
+default.write FileContents 
+default.close
+
+
+WScript.Quit 0
+
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Function SearchAndReplace(s, Str1, Str2)
+	Dim pos
+	s = s & "" 'Fix Null
+	pos = InStr(s, Str1)
+	While pos > 0
+		s = Mid(s, 1, pos - 1) & Str2 & Mid(s, pos + Len(Str1))
+	    pos = InStr(pos, s, Str1)
+	Wend
+	SearchAndReplace = s
+End Function
+
+

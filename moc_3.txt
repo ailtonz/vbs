@@ -1,0 +1,24 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set objSvc = GetObject("winmgmts:")
+Set retVal = objSvc.ExecMethod("win32_Service.name='Alerter'","stopService")
+If retVal.returnValue = 0 Then
+	wscript.Echo " The Alerter Service has been told to stop" & vbcrlf & _
+				"Just a wait a few seconds to give it a chance to complete the instruction" & vbcrlf & _
+				"Then click OK"
+Else
+	wscript.Echo "Error: " & retVal.returnValue
+	wscript.quit
+End If
+wscript.Echo "The Alerter Service is definitely " & objSvc.Get("Win32_Service.name='Alerter'").state
+wscript.quit
+
+

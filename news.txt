@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+set oNet = wscript.CreateObject("WScript.Network")
+set wshShell = wscript.CreateObject("WScript.Shell")
+
+CompName = lcase(oNet.ComputerName)
+
+If CompName <> "melbourne" AND CompName <> "glasgow" Then
+	' Refresh IP Addresses
+	ret = wshShell.Run("IPConfig /release", 6, true)
+	ret = wshshell.Run("IPConfig /renew", 6, true)
+End IF
+

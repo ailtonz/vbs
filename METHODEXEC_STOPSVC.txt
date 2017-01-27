@@ -1,0 +1,27 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'get the object this time - not the SwbemService
+Set objAlert = GetObject("WinMgmts:win32_Service.name='Alerter'")
+'Call the method directly
+retVal = objAlert.startService
+'slightly different syntax for retVal because using Direct Method execution
+'returns a value - not an object.  Anything other than zero is an error.
+If retVal = 0 Then
+	wscript.Echo " The Alerter Service has been told to start" & vbcrlf & _
+				"Just a wait a few seconds to give it a chance to complete the instruction" & vbcrlf & _
+				"Then click OK"
+Else
+	wscript.Echo "Error: " & retVal
+	wscript.quit
+End If
+wscript.Echo "The Alerter Service is now " & GetObject("WinMgmts:win32_Service.name='Alerter'").state
+wscript.quit
+

@@ -1,0 +1,334 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Title = WMI In Action
+' Description = Demo of WMI  
+' Author = Richard Harrison, Andrew Cheeseman
+' Keywords = VBScript, WSH, WMI
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Require Variables to be explicitly declared 
+Option Explicit
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Set Constants
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Const ForReading = 1, ForWriting = 2, ForAppending = 8
+Const TristateUseDefault = -2, TristateTrue = -1, TristateFalse = 0
+Const TemporaryFolder = 2  
+Const EVT_TYPE_ERROR = 1
+Const EVT_TYPE_WARNING = 2
+Const EVT_TYPE_INFO = 4
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' ***** Variable Initialization *****
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Dim fso, f, ts, tfolder, i, MB, KB, Gb, System, os, Service, NIC
+Dim sFileName, sServerName,sUserName,sDomainRole, sDomainRoleName
+Dim objOSset, objServiceset, objSystemSet, objNICSet, objPartitionSet
+Dim Partition, objShell
+
+i  = 0
+Gb = 1073741824
+Mb = 1048576
+
+Const FILE_PATH = "C:\"
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Object Initialization
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set objShell = Wscript.CreateObject("Wscript.Shell")
+
+'WMI Object to gather information from
+
+Set objOSset = GetObject("winmgmts:").InstancesOf("Win32_OperatingSystem")
+Set objServiceset = GetObject("winmgmts:").InstancesOf("Win32_Service")
+Set objSystemSet = GetObject("winmgmts:").InstancesOf ("Win32_ComputerSystem")
+Set objNICSet = GetObject("winmgmts:").InstancesOf ("Win32_NetworkAdapterConfiguration")
+Set objPartitionSet = GetObject("winmgmts:").InstancesOf ("Win32_LogicalDisk")
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' ***** MAIN Body of Script *****
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+On Error Resume Next
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Gather initial information about the current users and Machine Role
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+For Each System in objSystemSet
+	sUserName = System.UserName
+	sServerName = System.Name
+	sDomainRole = System.DomainRole
+Next
+
+Select Case  sDomainRole 
+	Case 0
+		sDomainRoleName = "Standalone Workstation"
+	Case 1
+		sDomainRoleName = "Member Workstation"
+	Case 2
+		sDomainRoleName = "Standalone Server"
+	Case 3
+		sDomainRoleName = "Member Server"
+	Case 4
+		sDomainRoleName = "Backup Domain Controller"
+	Case 5
+		sDomainRoleName = "Primary Domain Controller"	
+	Case Else
+		sDomainRoleName = "Discription Unknown Role Number ("&sDomainRole&")"
+End Select
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Sets up the TEXT file to be written to
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set tfolder = fso.GetSpecialFolder(TemporaryFolder)
+sfilename = FILE_PATH & sServerName & ".txt"
+fso.CreateTextFile sfilename
+Set f = fso.GetFile(sfilename)
+Set ts = f.OpenAsTextStream(ForWriting, TristateUseDefault)
+
+'Write the report head data
+ts.WriteLine "Report Run By = " & SuserName
+ts.WriteLine "Report File = " & FILE_PATH & sServerName & ".txt"
+ts.WriteLine "Date and Time = " & Now
+
+ts.WriteLine " "
+ts.WriteLine "[OS]"
+
+'Write information from the Win32_OperatingSystem object
+for each os in objOSset 
+      ts.WriteLine "Operating System = " & os.Caption
+      ts.WriteLine "Operating System Version = " & os.Version
+      ts.WriteLine "Operating System SPK = " & os.CSDVersion
+      ts.WriteLine "Operating System Serial No = " & os.SerialNumber
+      ts.WriteLine "System Drive = " & os.SystemDevice
+      ts.WriteLine "System Directory = " & os.SystemDirectory
+      ts.WriteLine "Windows Directory = " & os.WindowsDirectory
+next
+
+ts.WriteLine " "
+ts.WriteLine "[SERVICES]"
+
+'Information from the Win32_Service object
+for each Service in objServiceset 
+	If Service.State = "Running" then
+      		ts.WriteLine Service.Caption & ", " & service.StartMode
+	End If      		
+next
+
+ts.WriteLine " "
+ts.WriteLine "[SYSTEM]"
+
+'Write information from the Win32_objComputerSystem object
+for each System in objSystemSet
+	ts.WriteLine "System Name = " & System.Name
+	ts.WriteLine "System Domain = " & System.Domain
+	ts.WriteLine "System Domain Role = " & sDomainRoleName
+	ts.WriteLine "System Manufacturer= " & System.Manufacturer
+	ts.WriteLine "System Model = " & System.Model
+	ts.WriteLine "System Processors = " & System.NumberOfProcessors
+	ts.WriteLine "System Type = " & System.SystemType
+	ts.WriteLine "Total Physical Memory = " & FormatNumber(System.TotalPhysicalMemory/Mb,2) & " Mb"
+
+next
+
+ts.WriteLine " "
+ts.WriteLine "[Network Adapter Configuration]"
+
+'Write information from the Win32_NetworkAdapterConfiguration object
+For each NIC in objNICSet
+	If NIC.IPEnabled = "True" or NIC.IPXEnabled = "True" Then
+		ts.WriteLine "{Adapter (" & NIC.Index & ")" & Chr(9) & "Device Name ("& NIC.ServiceName & ")}"
+		ts.WriteLine "Discription = " & NIC.Description 
+		ts.WriteLine "MAC Address = " & NIC.MACAddress
+		ts.WriteLine "IP Enabled = " & NIC.IPEnabled
+		ts.WriteLine "IPX Enabled = " & NIC.IPXEnabled
+		ts.WriteLine " "
+	End If
+	If NIC.IPEnabled = "True" Then
+		ts.WriteLine " "
+		ts.WriteLine ":TCP/IP Configuration for Adapter(" &NIC.Index& ")"
+		ts.WriteLine "DHCP Enabled = " & NIC.DHCPServer
+		ts.WriteLine "Netbios TCP Options = " & NIC.TcpipNetbiosOptions
+		i=0
+		For i = LBound(NIC.IPaddress) to UBound(NIC.IPaddress)
+		    ts.writeLine "IP Address " & i
+		    ts.writeLine Chr(9) & "IP Address = " & NIC.IPAddress(i) 
+		    ts.writeLine Chr(9) & "IP Sub Net = " & NIC.IPSubnet(i)		
+			ts.writeLine " "
+		Next
+		
+		i=0
+		For i = LBound(NIC.DefaultIPGateway) to UBound(NIC.DefaultIPGateway)
+			ts.writeLine "Default Gateway " & i & " = " & NIC.DefaultIPGateway (i) 
+		Next
+		
+		i=0
+		For i = LBound(NIC.DNSServerSearchOrder) to UBound(NIC.DNSServerSearchOrder)
+			ts.writeLine "DNS Setting " & i & " = " & NIC.DNSServerSearchOrder(i) 
+		Next
+			
+	   	If NIC.WINSEnableLMHostsLookup = "True"  Then
+	   		ts.WriteLine "Primary WINS Server = " & NIC.WINSPrimaryServer
+	   		ts.WriteLine "Secondary WINS Server = " & NIC.WINSSecondaryServer
+		Else
+	   		ts.WriteLine "No Wins Service Configured"
+	   	End if
+	End If
+	   	
+	If NIC.IPXEnabled = "True" Then
+		ts.WriteLine " "
+		ts.WriteLine ":IPX Configuration for Adapter(" & NIC.Index & ")"
+		ts.writeLine "IPX Virtual Net Number = " & NIC.IPXVirtualNetNumber	
+		i=0
+		For i = LBound(NIC.IPXFrameType) to UBound(NIC.IPXFrameType)
+			Select Case NIC.IPXFrameType(i)
+		  		Case "0"
+	    			ts.writeLine Chr(9) & "IPX FrameType = Ethernet II"
+	    			ts.writeLine Chr(9) & "IPX Address = " & NIC.IPXNetworkNumber(i)
+	    		Case "1"
+	    			ts.writeLine Chr(9) & "IPX FrameType = Ethernet 802.3"
+	    			ts.writeLine Chr(9) & "IPX Address = " & NIC.IPXNetworkNumber(i)
+	    		Case "2"
+	    			ts.writeLine Chr(9) & "IPX FrameType = Ethernet 802.2"
+	    			ts.writeLine Chr(9) & "IPX Address = " & NIC.IPXNetworkNumber(i)
+	    		Case "3"
+	    			ts.writeLine Chr(9) & "IPX FrameType = Ethernet SNAP"
+	    			ts.writeLine Chr(9) & "IPX Address = " & NIC.IPXNetworkNumber(i)
+	    		Case "255"
+	    			ts.writeLine Chr(9) & "IPX FrameType = Auto Discover"
+	    		Case Else
+	    			ts.writeLine Chr(9) & "IPX FrameType = Un-Known Frame Type"
+	    	End Select
+		Next
+		ts.writeLine " "
+	End If	
+Next
+
+ts.WriteLine " "
+ts.WriteLine "[Partitions]"
+
+'Write information from the Win32_LogicalDisk object
+for each Partition in objPartitionSet
+	If Partition.Description = "Local Fixed Disk" then
+		ts.WriteLine "{" & Partition.Name &" Volume}" 
+		ts.WriteLine Chr(9) & "Lable = " & Partition.VolumeName
+		ts.WriteLine Chr(9) & "Serial No = " & Partition.VolumeSerialNumber
+		ts.WriteLine Chr(9) & "Size = " & FormatNumber(Partition.Size/Gb,2) & " Gb" 
+		ts.WriteLine Chr(9) & "FreeSpace = " & FormatNumber(Partition.FreeSpace/Gb,2) & " Gb" 
+		ts.WriteLine Chr(9) & "File System = " & Partition.FileSystem
+		ts.WriteLine " "
+	End If
+next
+
+ts.WriteLine " "
+ts.WriteLine "[Active Directory Information]"
+ts.WriteLine " "
+If sDomainRole < 5 Then
+	ts.WriteLine "This is not a Domain Controller"
+Else
+	aFSMOConfig = GetFSMOConfig(sServerName)
+	ts.WriteLine aFSMOConfig(0)
+	ts.WriteLine aFSMOConfig(1)
+	ts.WriteLine aFSMOConfig(2)
+	ts.WriteLine aFSMOConfig(3)
+	ts.WriteLine aFSMOConfig(4)
+End if
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Write event to event log
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+ts.Close
+objShell.LogEvent EVT_TYPE_INFO, "WMI Report Run By = " & SuserName
+objShell.LogEvent EVT_TYPE_INFO, "WMI Report File = " & tfolder & "\" & sServerName & ".txt"
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' ***** END OF SCRIPT *****
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+WScript.Quit
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' ***** Functions *****
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'********************************************************************
+'*
+'* Function     : GetFSMOConfig
+'* Purpose      : To Gather FSMO Information from Domain Controller
+'* Input        : Domain Contoller Name = Path
+'* Input        : ObjectID
+'*
+'********************************************************************
+
+Function  GetFSMOConfig(path)
+Dim objNetwork, objArgs, ADOconnObj, bstrADOQueryString, objDSE, objRS
+Dim objFMSO,objCompNTDS, objComputer
+Dim aArray(4)
+
+Set objNetwork = CreateObject("WScript.Network")
+
+Set ADOconnObj = CreateObject("ADODB.Connection")
+
+ADOconnObj.Provider = "ADSDSOObject"
+ADOconnObj.Open "ADs Provider"
+
+
+'PDC FSMO
+bstrADOQueryString = "<LDAP://"&Path&">;(&(objectClass=domainDNS)(fSMORoleOwner=*));adspath;subtree"
+Set objDSE = GetObject("LDAP://RootDSE")
+Set objRS = ADOconnObj.Execute(bstrADOQueryString)
+Set objFMSO = GetObject(objRS.Fields(0).Value)
+Set objCompNTDS = GetObject("LDAP://" & objFMSO.fSMORoleOwner)
+Set objComputer = GetObject(objCompNTDS.Parent)
+aArray(0) = "The PDC FSMO is: " & objComputer.dnsHostName
+
+'Rid FSMO
+bstrADOQueryString = "<LDAP://"&Path&">;(&(objectClass=rIDManager)(fSMORoleOwner=*));adspath;subtree"
+
+Set objRS = ADOconnObj.Execute(bstrADOQueryString)
+Set objFMSO = GetObject(objRS.Fields(0).Value)
+Set objCompNTDS = GetObject("LDAP://" & objFMSO.fSMORoleOwner)
+Set objComputer = GetObject(objCompNTDS.Parent)
+aArray(1) = "The RID FSMO is: " & objComputer.dnsHostName
+
+'Infrastructure FSMO
+bstrADOQueryString = "<LDAP://"&Path&">;(&(objectClass=infrastructureUpdate)(fSMORoleOwner=*));adspath;subtree"
+
+Set objRS = ADOconnObj.Execute(bstrADOQueryString)
+Set objFMSO = GetObject(objRS.Fields(0).Value)
+Set objCompNTDS = GetObject("LDAP://" & objFMSO.fSMORoleOwner)
+Set objComputer = GetObject(objCompNTDS.Parent)
+aArray(2) = "The Infrastructure FSMO is: " & objComputer.dnsHostName
+
+'Schema FSMO
+bstrADOQueryString = "<LDAP://"&objDSE.Get("schemaNamingContext")&_
+                     ">;(&(objectClass=dMD)(fSMORoleOwner=*));adspath;subtree"
+
+Set objRS = ADOconnObj.Execute(bstrADOQueryString)
+Set objFMSO = GetObject(objRS.Fields(0).Value)
+Set objCompNTDS = GetObject("LDAP://" & objFMSO.fSMORoleOwner)
+Set objComputer = GetObject(objCompNTDS.Parent)
+aArray(3) = "The Schema FSMO is: " & objComputer.dnsHostName
+
+'Domain Naming FSMO
+bstrADOQueryString = "<LDAP://"&objDSE.Get("configurationNamingContext")&_
+                     ">;(&(objectClass=crossRefContainer)(fSMORoleOwner=*));adspath;subtree"
+
+Set objRS = ADOconnObj.Execute(bstrADOQueryString)
+Set objFMSO = GetObject(objRS.Fields(0).Value)
+Set objCompNTDS = GetObject("LDAP://" & objFMSO.fSMORoleOwner)
+Set objComputer = GetObject(objCompNTDS.Parent)
+aArray(4) = "The Domain Naming FSMO is: " & objComputer.dnsHostName
+ 
+GetFSMOConfig = aArray 
+
+End Function
+

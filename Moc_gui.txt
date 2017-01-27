@@ -1,0 +1,73 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim IE
+Set WshShell = WScript.CreateObject("WScript.Shell")
+Set IE = CreateObject("InternetExplorer.Application")
+set objnet = wscript.CreateObject("wscript.network")
+cname = objnet.ComputerName
+namearr = split(cname,"-",-1)
+ie.left=0
+ie.top=0
+ie.height=570
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\moc\setup\mochtml\moccustb.htm"
+ie.visible=1
+
+wscript.Sleep 5000
+    
+'remove startup file
+Set fso = CreateObject("Scripting.FileSystemObject")
+set dest = fso.getfolder("c:\documents and settings\all users\Start Menu\Programs\startup")
+set fl = fso.getfile(dest & "\" & "runnext.vbs")
+fl.delete
+
+' set mocfinal.vbs to run after reboot
+set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+fn = "runnext.vbs"
+set nxt = fso.getfile("c:\moc\setup\mocfinal.vbs")
+set fl = fso.createtextfile(strt & "\" & fn, true)
+fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+
+'set wallpaper
+wshshell.Run "c:\setup\images\display.vbs", 6, true
+
+'Install exchange 2000
+ie.navigate "file:///c:\moc\setup\mochtml\moccustc.htm"
+wshshell.run "c:\tools\instex.vbs", 6, true
+
+'install Exchange 2000 SP2
+ie.Navigate "file:///c:\moc\setup\mochtml\moccustd.htm"
+if (fso.FolderExists("\\van-gc\exchange\sp2")) then
+	src = "\\van-gc\exchange\sp2"
+end if
+if (fso.FolderExists("\\van-gc\exchange\server")) then
+	src = "\\van-gc\exchange\server"
+end if
+if namearr(1) = "PF1" then
+	wshshell.Run src & "\setup\i386\update.exe /unattendfile c:\moc\setup\pf1.ini", 1, true
+elseif namearr(1) = "MBX1" then
+	wshshell.Run src & "\setup\i386\update.exe /unattendfile c:\moc\setup\mbx1.ini", 1, true
+else
+	wshshell.Run src & "\setup\i386\update.exe /unattendfile c:\moc\setup\fe.ini", 1, true
+end if
+
+		
+'reset logon domain for pf1 machines
+wshshell.Run "c:\tools\resetdom.vbs", 6, true
+
+'reboot
+wshShell.Run "c:\tools\reboot.cmd", 6, true
+

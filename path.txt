@@ -1,0 +1,19 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Change the name of server1 to be your partner's machine
+Set objSvc = GetObject("WinMgmts:\\Server1")
+Set objDisk = objSvc.Get("Win32_LogicalDisk.deviceID='C:'")
+Set objPageFile = objSvc.Get("Win32_PageFile.name='c:\pagefile.sys'")
+diskSize = objDisk.size
+pageSize = objPageFile.filesize
+wscript.echo "The percentage size is " & round((pageSize/diskSize)*100,2)
+
+

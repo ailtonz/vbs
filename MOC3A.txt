@@ -1,0 +1,77 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim IE
+Set WshShell = WScript.CreateObject("WScript.Shell")
+Set IE = CreateObject("InternetExplorer.Application")
+ie.left=0
+ie.top=0
+ie.height=570
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\moc\setup\mochtml\moccust3.htm"
+ie.visible=1
+
+wscript.Sleep 5000
+ 
+'remove startup file
+Set fso = CreateObject("Scripting.FileSystemObject")
+set dest = fso.getfolder("c:\documents and settings\all users\Start Menu\Programs\startup")
+set fl = fso.getfile(dest & "\" & "runnext.vbs")
+fl.delete
+
+' set moc_3.vbs to run after reboot
+set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+fn = "runnext.vbs"
+set nxt = fso.getfile("c:\moc\setup\moc_3.vbs")
+set fl = fso.createtextfile(strt & "\" & fn, true)
+fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+
+
+'Convert Drive D to NTFS
+wshshell.Run "c:\moc\setup\convert.vbs", 6, true
+
+'Installing labfiles
+ie.Navigate "file:///c:\moc\setup\mochtml\moccust4.htm"
+wshshell.run "c:\moc\setup\allfiles.exe /auto", 6, true
+
+'Elevate permissions for users when installing
+ie.navigate "file:///c:\moc\setup\mochtml\moccust5.htm"
+wshshell.regwrite "HKLM\Software\Policies\Microsoft\Windows\Installer\AlwaysInstallElevated" , 1 ,"REG_DWORD"
+
+'Disable Internet Connection Wizard
+ie.navigate "file:///c:\moc\setup\mochtml\moccust6.htm"
+WshShell.run "c:\moc\setup\ie.vbs", 6, true
+
+'install nntp service
+ie.navigate "file:///c:\moc\setup\mochtml\moccust7.htm"
+wshshell.run "sysocmgr.exe /i:sysoc.inf /u:c:\moc\setup\nntp.txt", 1, true
+
+'Install Windows 2000 support tools
+ie.navigate "file:///c:\moc\setup\mochtml\moccust8.htm"
+wshshell.run "\\VAN-GC\support\2000rkst.msi /qb", 6, true
+
+'Install office 2000
+ie.navigate "file:///c:\moc\setup\mochtml\moccust9.htm"
+wshshell.run "\\VAN-GC\office\setup.exe TRANSFORMS=" & chr(34) & "C:\MOC\setup\office.MST" & chr(34) & " /wait /qn", 6, true
+
+'change login domain for exchange install (pf1)
+ie.Navigate "file:///c:\moc\setup\mochtml\moccusta.htm"
+wshshell.Run "c:\tools\ChDom.vbs", 6, true
+
+'reboot
+wshShell.Run "c:\tools\reboot.cmd", 6, true
+
+
+

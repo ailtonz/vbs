@@ -1,0 +1,24 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim sourcePath, destPath,fso,shell
+
+'Get the command line arguments entered for the script
+	Dim objArgs: Set objArgs = WScript.Arguments
+
+sourcePath =objArgs(0)
+destPath= "C:\Labs\Work"
+
+On Error Resume Next
+set shell= createobject("wscript.shell")
+shell.run "xcopy " + "c:\labs\common" + " " + destPath + " /s /h /y /e"
+shell.run "xcopy " + sourcePath + " " + destPath + " /s /h /y /e"
+
+

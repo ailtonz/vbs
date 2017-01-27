@@ -1,0 +1,44 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+option explicit
+dim wshshell,fso,curdir,done,f,strUser,objUser,objArgs,noenable, response
+noenable = "user"
+set wshshell = wscript.createobject("wscript.shell")
+set fso = createobject("scripting.filesystemobject")
+set objArgs = wscript.arguments
+curdir = wshshell.currentdirectory
+set f = fso.OpenTextFile(curdir & "\user.txt",1)
+done = 0
+if objArgs.count=0 then
+    response = msgbox("This script will undo forcing all users to change their password at next login" & vbCrLf & vbCrLf & "Do you want to continue?", 1, "User must Change Password at Login")
+elseif objArgs(0)<>"s" then
+    response = msgbox("This script will undo forcing all users to change their password at next login" & vbCrLf & vbCrLf & "Do you want to continue?", 1, "User must Change Password at Login")
+end if
+If response = vbOK Then
+	while done = 0
+		strUser = f.readline
+		if strUser = "end" then
+			done = 1
+		else
+			set objUser=getObject("WinNT://nwtraders/" & strUser & ",User")
+			if left(lcase(strUser), 4) <> noenable then
+				objUser.Put "PasswordExpired", 0
+			end if
+			objUser.SetInfo
+			end if
+	wend
+	if objArgs.count=0 then
+	    msgbox "Finished"
+	elseif objArgs(0)<>"s" then
+	    msgbox "Finished"
+	end if
+End If
+

@@ -1,0 +1,265 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+set wshshell = wscript.CreateObject("wscript.shell")
+set objnet = wscript.CreateObject("wscript.network")
+set fso = createobject("scripting.filesystemobject")
+compname = objnet.ComputerName
+set fl1 = fso.OpenTextFile("c:\moc\setup\proun1.txt")
+set fl2 = fso.OpenTextFile("c:\moc\setup\proun2.txt")
+fla = fl1.ReadAll
+flb = fl2.ReadAll
+set un = fso.CreateTextFile("c:\moc\setup\proun.txt")
+un.Write fla
+un.WriteLine "computername = " & compname
+un.Write flb
+
+set IPConfigSet = GetObject("winmgmts:").ExecQuery _
+		("select IPAddress from Win32_NetworkAdapterConfiguration where IPEnabled=TRUE")
+
+for each IPConfig in IPConfigSet
+	if Not IsNull(IPConfig.IPAddress) then 
+		for i=LBound(IPConfig.IPAddress) to UBound(IPConfig.IPAddress)
+						IP = IPConfig.IPAddress(i)
+		
+		next
+	end if
+next
+
+clsrm = left(IP,9)
+
+un.WriteLine "DNSServerSearchOrder=" & clsrm & ".200"
+un.WriteLine "IPAddress = " & IP
+un.close
+
+if compname = "DENVER" then
+	done=1
+	wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+	wscript.quit
+end if
+
+if compname = "BRISBANE" then
+	done=1
+	wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+	wscript.quit
+end if
+
+if compname = "BONN" then
+	done=1
+	wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+	wscript.quit
+end if
+
+if compname = "SANTIAGO" then
+	done=1
+	wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+	wscript.quit
+end if
+
+if compname = "SINGAPORE" then
+	done=1
+	wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+	wscript.quit
+end if
+
+if compname = "TUNIS" then
+	done=1
+	wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+	wscript.quit
+end if
+
+if compname = "MIAMI" then
+	done=1
+	wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+	wscript.quit
+end if
+
+if compname = "SUVA" then
+	done=1
+	wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+	wscript.quit
+end if
+
+if compname = "MOSCOW" then
+	done=1
+	wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+	wscript.quit
+end if
+
+if compname = "MONTEVIDEO" then
+	done=1
+	wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+	wscript.quit
+end if
+
+if compname = "TOKYO" then
+	done=1
+	wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+	wscript.quit
+end if
+
+if compname = "NAIROBI" then
+	done=1
+	wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+	wscript.quit
+end if
+
+Done = 0
+Do while done = 0
+	if compname = "VANCOUVER" then
+		if fso.FileExists("\\london\status\dendone.txt") then
+			done=1
+			wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+			wscript.quit
+		else 
+			msg = "Setup is waiting for Denver to join the domain"
+			ttl = "2143a Setup"
+			wshshell.Popup msg,30,ttl,64
+		end if
+	end if
+
+	if compname = "PERTH" then
+		if fso.FileExists("\\london\status\bridone.txt") then
+			done=1
+			wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+			wscript.quit
+		else 
+			msg = "Setup is waiting for Brisbane to join the domain"
+			ttl = "2143a Setup"
+			wshshell.Popup msg,30,ttl,64
+		end if
+	end if
+
+	if compname = "LISBON" then
+		if fso.FileExists("\\london\status\bondone.txt") then
+			done=1
+			wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+			wscript.quit
+		else 
+			msg = "Setup is waiting for Bonn to join the domain"
+			ttl = "2143a Setup"
+			wshshell.Popup msg,30,ttl,64
+		end if
+	end if
+
+	if compname = "LIMA" then
+		if fso.FileExists("\\london\status\sandone.txt") then
+			done=1
+			wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+			wscript.quit
+		else 
+			msg = "Setup is waiting for Santiago to join the domain"
+			ttl = "2143a Setup"
+			wshshell.Popup msg,30,ttl,64
+		end if
+	end if
+
+	if compname = "BANGALORE" then
+		if fso.FileExists("\\london\status\sindone.txt") then
+			done=1
+			wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+			wscript.quit
+		else 
+			msg = "Setup is waiting for Singapore to join the domain"
+			ttl = "2143a Setup"
+			wshshell.Popup msg,30,ttl,64
+		end if
+	end if
+
+	if compname = "CASABLANCA" then
+		if fso.FileExists("\\london\status\tundone.txt") then
+			done=1
+			wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+			wscript.quit
+		else 
+			msg = "Setup is waiting for Tunis to join the domain"
+			ttl = "2143a Setup"
+			wshshell.Popup msg,30,ttl,64
+		end if
+	end if
+
+	if compname = "ACAPULCO" then
+		if fso.FileExists("\\london\status\miadone.txt") then
+			done=1
+			wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+			wscript.quit
+		else 
+			msg = "Setup is waiting for Miami to join the domain"
+			ttl = "2143a Setup"
+			wshshell.Popup msg,30,ttl,64
+		end if
+	end if
+
+	if compname = "AUCKLAND" then
+		if fso.FileExists("\\london\status\suvdone.txt") then
+			done=1
+			wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+			wscript.quit
+		else 
+			msg = "Setup is waiting for Suva to join the domain"
+			ttl = "2143a Setup"
+			wshshell.Popup msg,30,ttl,64
+		end if
+	end if
+
+	if compname = "STOCKHOLM" then
+		if fso.FileExists("\\london\status\mosdone.txt") then
+			done=1
+			wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+			wscript.quit
+		else 
+			msg = "Setup is waiting for Moscow to join the domain"
+			ttl = "2143a Setup"
+			wshshell.Popup msg,30,ttl,64
+		end if
+	end if
+
+	if compname = "CARACAS" then
+		if fso.FileExists("\\london\status\mondone.txt") then
+			done=1
+			wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+			wscript.quit
+		else 
+			msg = "Setup is waiting for Montevideo to join the domain"
+			ttl = "2143a Setup"
+			wshshell.Popup msg,30,ttl,64
+		end if
+	end if
+	
+	if compname = "MANILA" then
+		if fso.FileExists("\\london\status\tokdone.txt") then
+			done=1
+			wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+			wscript.quit
+		else 
+			msg = "Setup is waiting for Tokyo to join the domain"
+			ttl = "2143a Setup"
+			wshshell.Popup msg,30,ttl,64
+		end if
+	end if
+
+	if compname = "KHARTOUM" then
+		if fso.FileExists("\\london\status\naidone.txt") then
+			done=1
+			wshshell.Run "\\london\win2kpro\winnt32 /s:\\london\win2kpro /unattend:c:\moc\setup\proun.txt /tempdrive:d:"
+			wscript.quit
+		else 
+			msg = "Setup is waiting for Nairobi to join the domain"
+			ttl = "2143a Setup"
+			wshshell.Popup msg,30,ttl,64
+		end if
+	end if
+loop
+
+
+
+
+

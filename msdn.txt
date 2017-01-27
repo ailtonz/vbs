@@ -1,0 +1,147 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'+-------------------------------------------------------------------------
+'
+' setupCommerceADSetup.vbs
+'
+' Microsoft Commerce Server
+' Copyright (C) Microsoft Corporation, 1999. All rights reserved.
+' 
+' Description:	This script file creates all additional attributes required for out-of-box
+' 		profiles installed with Commerce Server 4.0.
+'
+'--------------------------------------------------------------------------
+
+Option Explicit
+
+' Local variables
+
+ Dim oArgs
+
+ Dim obj_ServerRoot 'As IADsOpenDSObject
+ Dim obj_rootDse 'As IADs
+ Dim obj_RootContainer  'As ActiveDs.IADsContainer
+ Dim obj_Container ' As IADs
+
+ Dim strServer
+ Dim strUser
+ Dim strPw
+ Dim strSiteName
+ Dim strContainerPath 
+Dim strDefNamingCtx
+
+ Dim i
+ Dim strConn
+ Dim argConn
+ Dim nLen
+ Dim argVar
+ Dim argValue
+
+ Set oArgs = WScript.Arguments
+
+ rem Arguments : "Server=<m/c name>;User=<user-name>;Password=<pwd>;DN=<dn>" "sitename"
+ rem If (oArgs.Count <> 2) Then
+ rem WScript.Echo "Usage: mscsPopulate 'Server=<m/c name>;User=<user-name>;Password=<pwd>;DN=<dn>' 'sitename'"
+ rem WScript.Quit(-1)
+ rem End If
+
+ rem Initialize variables
+
+ strConn = oArgs(0)
+ strSiteName = "OU=" & oArgs(1)
+
+ argConn = Split(strConn, Chr(13)+Chr(10))
+ For i = 0 To UBound(argConn)
+    nLen = InStr(1, argConn(i), "=")
+    If nLen > 0 Then
+     argVar = Left(argConn(i), nLen - 1)
+     argValue = Mid(argConn(i), nLen + 1, Len(argConn(i)) - nLen)
+    End If
+    If (UCase(argVar) = CStr("SERVER")) Then
+       strServer = argValue
+    ElseIf (UCase(argVar) = CStr("USER")) Then
+       strUser = argValue
+    ElseIf (UCase(argVar) = CStr("PASSWORD")) Then
+       strpw = argValue
+    ElseIf (UCase(argVar) = CStr("DN")) Then
+       strContainerPath = argValue
+    End If
+ Next
+ 
+
+
+' Get LDAP rootDSE object ---------------------------------------------------
+Set obj_ServerRoot = GetObject("LDAP:")
+
+Set obj_rootDse = GetObject("LDAP://" & strServer & "/rootDSE")
+
+' Get Default Naming Context ---------------------------------------------------
+strDefNamingCtx = obj_rootDse.Get("defaultNamingContext")
+set obj_rootDse = Nothing
+    
+Set obj_RootContainer = obj_ServerRoot.OpenDSObject("LDAP://" & strServer & "/" & strDefNamingCtx, strUser, strPw, 0)
+
+' Create  Commerce Server Root ---------------------------------------------------
+On error resume next
+
+Dim varContainers
+Dim varContainer
+
+varContainers = Split (StrReverse(strContainerPath),",")
+
+Set obj_Container=obj_RootContainer
+For each varContainer in varContainers
+	Set obj_Container = CreateDsObject(obj_Container,"organizationalUnit",StrReverse(varContainer))
+Next
+            
+Set obj_RootContainer =  Nothing
+Set obj_ServerRoot     =  Nothing
+Set obj_Container       =  Nothing
+
+
+'+-------------------------------------------------------------------------
+'
+' Subroutine:	CreateDsObject
+'
+' Description:	This subroutine create an Organization object instance in the underlying 
+'		directory store.
+'
+'--------------------------------------------------------------------------
+Function CreateDsObject( _
+	oContainer, _
+	strObjectClass, _
+	strRDNAttID)
+
+  Dim oObj
+
+On Error Resume Next
+
+  If (IsEmpty(oContainer) Or IsNull(oContainer)) Then
+    Set CreateOrgDSObject = Nothing
+    Exit Function
+  End If
+
+  Set oObj = oContainer.Create(strObjectClass, strRDNAttID)
+  ' Commit this object.
+  oObj.SetInfo
+
+  If Not (Err.Number = 0 Or Hex(Err.Number) = 80071392) Then
+	Set oObj = Nothing  
+  End if
+
+On Error goto 0
+
+	Set CreateDsObject = oObj
+
+End Function
+
+
+

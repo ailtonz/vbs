@@ -1,0 +1,47 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+message = "Outlook 2000 is installing, Please Wait"
+title = "Course 2072a Setup"
+done = 0
+
+set shell = wscript.createobject("wscript.shell")
+set fso = createobject("scripting.filesystemobject")
+set net = wscript.createobject("wscript.network")
+
+if net.computername = "LONDON" then
+
+	shell.run "d:\outlook\setup.exe TRANSFORMS=c:\setup\outlook.MST /qn+", 1, true
+
+	do while done = 0
+		shell.popup message,60,title,64
+		if fso.fileexists("C:\Documents and Settings\All Users\Start Menu\Programs\microsoft outlook.lnk") then
+			shell.popup message,60,title,64
+			done = 1
+			wscript.sleep 75000
+			shell.run "c:\tools\kill.exe -f msiexec.exe", 6, true
+	exit do
+	end if
+	loop
+	Else
+		shell.run "\\london\outlook\setup.exe TRANSFORMS=c:\moc\setup\outlook.MST /qn+", 1, true
+
+		do while done = 0
+			shell.popup message,60,title,64
+			if fso.fileexists("C:\Documents and Settings\All Users\Start Menu\Programs\microsoft outlook.lnk") then
+			shell.popup message,60,title,64
+			done = 1
+			wscript.sleep 75000
+			shell.run "c:\tools\kill.exe -f msiexec.exe", 6, true
+		exit do
+		end if
+		loop
+end if
+

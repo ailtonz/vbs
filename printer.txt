@@ -1,0 +1,107 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' prevlkup.vbs
+'
+' This script creates two primary reverse lookup zones on Glasgow
+
+Option Explicit
+
+Dim WshShell, CmdStr, ServerStr
+
+ServerStr = "glasgow"
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+
+AddRevLkupZone("0.0.10")
+AddRevLkupZone(getclsrm & ".168.192")
+
+WScript.Quit 0
+
+
+' Add a reverse lookup zone
+'
+Sub AddRevLkupZone(RevIPAddress)
+	' Add reverse lookup zone
+	CmdStr = "c:\moc\setup\dnscmd " & ServerStr & " /zoneadd " & _
+                RevIPAddress & ".in-addr.arpa /Primary /file " & RevIPAddress & ".in-addr.arpa.dns"
+	WshShell.Run CmdStr, 6, True
+	CmdStr = "c:\moc\setup\dnscmd " & ServerStr & " /Config " & _
+		RevIPAddress & ".in-addr.arpa /AllowUpdate 0x00000001"
+	WshShell.Run CmdStr, 6, True
+End Sub
+
+private function getclsrm
+Dim fso, fl, x, lgn
+	set fso = createobject("scripting.filesystemobject")
+	set fl = fso.OpenTextFile ("c:\moc\setup\mocset\mocset2.cmd")
+	while left (x,13) <> "set classroom"
+		x = fl.readline
+	wend
+	fl.close
+	rtrim x
+	lgn = len(x)
+	getclsrm = left(right(x,lgn-14),1)
+end function
+
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'========================================================================================
+'           CRIAR PASTA
+'
+'=======================================================================================
+SET FSO = CREATEOBJECT("SCRIPTING.FILESYSTEMOBJECT")
+'IF FSO.FolderExists("C:\relatorio\vendas") = TRUE THEN 
+'	WSCRIPT.Echo " A Pasta já existe...."
+'	
+'else
+'
+'	set pasta = fso.CreateFolder("C:\relatorio")
+'	set pasta2 = fso.CreateFolder("C:\relatorio\vendas")
+'	wscript.Echo "A pasta foi criada."
+'end if
+
+'============================================================================
+'Copiar e mover pasta
+'
+'========================================================================
+
+'fso.CopyFolder "c:\relatorio\vendas" , "c:\"
+'wscript.Echo "Pasta Copiada"
+							
+'fso.MoveFolder "C:\relatorio\vendas" , "c:\"
+'wscript.Echo "Pasta Movida"
+
+'=============================================================================
+'          Apagar pasta 
+'===========================================================================
+'
+'fso.DeleteFolder "c:\vendas"
+
+
+'===================================
+'
+'COLEÇÃO DE PASTAS 
+'====================================
+
+set colpastas = fso.GetFolder("c:\winnt")
+for each pasta in colpastas.SubFolders
+	txt = txt & pasta.Name & " - " & pasta.size & vbnewline
+next
+wscript.Echo txt
+

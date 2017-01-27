@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim objItem 
+
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+Set colItems = objWMIService.ExecQuery("Select * from Win32_PrinterConfiguration ", , 48)
+For Each objItem In colItems
+    Wscript.Echo "NAME: " & objItem.Name
+	Wscript.Echo "PaperSize: " & objItem.PaperSize
+    'objItem.PaperSize = 8
+    'Wscript.Echo "PaperSize: " & objItem.PaperSize
+Next
+

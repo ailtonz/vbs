@@ -1,0 +1,141 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' createsite.vbs by Xavier Minet
+' Microsoft Consulting Services Belgium
+'
+'
+' This scripts creates the site structure for LCM
+'
+' Remark: NO ERROR HANDLING - WE ASSUME WE RUN THIS SCRIPT
+'         ON THE FIRST DC, RIGHT AFTER DCPROMO
+'
+' Remark: BEFORE RUNNING THIS SCRIPT, SET THE DESIRED SCHEDULE
+'         ON THE DEFAULTIPSITELINK. IF MORE THAN ONE SCHEDULE
+'         NECESSARY, DEFINE ADDITIONAL DUMMY SITELINKS AND
+'         MODIFY THIS SCRIPT ACCORDINGLY
+'
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Dim MyList(1)
+
+
+' First, the usual Bindings
+
+
+Set Root=GetObject("LDAP://RootDSE")
+ConfigurationRoot = Root.Get("configurationNamingContext")
+Set Root  = GetObject("LDAP://" & ConfigurationRoot)
+Set SitesRoot = Root.GetObject("sitesContainer", "CN=Sites")
+set SubnetsRoot = SitesRoot.GetObject("subnetsContainer", "CN=Subnets")
+set TransportRoot = SitesRoot.GetObject("interSiteTransportContainer", "CN=Inter-Site Transports")
+set IPTransportRoot = TransportRoot.GetObject("interSiteTransport", "CN=IP")
+Set MyDefaultIPSiteLink = IPTransportRoot.GetObject("siteLink", "CN=DEFAULTIPSITELINK")
+
+' Let's create the sites. The complexity of site creation is
+' "hidden" in the MakeSite function - see end of the script
+
+
+
+result=MakeSite("NAmerica1")
+result=MakeSite("NAmerica2")
+result=MakeSite("Europe1")
+result=MakeSite("Europe2")
+result=MakeSite("Asia1")
+result=MakeSite("Asia2")
+result=MakeSite("SPacific1")
+result=MakeSite("SPacific2")
+result=MakeSite("SAmerica1")
+result=MakeSite("SAmerica2")
+result=MakeSite("Africa1")
+result=MakeSite("Africa2")
+
+
+
+
+'''''''''''''''''''''''''''''''''''''''''
+Function MakeSite(SiteName)
+
+'''''''''''''''''''''''''''''''''''''''''
+
+'creation of the site (container)
+
+	set NewSite = SitesRoot.Create("site","CN=" & SiteName)
+	NewSite.SetInfo
+
+'creation of the Servers container and other objects
+
+	set thisSite = SitesRoot.GetObject("site", "CN=" & SiteName)
+	set NewServersContainer = thisSite.Create("serversContainer", "CN=Servers")
+	NewServersContainer.SetInfo
+
+	set NewNTDSSiteSettings = thisSite.Create("nTDSSiteSettings", "CN=NTDS Site Settings")
+	NewNTDSSiteSettings.SetInfo
+	
+	set NewSiteLicensingSettings = thisSite.Create("licensingSiteSettings", "CN=Licensing Site Settings")
+	NewSiteLicensingSettings.SetInfo
+
+	MakeSite = NewSite.cn
+
+End Function
+
+
+
+
+
+'''''''''''''''''''''''''''''''''''''''''''''
+Function MakeSubnet(SubnetName, SiteName)
+
+'''''''''''''''''''''''''''''''''''''''''''''
+
+	set NewSubnet = SubnetsRoot.Create("subnet", "CN=" & SubnetName)
+	set thisSite = SitesRoot.GetObject("site", "CN=" & SiteName)
+	NewSubnet.Put "siteObject", thisSite.Get("distinguishedName")
+	NewSubnet.Put "description", SiteName 
+	NewSubnet.SetInfo
+
+	MakeSubnet = NewSubnet.cn
+
+End Function
+
+
+
+
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''
+Function MakeSiteLink(Site1, Site2, MySiteLinkName)
+
+'''''''''''''''''''''''''''''''''''''''''''''''''
+'	msgbox "MySiteLinkName=" & MySiteLinkName
+	set temp = SitesRoot.GetObject("Site", "CN=" & Site1)	
+	MyList(0) = temp.distinguishedName
+'	msgbox "MyList(0)=" & MyList(0)
+	set temp = SitesRoot.GetObject("Site", "CN=" & Site2)	
+	MyList(1) = temp.distinguishedName
+'	msgbox "MyList(1)=" & MyList(1)
+
+
+	set NewSiteLink = IPTransportRoot.Create("siteLink", "CN=" & MySiteLinkName) 
+	NewSiteLink.Put "siteList", MyList
+'	msgbox "siteList set"
+	NewSiteLink.Put "description", "script generated"
+	NewSiteLink.Put "cost", 100
+'	msgbox "cost set"
+	NewSiteLink.Put "replInterval", 15
+'	msgbox "replInterval set"
+	NewSiteLink.Put "schedule", MyDefaultIPSiteLink.schedule
+	NewSiteLink.SetInfo
+
+	MakeSiteLink = NewSiteLink.cn
+
+End Function
+

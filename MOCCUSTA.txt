@@ -1,0 +1,92 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim IE, fso, MyFile
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+set wshshell = wscript.CreateObject("wscript.shell")
+ie.left=0
+ie.top=0
+ie.height=600
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\moc\setup\html\stu\stucust9.htm"
+ie.visible=1
+
+'Wait for London to be available
+done = 0
+while done = 0
+	if fso.FolderExists("\\london\setup") then
+		done = 1
+	else
+		wscript.sleep 5000
+	end if
+wend
+
+'Setting Auto Logon
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+wshshell.Regwrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultUserName", "administrator", "REG_SZ"
+wshshell.Regwrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultPassword", "P@ssw0rd", "REG_SZ"
+'wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", strDomain, "REG_SZ"
+
+'set script to run after reboot
+strNext = "c:\moc\setup\mocfinal.vbs"
+if fso.FileExists (strNext) then
+	set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+	fn = "runnext.vbs"
+	set nxt = fso.getfile(strNext)
+	set fl = fso.createtextfile(strt & "\" & fn, true)
+	fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+	fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+	fl.Close
+else
+	set MyFile = fso.GetFile("C:\Documents and Settings\All Users\Start Menu\Programs\Startup\runnext.vbs")
+	MyFile.Delete
+end if
+
+
+'Install Adobe Acrobat Reader 6.0
+'ie.navigate "file:///c:\moc\setup\html\stu\stucust9.htm"
+'wshshell.run "c:\moc\setup\adberdr.vbs", 1, true
+
+'Install Microsoft Excel 2002
+ie.navigate "file:///c:\moc\setup\html\stu\stucusta.htm"
+WshShell.run "c:\moc\setup\instxl.vbs", 1, true
+
+'Install course demo files
+ie.navigate "file:///c:\moc\setup\html\stu\stucustb.htm"
+WshShell.Run "c:\moc\setup\AllFiles.exe /auto" , 6, true
+
+'Attach lab database files in SQL Server
+ie.navigate "file:///c:\moc\setup\html\stu\stucustc.htm"
+wshshell.run "c:\moc\setup\attchdb2.bat", 6, true
+
+'Configure file-viewing settings
+ie.Navigate "file:///c:\moc\setup\html\stu\stucustd.htm"
+wshshell.Run "c:\moc\setup\explrcfg.vbs", 6, true
+
+'Configure folder sharing
+ie.navigate "file:///c:\moc\setup\html\stu\stucuste.htm"
+wshshell.run "c:\moc\setup\cfgfldrs.vbs", 6, true
+
+'Configure AdventureWorks portal web site
+ie.navigate "file:///c:\moc\setup\html\stu\stucustf.htm"
+wshshell.run "c:\moc\setup\cfgwsite.vbs", 6, true
+
+'Configure Internet Explorer favorites
+ie.navigate "file:///c:\moc\setup\html\stu\stucustg.htm"
+wshshell.run "c:\moc\setup\cfgiefav.vbs", 6, true
+
+'Reboot the machine
+WshShell.run "c:\tools\reboot.cmd", 6, true
+

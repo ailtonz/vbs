@@ -1,0 +1,48 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim IE, fso, MyFile
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+set wshshell = wscript.CreateObject("wscript.shell")
+ie.left=0
+ie.top=0
+ie.height=600
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\moc\setup\mocahtml\moc_end.htm"
+ie.visible=1
+
+'Wait for London to be available
+done = 0
+while done = 0
+	if fso.FolderExists("\\london\setup") then
+		done = 1
+	else
+		wscript.sleep 5000
+	end if
+wend
+
+if fso.FileExists ("C:\Documents and Settings\All Users\Start Menu\Programs\Startup\runnext.vbs") then
+	set MyFile = fso.GetFile("C:\Documents and Settings\All Users\Start Menu\Programs\Startup\runnext.vbs")
+	MyFile.Delete
+end if
+
+
+'Disable Auto Logon
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 0 ,"REG_SZ"
+
+
+'* Insert final tasks here
+'
+

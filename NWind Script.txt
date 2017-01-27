@@ -1,0 +1,25 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Create share folders
+Set WshShell = WScript.CreateObject("WScript.Shell")
+	'create folders & shares
+	wshShell.Run("c:\tools\share.cmd"), 6, true
+	'copy data files
+	wshShell.Run("c:\tools\data.cmd"), 6, True
+	
+'Create service account
+	wshShell.Run("c:\tools\uMel_Acc.cmd"), 6, True
+	
+'create users & domain local groups
+	wshShell.Run("c:\tools\Grps_Mel.cmd"), 6, True
+		wshShell.Run("c:\tools\Grps_All.cmd"), 6, True
+			wshShell.Run("c:\tools\Grps_MAd.cmd"), 6, true
+

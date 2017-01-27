@@ -1,0 +1,65 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim IE, fso, MyFile
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+set wshshell = wscript.CreateObject("wscript.shell")
+ie.left=0
+ie.top=0
+ie.height=600
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\moc\setup\mochtml\moccust3.htm"
+ie.visible=1
+
+
+
+'set mocfinal.vbs to run after reboot
+if fso.FileExists ("c:\moc\setup\mocfinal.vbs") then
+	set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+	fn = "runnext.vbs"
+	set nxt = fso.getfile("c:\moc\setup\mocfinal.vbs")
+	set fl = fso.createtextfile(strt & "\" & fn, true)
+	fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+	fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+	fl.Close
+else
+	set MyFile = fso.GetFile("C:\Documents and Settings\All Users\Start Menu\Programs\Startup\runnext.vbs")
+	MyFile.Delete
+end if
+
+
+' Determine domain name
+Set IPConfigSet = GetObject("winmgmts:").ExecQuery ("select IPAddress from Win32_NetworkAdapterConfiguration where IPenabled=TRUE and DHCPEnabled=FALSE")
+for each j in IpConfigSet
+	if Not IsNull(j.ipaddress) then
+		ipAddr = j.ipaddress(i)
+		pos = InStrRev(ipAddr, ".")
+		strDomainNum = Mid(ipAddr, pos + 1)
+		strDomainName = "nwtraders" & strDomainNum
+	end if
+next
+
+'Setting Auto Logon
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+wshshell.Regwrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultUserName", "administrator", "REG_SZ"
+wshshell.Regwrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultPassword", "P@ssw0rd", "REG_SZ"
+wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", strDomainName, "REG_SZ"
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\ForceAutoLogon", 1 ,"REG_SZ"
+
+wscript.sleep 5000
+
+'log off barnhillj and log on administrator
+wshshell.run "logoff.exe", 0, true
+
