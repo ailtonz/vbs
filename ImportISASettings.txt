@@ -1,0 +1,65 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set WshShell = CreateObject("WScript.Shell")
+WshShell.Run "control inpl.cpl"
+wscript.sleep 1000
+
+
+
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{RIGHT}"
+WshShell.SendKeys "+{F10}"
+WshShell.SendKeys "r"
+wscript.sleep 1000
+WshShell.AppActivate "Local"
+WshShell.SendKeys "{DOWN}"
+WshShell.SendKeys "{DOWN}"
+WshShell.SendKeys "{DOWN}"
+WshShell.SendKeys "{DOWN}"
+WshShell.SendKeys "{DOWN}"
+WshShell.SendKeys "%r"
+wscript.sleep 1000
+WshShell.AppActivate "Internet"
+WshShell.SendKeys "{DOWN}"
+WshShell.SendKeys "192168"
+WshShell.SendKeys bob
+WshShell.SendKeys "{RIGHT}"
+WshShell.SendKeys fred
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+wshShell.SendKeys "192168"
+WshShell.SendKeys "1"
+WshShell.SendKeys "{RIGHT}"
+WshShell.sendKeys "200"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+
+WshShell.SendKeys "{ENTER}"
+wscript.sleep 1000
+WshShell.AppActivate "Local"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+
+wscript.sleep 1000
+WshShell.SendKeys "{ENTER}"
+WshShell.SendKeys "%{F4}"
+
+
+

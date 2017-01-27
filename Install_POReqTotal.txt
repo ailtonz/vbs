@@ -1,0 +1,193 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'#######################################################################
+'# Install_BTS_outproc.vbs
+'# Copyright (C) 2000 Microsoft Corporation
+'# a-aluty, 01-Feb-2000
+'# Installs "BizTalk Server Out-of-Process Package" COM+ Application.
+'#######################################################################
+
+Dim cat  'COMAdminCatalog
+Dim apps 'COMAdminCatalogCollection
+Dim app  'COMAdminCatalogObject
+
+Const strAppName    = "BizTalk Server Interchange Application"
+Const strOldAppName    = "BizTalk Server Out-of-Process Package"
+Const L_str_AppDesc = "The BizTalk Server Interchange Application contains the BizTalk.Interchange component that user applications can use to submit documents to the BizTalk Messaging Service."
+
+Const strAppID      = "{0C9B9BBE-E0F2-4485-9BE8-C40BAC8D0677}"
+
+Const guidProduct   = "{E0993E49-C0A8-11D2-973D-00C04F79E4B3}" 'Microsoft BizTalk Server
+Const guidCisApiDll = "{B67B0374-C114-11D2-973D-00C04F79E4B3}" 'CISAPI.dll
+Const guidCisApiTlb = "{23AB6C04-72C8-4B7D-B352-FF1BB36E16DB}" 'cisapi.tlb
+
+Dim objInstaller 'WindowsInstaller.Installer
+Dim pathDLL      'String
+Dim pathTLB      'String
+Dim pathPSDLL    'String
+
+'-----------------------------------------------------------------------
+'Deletes specified COMAdminCatalogObject from COMAdminCatalog
+'
+Private Sub DeleteApp(apps, strAppName)
+    Dim index 'Integer
+    Dim app   'COMAdminCatalogObject
+    
+    apps.Populate
+    For index = 0 To apps.Count - 1
+        Set app = apps.Item(index)
+        If app.Value("Name") = strAppName Then
+            UnlockApp apps, app
+            apps.Remove (index)
+            apps.SaveChanges
+            Exit For
+        End If
+    Next
+End Sub
+
+
+'-----------------------------------------------------------------------
+'Sets the application properties as read-only
+'Reference: MSDN; Platform SDK: COM+ (Component Services); Index="Applications Collection"
+'
+Private Sub LockApp(apps, app)
+
+    '### Advanced Properties
+    app.Value("Deleteable") = False
+    app.Value("Changeable") = False
+
+    apps.SaveChanges
+End Sub
+
+
+'-----------------------------------------------------------------------
+'Sets the application properties as read/write
+'Reference: MSDN; Platform SDK: COM+ (Component Services); Index="Applications Collection"
+'
+Private Sub UnlockApp(apps, app)
+
+    '### Advanced Properties
+    app.Value("Deleteable") = True
+    app.Value("Changeable") = True
+
+    apps.SaveChanges
+End Sub
+
+'-----------------------------------------------------------------------
+'Creates application in COMAdminCatalog
+'Reference: MSDN; Platform SDK: COM+ (Component Services); Index="Applications Collection"
+'
+Private Sub ConfigApp(apps, app)
+    '### General Properties
+    app.Value("Name") = strAppName
+    app.Value("Description") = L_str_AppDesc
+    app.Value("CreatedBy") = "Microsoft BizTalk Server 2000"
+    app.Value("ID") = strAppID
+
+    '### Security Properties
+    app.Value("ApplicationAccessChecksEnabled") = False
+    app.Value("AccessChecksLevel") = 0 'COMAdminAccessChecksApplicationLevel
+    app.Value("Authentication") = 0 'COMAdminAuthenticationDefault
+    app.Value("AuthenticationCapability") = 64 'COMAdminAuthenticationCapabilitiesDynamicCloaking
+    app.Value("ImpersonationLevel") = 3 'COMAdminImpersonationImpersonate
+
+    '### Identity Properties
+    app.Value("Identity") = "Interactive User"
+    app.Value("Password") = ""
+
+    '### Activation Properties
+    app.Value("Activation") = 1 'COMAdminActivationLocal
+    
+    '### Queueing Properties
+    app.Value("QueuingEnabled") = False
+    app.Value("QueueListenerEnabled") = False
+
+    '### Advanced Properties
+    app.Value("RunForever") = False
+    app.Value("ShutdownAfter") = 1 '[0-1440] minutes
+    app.Value("Deleteable") = True
+    app.Value("Changeable") = True
+    'app.Value("CommandLine") = ""
+    app.Value("CRMEnabled") = False
+    'app.Value("CRMLogFile") = ""
+    app.Value("3GigSupportEnabled") = False
+
+    '### Other Properties	
+    app.Value("EventsEnabled") = False
+
+    apps.SaveChanges
+    'apps.Populate
+End Sub
+
+'-----------------------------------------------------------------------
+'Configures Component
+'Reference: MSDN; Platform SDK: COM+ (Component Services); Index="Components Collection"
+'
+Private Sub ConfigComp(apps, app)
+    Dim comps 'COMAdminCatalogCollection
+    Dim comp  'COMAdminCatalogObject
+    
+    Set comps = apps.GetCollection("Components", app.Key)
+    comps.Populate
+    Set comp = comps.Item(0)
+
+    '### Transactions Properties
+    comp.Value("Transaction") = 2 'COMAdminTransactionSupported 
+
+    '### Security Properties
+    'app.Value("ComponentAccessChecksEnabled") = False
+
+    '### Activation Properties
+    comp.Value("ObjectPoolingEnabled") = False
+    'comp.Value("MinPoolSize") = 0 '[0-] objects
+    'comp.Value("MaxPoolSize") = 1048576 '[0-] objects
+    comp.Value("CreationTimeout") = 60000 '[0-2147483647] ms
+    comp.Value("ConstructionEnabled") = False
+    'comp.Value("ConstructorString") = ""
+    'comp.Value("JustInTimeActivation") = False
+    comp.Value("EventTrackingEnabled") = False
+    comp.Value("MustRunInClientContext") = False
+
+    '### Concurrency Properties
+    comp.Value("Synchronization") = 3 'COMAdminSynchronizationRequired 
+    'comp.Value("ThreadingModel") = 0 'COMAdminThreadingModelApartment
+
+    '### Advanced Properties
+    'comp.Value("ExceptionClass") = ""
+
+    comps.SaveChanges
+End Sub
+
+'-----------------------------------------------------------------------
+
+'Open a session with the catalog; Instantiate a COMAdminCatalog object
+'Create a new COM+ application; get the "Applications" collection from the catalog
+Set cat = CreateObject("COMAdmin.COMAdminCatalog")
+Set apps = cat.GetCollection("Applications")
+
+'Delete any existing application
+DeleteApp apps, strAppName
+DeleteApp apps, strOldAppName
+
+'Create application
+Set app = apps.Add
+ConfigApp apps, app
+
+Set objInstaller = CreateObject("WindowsInstaller.Installer")
+pathDLL = objInstaller.ComponentPath(guidProduct, guidCisApiDll)
+pathTLB = objInstaller.ComponentPath(guidProduct, guidCisApiTlb)
+pathPSDLL = ""
+
+cat.InstallComponent strAppName, pathDLL, pathTLB, pathPSDLL
+ConfigComp apps, app
+LockApp apps, app
+'-----------------------------------------------------------------------
+

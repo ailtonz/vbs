@@ -1,0 +1,101 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' stuusers.vbs
+'
+' This script populates the Active Directory on Glasgow
+
+Option Explicit
+
+Dim WSHShell, strDomain, strBase, strFullDomain
+Dim odomDomain
+Dim oouFin
+Dim ousrCurrent
+
+Const ADS_UF_PASSWD_NOTREQD            = &H20
+Const ADS_UF_NORMAL_ACCOUNT            = &H200
+Const ADS_UF_WORKSTATION_TRUST_ACCOUNT = &H1000
+Const ADS_UF_DONT_EXPIRE_PASSWD        = &H10000
+
+Const ADSI_TYPE_CONT  = "container"
+Const ADSI_TYPE_GROUP = "group"
+Const ADSI_TYPE_OU    = "organizationalUnit"
+Const ADSI_TYPE_USER  = "user"
+Const ADSI_TYPE_COMP  = "computer"
+
+Const PASSWORD = "P@ssw0rd"
+
+
+Set WSHShell = WScript.CreateObject("wscript.shell")
+
+
+strDomain = "contoso"
+strBase = "msft"
+strFullDomain = strDomain & "." & strBase
+
+'MsgBox("Domain:  " & strDomain)
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the Finance organizational unit 
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Set odomDomain = GetObject("LDAP://" & strFullDomain)
+Set oouFin = odomDomain.Create(ADSI_TYPE_OU, "OU=Finance")
+oouFin.SetInfo
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Create the user account(s)
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Call CreateUser(oouFin, "Brenda", "Diaz", ousrCurrent, PASSWORD)
+
+'''''''''''''''''''''''''
+'' Add members to groups
+'''''''''''''''''''''''''
+Call AddMember("Brenda", "Diaz", "OU=Finance", "CN=Server Operators,CN=Builtin")
+
+'MsgBox("Done")
+
+WScript.Quit 0
+
+
+'''''''''''''''''''''''''''''''''''
+' Create a user account
+' Sets: ousrOut to user object
+'''''''''''''''''''''''''''''''''''
+Sub CreateUser(oouThis, strFirst, strLast, ousrOut, strPwd)
+   Set ousrOut = oouThis.Create(ADSI_TYPE_USER, "CN=" & strFirst & " " & strLast) 
+   ousrOut.Put "name",              strFirst & " " & strLast
+   ousrOut.Put "sAMAccountName",    strLast & Left(strFirst, 1)
+   ousrOut.Put "sn",                strLast
+   ousrOut.Put "givenName",         strFirst
+   ousrOut.Put "userPrincipalName", strLast & Left(strFirst, 1) & "@" & strFullDomain 
+   ousrOut.Put "displayName",       strFirst & " " & strLast
+   ousrOut.SetInfo
+   ousrOut.SetPassword strPwd
+   ousrOut.Put "UserAccountControl", ousrOut.Get("UserAccountControl") Xor ADS_UF_PASSWD_NOTREQD
+   ousrOut.AccountDisabled = False
+   ousrOut.SetInfo
+End Sub
+
+
+'''''''''''''''''''''''''''''''''''''''''''''
+' Add user as member of a group
+' '''''''''''''''''''''''''''''''''''''''''''
+Sub AddMember(strFirst, strLast, strOU, strGroup)
+   Dim strDN
+   Dim ogrpThis
+
+   ' Retrieve group object from Active Directory
+   Set ogrpThis = GetObject("LDAP://" & strGroup & ",DC=" & strDomain & ",DC=" & strBase)
+
+   ' Add user to member list
+   ogrpThis.Add "LDAP://CN=" & strFirst & " " & strLast & "," & strOU & ",DC=" & strDomain & ",DC=" & strBase
+   Set ogrpThis = Nothing
+End Sub
+

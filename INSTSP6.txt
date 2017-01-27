@@ -1,0 +1,39 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Install SQL Server 2000 Reporting Services
+Option Explicit
+
+Dim WshNetwork, WshShell, fso, strComputerName, strSource, strLocal
+Set WshNetwork = wscript.CreateObject("Wscript.Network")
+Set Wshshell = wscript.CreateObject("Wscript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
+
+strComputerName = WshNetwork.ComputerName
+
+If UCase(strComputerName) = "LONDON" Then
+   strSource = "C:"
+   strLocal = "C:"
+Else
+   strSource = "\\LONDON"
+   strLocal = "C:\MOC"
+End If
+
+
+'---------------
+'Install product 
+'---------------
+
+'Run an AutoIT script to close the info prompt warning that SQL installed in Windows 2003 Server
+'must use SQL Server SP3 or later.
+WshShell.Run strLocal & "\Setup\CLOSEWR2.EXE", 6, false
+
+WshShell.Run strSource & "\SQL2KDE\RptgSvcs\setup.exe /settings " & strLocal & "\setup\sql2krs.ini", 1, true
+

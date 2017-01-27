@@ -1,0 +1,269 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+wscript.echo "This script creates the OUs and Users for the labs in this module.", Chr(10), "Do not continue with the lab until the script finishes executing.", Chr(10), "Please click OK to continue."
+'**************************************************
+'Script to create users in the Active Directory
+'**************************************************
+
+
+'**************************************************
+' Determine the LDAP path for your domain
+'**************************************************
+Set jRoot = GetObject("LDAP://RootDSE")
+DomainPath = jRoot.Get("DefaultNamingContext")
+Set Domain = GetObject("LDAP://" & DomainPath)
+
+Set WshShell = Wscript.CreateObject("Wscript.Shell")
+Set WshSysEnv = WshShell.Environment("Process")
+upnDomain = WshSysEnv("USERDOMAIN")
+
+'**************************************************
+' Create Top Level OUs
+'**************************************************
+Set jac_HR = Domain.Create("organizationalUnit", "OU=Human Resources")
+jac_HR.Put "Description", "Human Resources"
+jac_HR.SetInfo
+
+
+'**************************************************
+'Create subordinate OUs
+'**************************************************
+
+Set jac_Compensation = jac_HR.Create("organizationalUnit", "OU=Compensation")
+jac_Compensation.Put "Description", "Compensation"
+jac_Compensation.SetInfo
+
+Set jac_Benefits = jac_HR.Create("organizationalUnit", "OU=Benefits")
+jac_Benefits.Put "Description", "Benefits"
+jac_Benefits.SetInfo
+
+Set jac_Training = jac_HR.Create("organizationalUnit", "OU=Training")
+jac_Training.Put "Description", "Training"
+jac_Training.SetInfo
+
+Set jac_Recruiting = jac_HR.Create("organizationalUnit", "OU=Recruiting")
+jac_Recruiting.Put "Description", "Recruiting"
+jac_Recruiting.SetInfo
+
+
+
+'**************************************************
+'Create users in the Top Level OUs
+'**************************************************
+
+Set usr = jac_Compensation.Create("user", "CN=Comp1")
+usr.Put "samAccountName", "Comp1"
+usr.Put "userPrincipalName", "Comp1" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Compensation.Create("user", "CN=Comp2")
+usr.Put "samAccountName", "Comp2"
+usr.Put "userPrincipalName", "Comp2" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Compensation.Create("user", "CN=Comp3")
+usr.Put "samAccountName", "Comp3"
+usr.Put "userPrincipalName", "Comp3" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Compensation.Create("user", "CN=Comp4")
+usr.Put "samAccountName", "Comp4"
+usr.Put "userPrincipalName", "Comp4" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Compensation.Create("user", "CN=Comp5")
+usr.Put "samAccountName", "Comp5"
+usr.Put "userPrincipalName", "Comp5" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Benefits.Create("user", "CN=Benefits1")
+usr.Put "samAccountName", "Benefits1"
+usr.Put "userPrincipalName", "Benefits1" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Benefits.Create("user", "CN=Benefits2")
+usr.Put "samAccountName", "Benefits2"
+usr.Put "userPrincipalName", "Benefits2" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Benefits.Create("user", "CN=Benefits3")
+usr.Put "samAccountName", "Benefits3"
+usr.Put "userPrincipalName", "Benefits3" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Benefits.Create("user", "CN=Benefits4")
+usr.Put "samAccountName", "Benefits4"
+usr.Put "userPrincipalName", "Benefits4" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Benefits.Create("user", "CN=Benefits5")
+usr.Put "samAccountName", "Benefits5"
+usr.Put "userPrincipalName", "Benefits5" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Training.Create("user", "CN=Training1")
+usr.Put "samAccountName", "Training1"
+usr.Put "userPrincipalName", "Training1" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Training.Create("user", "CN=Training2")
+usr.Put "samAccountName", "Training2"
+usr.Put "userPrincipalName", "Training2" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Training.Create("user", "CN=Training3")
+usr.Put "samAccountName", "Training3"
+usr.Put "userPrincipalName", "Training3" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Training.Create("user", "CN=Training4")
+usr.Put "samAccountName", "Training4"
+usr.Put "userPrincipalName", "Training4" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Training.Create("user", "CN=Training5")
+usr.Put "samAccountName", "Training5"
+usr.Put "userPrincipalName", "Training5" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Recruiting.Create("user", "CN=Recruiting1")
+usr.Put "samAccountName", "Recruiting1"
+usr.Put "userPrincipalName", "Recruiting1" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Recruiting.Create("user", "CN=Recruiting2")
+usr.Put "samAccountName", "Recruiting2"
+usr.Put "userPrincipalName", "Recruiting2" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Recruiting.Create("user", "CN=Recruiting3")
+usr.Put "samAccountName", "Recruiting3"
+usr.Put "userPrincipalName", "Recruiting3" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Recruiting.Create("user", "CN=Recruiting4")
+usr.Put "samAccountName", "Recruiting4"
+usr.Put "userPrincipalName", "Recruiting4" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Recruiting.Create("user", "CN=Recruiting5")
+usr.Put "samAccountName", "Recruiting5"
+usr.Put "userPrincipalName", "Recruiting5" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+
+'XXXXXXXXXXXXXXXXXXXXxxxxxx
+
+Set usr = jac_Compensation.Create("user", "CN=CompUser")
+usr.Put "samAccountName", "CompUser"
+usr.Put "userPrincipalName", "CompUser" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Benefits.Create("user", "CN=BenefitsUser")
+usr.Put "samAccountName", "BenefitsUser"
+usr.Put "userPrincipalName", "BenefitsUser" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Training.Create("user", "CN=TrainingUser")
+usr.Put "samAccountName", "TrainingUser"
+usr.Put "userPrincipalName", "TrainingUser" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Recruiting.Create("user", "CN=RecruitingUser")
+usr.Put "samAccountName", "RecruitingUser"
+usr.Put "userPrincipalName", "RecruitingUser" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+
+	
+
+dim rootDSE
+set rootDSE = GetObject("LDAP://RootDSE")
+domainname=rootDSE.Get("defaultnamingcontext")
+
+
+
+
+OUName = "Human Resources"
+	OUName2= "Training"
+	grpName = "Trainers"
+set domain = GetObject("LDAP://OU=" & OUName & "," & domainname)
+	set ou = domain.GetObject("organizationalUnit", "OU=" & OUName2 )
+	set grp=ou.Create("group", "CN=" & grpName)
+	grp.Put "samAccountName", grpName
+	grp.SetInfo
+
+OUName = "Human Resources"
+OUName2= "Training"
+grpName = "Trainers"
+usrName = "TrainingUser" 
+	
+
+Set domain = GetObject("LDAP://OU=" & OUName & "," & domainname)
+set ou = domain.GetObject("organizationalUnit", "OU=" & OUName2 )
+
+set grp = ou.GetObject("group", "CN=" & grpName )
+set usr = ou.GetObject("user","CN= "& usrname)
+
+
+grp.Add usr.AdsPath
+
+
+wscript.echo "The Active Directory Structure has been created.", Chr(10), "Please click OK to finish.", Chr(10), "You may now proceed with the lab."
+

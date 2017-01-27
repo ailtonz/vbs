@@ -1,0 +1,16 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'iewarn.vbs a user registry entry to disable the ie security warning in Windows 2003 server
+'This is meant to run from the run line in the machine portion of the registry.
+
+set wshshell = wscript.createobject("wscript.shell")
+wshshell.regwrite "HKCU\software\Microsoft\Windows\CurrentVersion\Internet Settings\IEHardenIENoWarn", 00000001, "REG_DWORD"
+

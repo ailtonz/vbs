@@ -1,0 +1,552 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+ ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'
+' Copyright (c) 2001 Microsoft Corporation.  All rights reserved.
+'
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'
+' Notwithstanding the terms of the license accompanying this Product, 
+' this script is provided "as is" and Microsoft does not make any assurances 
+' with regard to the accuracy of this script or to the accuracy of any results 
+' which derive from the use of this script.
+'
+' Ernest Chen - MCS Socal - erniec@microsoft.com
+' Ver 1.0.24
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Dim fso, f
+Dim SourceName, TargetName
+Dim Arrays
+Dim Arr
+Dim Elements
+Dim NumCmdLineArguments
+
+Const ForReading = 1, ForWriting = 2
+Const DestinationTypeDomain = 0, DestinationTypeSingleIp = 1, DestinationTypeIpRange = 2
+Const TCP = 0, UDP = 1
+Const ERROR_ALREADY_EXISTS = 183
+
+Function InputBoxAnswer(message,messagetitle,answerdefault)
+    IBAnswer = InputBox(message,messagetitle,answerdefault)
+    If IBAnswer = "y" Then
+         InputBoxAnswer = TRUE
+    Else
+         InputBoxAnswer = FALSE
+    End If
+End Function 
+
+Function InitScriptFile()   
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set f = fso.OpenTextFile("ImportISASettings.vbs", ForWriting, True)
+    f.WriteLine "''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''"
+    f.WriteLine "'"
+    f.WriteLine "' Copyright (c) 2001 Microsoft Corporation.  All rights reserved." 
+    f.WriteLine "'"
+	f.WriteLine "' Notwithstanding the terms of the license accompanying this Product,"
+	f.WriteLine "' this script is provided ""as is"" and Microsoft does not make any assurances"
+	f.WriteLine "' with regard to the accuracy of this script or to the accuracy of any results" 
+	f.WriteLine "' which derive from the use of this script."
+    f.WriteLine "''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''"
+    f.WriteLine
+	
+    Set ISA = CreateObject("FPC.Root")
+    ISA.Refresh
+    Set Arrays = ISA.Arrays  
+    
+    ' Get inputs from user (if not in quiet mode, otherwise use command line argument)
+	
+	' Source array name
+    If NumCmdLineArguments = 0 Then
+		SourceName = InputBox("Please enter the name of the source standalone server or array whose elements you want to export. Use * to automatically select the first available name:", "Select source name", "*")
+    End If
+
+	If SourceName = "*" Then
+		Set Arr = Arrays(1)
+    ElseIf SourceName = "" Then
+		InitScriptFile = False
+		Exit Function		    
+	Else ' search source name
+		' Look for the specified array
+		On Error Resume Next
+		Set Arr = Arrays(SourceName)
+
+		If Err.Number <> 0 Then
+			MsgBox "The specified source name was not found"
+			InitScriptFile = False
+			Exit Function
+        End If
+    End If
+
+    ' Target array name
+    If NumCmdLineArguments = 0 Then
+		TargetName = InputBox("Please enter the target standalone server or array name to which you want to import the elements.", "Select target name", "ISA")    
+    End If
+	
+    If TargetName = "" Then
+	InitScriptFile = False
+	Exit Function		
+    Else
+	' Import to Array or standalone server
+        Elm = "Set Elements = ISA.Arrays(" & """" & TargetName & """" & ").PolicyElements"
+	APol = "Set APolicy = ISA.Arrays(" & """" & TargetName & """" & ").ArrayPolicy" 
+	Pub = "Set Publishing = ISA.Arrays(" & """" & TargetName & """" & ").Publishing"
+	Dst = TargetName
+    End If
+
+	f.WriteLine "' This script imports policy elements, access policies and publishing rules of source " + """" + Arr.Name + """" + " to target " + """" + Dst + """"
+	f.WriteLine
+    f.WriteLine "Const ERROR_ALREADY_EXISTS = 183"
+	f.WriteLine "Sub CheckError()"
+	f.WriteLine "    On Error Resume Next"
+	f.WriteLine "    If (Err.Number <> 0) And (Err.Number <> ERROR_ALREADY_EXISTS) Then"
+    f.WriteLine "        MsgBox " & """" & "An error has occured:" & """" & " & vbCrLf & Err.Description & Err.Number"
+	f.WriteLine "        WScript.Quit Err.Number"
+	f.WriteLine "    End If"
+    f.WriteLine "End Sub" 
+	f.WriteLine
+         
+    f.WriteLine "On Error Resume Next"
+    f.WriteLine "Set ISA = CreateObject(" + """" + "FPC.Root" + """" + ")"
+    f.WriteLine "ISA.Refresh"	
+	f.WriteLine Elm
+	f.writeLine APol
+	f.writeline Pub
+	f.WriteLine
+
+	InitScriptFile = True
+End Function
+
+' ------------------------------------------------------------------------------------------------------------------
+
+Sub CloseScriptFile()    
+    f.Close    
+End Sub
+
+' ------------------------------------------------------------------------------------------------------------------
+
+Sub AddImportProtocolDefinitionsToScript()     
+    f.WriteLine "'-------------------------------------------------------"
+    f.WriteLine "Set Protocols = Elements.Protocoldefinitions"
+    Set Protocols = Arr.policyElements.Protocoldefinitions
+    For Each Protocol In Protocols
+	If Protocol.IsISAProtocol = FALSE Then
+	    If Protocol.InitialConnectionProtocol = TCP Then
+		f.Write "Set NewDefinition = Protocols.AddTCP (" 
+	    Else
+		f.Write "Set NewDefinition = Protocols.AddUDP (" 
+	    End If
+                
+	    f.Write """" & Protocol.Name & """" & "," 
+
+            If Protocol.InitialConnectionProtocol = TCP Then
+		f.Write Protocol.TCPInitialConnectionDirection & ","
+	    Else
+		f.Write Protocol.UDPInitialConnectionDirection & ","
+	    End If
+
+            f.Write Protocol.InitialConnectionPort & ")" & vbCrLf
+	    f.WriteLine "CheckError"        
+
+      	    f.WriteLine "NewDefinition.Description = " & """" & Protocol.Description & """"
+                
+            ' Secondary connections
+            Set SecConns = Protocol.SecondaryConnections
+            For Each secconn In SecConns
+
+                If secconn.Protocol = TCP Then 
+                    f.WriteLine "NewDefinition.SecondaryConnections.AddTCP " & secconn.TCPDirection & "," & secconn.PortLow & "," & secconn.PortHigh 
+                Else
+                    f.WriteLine "NewDefinition.SecondaryConnections.AddUDP " & secconn.UDPDirection & "," & secconn.PortLow & "," & secconn.PortHigh 
+                End If
+ 
+                f.WriteLine "CheckError"     
+ 	    Next
+            f.WriteLine
+        End If
+    Next
+    f.WriteLine "Protocols.Save"
+	f.WriteLine "CheckError"
+End Sub
+
+' ------------------------------------------------------------------------------------------------------------------
+
+Sub AddImportClientSetsToScript()     
+    f.WriteLine "'-------------------------------------------------------"
+    f.WriteLine "Set ClientSets = Elements.ClientAddressSets"
+    Set clientsets = Arr.policyElements.ClientAddressSets
+    For Each ClientSet In ClientSets
+        f.WriteLine "Set NewDefinition = ClientSets.Add (" & """" & ClientSet.Name & """" & ")"
+		f.WriteLine "CheckError"        
+        
+        f.WriteLine "NewDefinition.Description = " & """" & ClientSet.Description & """"
+                
+        ' Set IP ranges     
+        For Each IPRange In ClientSet
+            f.WriteLine "NewDefinition.Add " & """" & IPRange.IP_From & """" & "," & """" & IPRange.IP_To & """"
+            f.WriteLine "CheckError"        
+        Next
+        f.WriteLine
+    Next
+    f.WriteLine "ClientSets.Save"
+	f.WriteLine "CheckError"
+End Sub
+
+
+' ------------------------------------------------------------------------------------------------------------------
+
+Sub AddImportDestinationSetsToScript()     
+    f.WriteLine "'-------------------------------------------------------"
+    f.WriteLine "Set DestinationSets = Elements.DestinationSets"
+    Set DestinationSets = Arr.policyElements.DestinationSets
+    For Each DestinationSet In DestinationSets
+        f.WriteLine "Set NewDefinition = DestinationSets.Add (" & """" & DestinationSet.Name & """" & ")"
+		f.WriteLine "CheckError"       
+
+        f.WriteLine "NewDefinition.Description = " & """" & DestinationSet.Description & """" 
+                
+        ' Add destination items     
+        For Each Destination In DestinationSet
+            If Destination.Type = DestinationTypeDomain Then
+  	            f.WriteLine "NewDefinition.Add " & """" & destination.DomainName & """" & "," & """" & """" & "," & """" & Destination.Path & """"
+            ElseIf Destination.Type = DestinationTypeSingleIp Then
+                f.WriteLine "NewDefinition.Add " & """" & Destination.IP_From & """" & "," & """" & """" & "," & """" & destination.path & """"
+		    Else
+                f.WriteLine "NewDefinition.Add " & """" & Destination.IP_From & """" & "," & """" & destination.IP_To & """" & "," & """" & destination.path & """"
+			End If
+			f.WriteLine "CheckError"
+
+			f.WriteLine "NewDefinition.Save"
+			f.WriteLine "CheckError"       
+        Next
+        f.WriteLine
+    Next
+    f.WriteLine "DestinationSets.Save"
+	f.WriteLine "CheckError"
+End Sub
+
+' ------------------------------------------------------------------------------------------------------------------
+
+
+Sub AddImportProtocolRulesToScript()     
+    f.WriteLine "'-------------------------------------------------------"
+    f.WriteLine "Set ProtocolRules = APolicy.ProtocolRules"
+    Set ProtocolRules = Arr.ArrayPolicy.ProtocolRules
+    For Each ProtocolRule In ProtocolRules
+	f.WriteLine "Set NewRule = ProtocolRules.Add (" & """" & ProtocolRule.Name & """" & ")" 
+        f.WriteLine "CheckError"        
+        f.WriteLine "NewRule.Description = " & """" & ProtocolRule.Description & """"
+        f.WriteLine "NewRule.Enabled = " & """" & ProtocolRule.Enabled & """"
+        f.WriteLine "NewRule.Action = " & """" & ProtocolRule.Action & """"	
+
+	If ProtocolRule.ScheduleUsed.Name = "" Then
+     	    f.WriteLine "NewRule.SetSchedule (" & """"  & " " & """" & ")" 
+	Else
+     	    f.WriteLine "NewRule.SetSchedule (" & """"  & ProtocolRule.ScheduleUsed.Name & """" & ")" 
+	End If
+
+	f.WriteLine "NewRule.ProtocolSelectionMethod = " & """" & ProtocolRule.ProtocolSelectionMethod & """"
+
+        ' SpecifiedProtocols
+        Set PRProtocols = ProtocolRule.SpecifiedProtocols
+        For Each PRProtocol In PRProtocols
+     	    f.WriteLine "NewRule.SpecifiedProtocols.Add " & """"  & PRProtocol.Name & """" & ", " & """" & PRProtocol.ApplicationFilterGuid & """" & ", " & """" & PRProtocol.Scope & """" 
+            f.WriteLine "CheckError"     
+ 	Next
+
+
+	f.WriteLine "NewRule.AppliesToMethod = " & """" & ProtocolRule.AppliesToMethod & """"
+        ' ClientSetsUsed
+        Set PRClientSets = ProtocolRule.ClientAddressSetsUsed
+        For Each PRClientSet In PRClientSets
+     	    f.WriteLine "NewRule.ClientAddressSetsUsed.Add " & """"  & PRClientSet.Name & """" & ", " & """" & PRClientSet.ApplicationFilterGuid & """" & ", " & """" & PRClientSet.Scope & """" 
+            f.WriteLine "CheckError"     
+ 	Next
+        ' ClientSetsExcluded
+        Set PRClientSetsEx = ProtocolRule.ClientAddressSetsExcluded
+        For Each PRClientSetEx In PRClientSetsEx
+     	    f.WriteLine "NewRule.ClientAddressSetsExcluded.Add " & """"  & PRClientSetEx.Name & """" & ", " & """" & PRClientSetEx.ApplicationFilterGuid & """" & ", " & """" & PRClientSetEx.Scope & """"
+            f.WriteLine "CheckError"     
+ 	Next
+        ' AppliesToAccounts
+        Set PRAccounts = ProtocolRule.AppliesToAccounts
+        For Each PRAccount In PRAccounts
+     	    f.WriteLine "NewRule.AppliesToAccounts.Add " & """"  & PRAccount.Account & """" & ", " & PrAccount.AccountStatus  
+            f.WriteLine "CheckError"     
+ 	Next
+        f.WriteLine
+    Next
+    f.WriteLine "ProtocolRules.Save"
+	f.WriteLine "CheckError"
+End Sub
+
+' ------------------------------------------------------------------------------------------------------------------
+
+Sub AddImportPacketFiltersToScript()     
+    f.WriteLine "'-------------------------------------------------------"
+    f.WriteLine "Set PacketFilters = APolicy.IpPacketFilters"
+    Set PacketFilters = Arr.ArrayPolicy.IpPacketFilters
+    For Each PacketFilter In PacketFilters
+	f.WriteLine "Set NewPFilter = PacketFilters.Add (" & """" & PacketFilter.Name & """" & ", " & """" & PacketFilter.FilterMode & """" & ")" 
+        f.WriteLine "CheckError"        
+        f.WriteLine "NewPFilter.Description = " & """" & PacketFilter.Description & """"
+        f.WriteLine "NewPFilter.Enabled = " & """" & PacketFilter.Enabled & """"
+        f.WriteLine "NewPFilter.FilterType = " & """" & PacketFilter.FilterType & """"	
+        f.WriteLine "NewPFilter.AllServers = " & """" & PacketFilter.AllServers & """"	
+        f.WriteLine "NewPFilter.ServerName = " & """" & PacketFilter.ServerName & """"	 
+        f.WriteLine "NewPFilter.ICMPCodeNumber = " & """" & PacketFilter.ICMPCodeNumber & """"
+        f.WriteLine "NewPFilter.ICMPCodeOption = " & """" & PacketFilter.ICMPCodeOption & """"
+        f.WriteLine "NewPFilter.ICMPTypeNumber = " & """" & PacketFilter.ICMPTypeNumber & """"	
+        f.WriteLine "NewPFilter.ICMPTypeOption = " & """" & PacketFilter.ICMPTypeOption & """"	
+        f.WriteLine "NewPFilter.LocalPortNumber = " & """" & PacketFilter.LocalPortNumber & """"	 
+        f.WriteLine "NewPFilter.LocalPortType = " & """" & PacketFilter.LocalPortType & """"
+        f.WriteLine "NewPFilter.LogMatchingPackets = " & """" & PacketFilter.LogMatchingPackets & """"
+        f.WriteLine "NewPFilter.PacketDirection = " & """" & PacketFilter.PacketDirection & """"	
+        f.WriteLine "NewPFilter.ProtocolNumber = " & """" & PacketFilter.ProtocolNumber & """"	
+        f.WriteLine "NewPFilter.RemotePortNumber = " & """" & PacketFilter.RemotePortNumber & """"	 
+        f.WriteLine "NewPFilter.RemotePortType = " & """" & PacketFilter.RemotePortType & """"
+        f.WriteLine "NewPFilter.UDPPacketDirection = " & """" & PacketFilter.UDPPacketDirection & """"
+        f.WriteLine "NewPFilter.SetLocalHost " & """" & PacketFilter.LocalHostType & """" & ", " & """" & PacketFilter.LocalHostIpAddress & """" & ", " & """" & PacketFilter.LocalHostIpMask & """"
+        f.WriteLine "NewPFilter.SetRemoteHost " & """" & PacketFilter.RemoteHostType & """" & ", " & """" & PacketFilter.RemoteHostIpAddress & """" & ", " & """" & PacketFilter.RemoteHostIpMask & """" 
+        f.WriteLine
+    Next
+    f.WriteLine "PacketFilters.Save"
+    f.WriteLine "CheckError"
+End Sub
+
+' -------------------------------------------------------
+
+Sub AddImportSiteContentRulesToScript()     
+    f.WriteLine "'-------------------------------------------------------"
+    f.WriteLine "Set SiteContentRules = APolicy.SiteAndContentRules"
+    Set SiteContentRules = Arr.ArrayPolicy.SiteAndContentRules
+    For Each SiteContentRule In SiteContentRules
+	f.WriteLine "Set NewSCRule = SiteContentRules.Add (" & """" & SiteContentRule.Name & """" & ")" 
+        f.WriteLine "CheckError"        
+        f.WriteLine "NewSCRule.Description = " & """" & SiteContentRule.Description & """"
+        f.WriteLine "NewSCRule.Enabled = " & """" & SiteContentRule.Enabled & """"
+        f.WriteLine "NewSCRule.Action = " & """" & SiteContentRule.Action & """"	
+        f.WriteLine "NewSCRule.AppliesToContentMethod = " & """" & SiteContentRule.AppliesToContentMethod & """"	
+        f.WriteLine "NewSCRule.RedirectURL = " & """" & SiteContentRule.RedirectURL & """"
+        f.WriteLine "NewSCRule.Action = " & """" & SiteContentRule.Action & """"	
+        f.WriteLine "NewSCRule.AppliesToContentMethod = " & """" & SiteContentRule.AppliesToContentMethod & """"	
+        f.WriteLine "NewSCRule.SetDestination " & """" & SiteContentRule.AppliesToDestination & """" & ", " & """" & SiteContentRule.DestinationSetUsed & """"
+
+	If SiteContentRule.ScheduleUsed.Name = "" Then
+	    f.WriteLine "NewSCRule.SetSchedule (" & """"  & " " & """" & ")" 
+	Else
+	    f.WriteLine "NewSCRule.SetSchedule (" & """"  & SiteContentRule.ScheduleUsed.Name & """" & ")" 
+	End If
+
+        f.WriteLine "NewSCRule.AppliesToMethod = " & """" & SiteContentRule.AppliesToMethod & """"
+        ' ClientSetsUsed
+        Set SCRClientSets = SiteContentRule.ClientAddressSetsUsed
+        For Each SCRClientSet In SCRClientSets
+     	    f.WriteLine "NewSCRule.ClientAddressSetsUsed.Add " & """"  & SCRClientSet.Name & """" & ", " & """" & SCRClientSet.ApplicationFilterGuid & """" & ", " & """" & SCRClientSet.Scope & """" 
+            f.WriteLine "CheckError"     
+ 	Next
+        ' ClientSetsExcluded
+        Set SCRClientSetsEx = SiteContentRule.ClientAddressSetsExcluded
+        For Each SCRClientSetEx In SCRClientSetsEx
+     	    f.WriteLine "NewSCRule.ClientAddressSetsExcluded.Add " & """"  & SCRClientSetEx.Name & """" & ", " & """" & SCRClientSetEx.ApplicationFilterGuid & """" & ", " & """" & SCRClientSetEx.Scope & """"
+            f.WriteLine "CheckError"     
+ 	Next
+        ' AppliesToAccounts
+        Set SCRAccounts = SiteContentRule.AppliesToAccounts
+        For Each SCRAccount In SCRAccounts
+     	    f.WriteLine "NewSCRule.AppliesToAccounts.Add " & """"  & SCRAccount.Account & """" & ", " & SCRAccount.AccountStatus  
+            f.WriteLine "CheckError"     
+ 	Next
+
+' Not sure about multiple Content Groups?
+        ' SpecifiedContentGroups
+        Set SCRContentGroups = SiteContentRule.ContentGroupsUsed
+        For Each SCRContentGroup In SCRContentGroups
+     	    f.WriteLine "NewSCRule.ContentGroupsUsed.Add " & """"  & SCRContentGroup.Name & """" & ", " & """" & SCRContentGroup.ApplicationFilterGuid & """" & ", " & """" & SCRContentGroup.Scope & """" 
+            f.WriteLine "CheckError"     
+ 	Next
+        f.WriteLine
+    Next
+    f.WriteLine "SiteContentRules.Save"
+    f.WriteLine "CheckError"
+End Sub
+
+' ----------------------------------------------
+
+Sub AddImportServerPublishingRulesToScript()     
+    f.WriteLine "'-------------------------------------------------------"
+    f.WriteLine "Set ServerPubRules = Publishing.ServerPublishingRules"
+    Set ServerPubRules = Arr.Publishing.ServerPublishingRules
+    f.WriteLine "CheckError"    
+    For Each ServerPubRule In ServerPubRules
+	f.WriteLine "Set NewPubRule = ServerPubRules.Add (" & """" & ServerPubRule.Name & """" & ")" 
+        f.WriteLine "CheckError"        
+        f.WriteLine "NewPubRule.Description = " & """" & ServerPubRule.Description & """"
+        f.WriteLine "NewPubRule.Enabled = " & """" & ServerPubRule.Enabled & """"
+        f.WriteLine "NewPubRule.InternalIp = " & """" & ServerPubRule.InternalIp & """"	
+        f.WriteLine "NewPubRule.ExternalIp = " & """" & ServerPubRule.ExternalIp & """"	
+     	f.WriteLine "NewPubRule.SetProtocol " & """"  & ServerPubRule.ProtocolUsed.Name & """" & ", " & """" & ServerPubRule.ProtocolUsed.ApplicationFilterGuid & """"
+	f.WriteLine "NewPubRule.AppliesToMethod = " & """" & ServerPubRule.AppliesToMethod & """"
+        ' ClientSetsUsed
+        Set SPRClientSets = ServerPubRule.ClientAddressSetsUsed
+        For Each SPRClientSet In SPRClientSets
+     	    f.WriteLine "NewPubRule.ClientAddressSetsUsed.Add " & """"  & SPRClientSet.Name & """" & ", " & """" & SPRClientSet.ApplicationFilterGuid & """" & ", " & """" & SPRClientSet.Scope & """" 
+            f.WriteLine "CheckError"     
+ 	Next
+        ' ClientSetsExcluded
+        Set SPRClientSetsEx = ServerPubRule.ClientAddressSetsExcluded
+        For Each SPRClientSetEx In SPRClientSetsEx
+    	    f.WriteLine "NewPubRule.ClientAddressSetsExcluded.Add " & """"  & SPRClientSetEx.Name & """" & ", " & """" & SPRClientSetEx.ApplicationFilterGuid & """" & ", " & """" & SPRClientSetEx.Scope & """"
+            f.WriteLine "CheckError"     
+ 	Next
+        f.WriteLine
+    Next
+    f.WriteLine "ServerPubRules.Save"
+    f.WriteLine "CheckError"
+End Sub
+' ------------------------------------------------------------------------------------------------------------------
+
+Sub AddImportWebPublishingRulesToScript()     
+    f.WriteLine "'-------------------------------------------------------"
+    f.WriteLine "Set WebPubRules = Publishing.WebPublishingRules"
+    Set WebPubRules = Arr.Publishing.WebPublishingRules
+    f.WriteLine "CheckError"    
+    For Each WebPubRule In WebPubRules
+	f.WriteLine "Set NewWebPubRule = WebPubRules.Add (" & """" & WebPubRule.Name & """" & ")" 
+        f.WriteLine "CheckError"        
+        f.WriteLine "NewWebPubRule.Description = " & """" & WebPubRule.Description & """"
+        f.WriteLine "NewWebPubRule.Enabled = " & """" & WebPubRule.Enabled & """"
+        f.WriteLine "NewWebPubRule.SetDestination " & """" & WebPubRule.AppliesToDestination & """" & ", " & """" & WebPubRule.DestinationSetUsed & """"
+        f.WriteLine "NewWebPubRule.SetWebSiteAndPorts " & """" & WebPubRule.Action & """" & ", " & """" & WebPubRule.WebSite & """" & ", " & """" & WebPubRule.HTTPRedirectPort & """" & ", " & """" & WebPubRule.FTPRedirectPort & """" & ", " & """" & WebPubRule.SSLRedirectPort & """"	
+        f.WriteLine "NewWebPubRule.SendOriginalHostHeader = " & """" & WebPubRule.SendOriginalHostHeader & """"
+        f.WriteLine "NewWebPubRule.NonSecureProtocolRedirection = " & """" & WebPubRule.NonSecureProtocolRedirection & """"
+        f.WriteLine "NewWebPubRule.SecureProtocolRedirection = " & """" & WebPubRule.SecureProtocolRedirection & """"
+        f.WriteLine "NewWebPubRule.SSLRequireSecureChannel = " & """" & WebPubRule.SSLRequireSecureChannel & """"
+	f.WriteLine "NewWebPubRule.AppliesToMethod = " & """" & WebPubRule.AppliesToMethod & """"
+        ' ClientSetsUsed
+        Set WPRClientSets = WebPubRule.ClientAddressSetsUsed
+        For Each WPRClientSet In WPRClientSets
+     	    f.WriteLine "NewWebPubRule.ClientAddressSetsUsed.Add " & """"  & WPRClientSet.Name & """" & ", " & """" & WPRClientSet.ApplicationFilterGuid & """" & ", " & """" & WPRClientSet.Scope & """" 
+            f.WriteLine "CheckError"     
+ 	Next
+        ' ClientSetsExcluded
+        Set WPRClientSetsEx = WebPubRule.ClientAddressSetsExcluded
+        For Each WPRClientSetEx In WPRClientSetsEx
+    	    f.WriteLine "NewWebPubRule.ClientAddressSetsExcluded.Add " & """"  & WPRClientSetEx.Name & """" & ", " & """" & WPRClientSetEx.ApplicationFilterGuid & """" & ", " & """" & WPRClientSetEx.Scope & """"
+            f.WriteLine "CheckError"     
+ 	Next
+        ' AppliesToAccounts
+        Set WPRAccounts = WebPubRule.AppliesToAccounts
+        For Each WPRAccount In WPRAccounts
+     	    f.WriteLine "NewWebPubRule.AppliesToAccounts.Add " & """"  & WPRAccount.Account & """" & ", " & WPRAccount.AccountStatus  
+            f.WriteLine "CheckError"     
+ 	Next
+        f.WriteLine
+    Next
+    f.WriteLine "WebPubRules.Save"
+    f.WriteLine "CheckError"
+End Sub
+
+' ---------------------------------------------------------------------------------------------------------
+
+Sub AddImportWebProxyToScript()     
+    f.WriteLine "'-------------------------------------------------------"
+    f.WriteLine "Set WebProxys = APolicy.WebProxy"
+    Set WebProxySet = Arr.ArrayPolicy.WebProxy
+    f.WriteLine "CheckError"    
+    f.WriteLine "WebProxys.EnableAutoDiscovery = " & """" & WebProxySet.EnableAutoDiscovery & """"
+    f.WriteLine "WebProxys.AutoDiscoveryPort = " & """" & WebProxySet.AutoDiscoveryPort & """"
+    f.WriteLine "WebProxys.LoadSize = " & """" & WebProxySet.LoadSize & """"
+    f.WriteLine "WebProxys.UpstreamResolveSystem = " & """" & WebProxySet.UpstreamResolveSystem & """"
+    f.WriteLine "WebProxys.IncomingWebRequests.AllInterfaces = " & """" & WebProxySet.IncomingWebRequests.AllInterfaces & """"
+    f.WriteLine "WebProxys.IncomingWebRequests.AlwaysAuthenticate = " & """" & WebProxySet.IncomingWebRequests.AlwaysAuthenticate & """"
+    f.WriteLine "WebProxys.IncomingWebRequests.CacheSSLResponses = " & """" & WebProxySet.IncomingWebRequests.CacheSSLResponses & """"
+    f.WriteLine "WebProxys.IncomingWebRequests.ConnectionTimeout = " & """" & WebProxySet.IncomingWebRequests.ConnectionTimeout & """"
+    f.WriteLine "WebProxys.IncomingWebRequests.NumberOfConnections = " & """" & WebProxySet.IncomingWebRequests.NumberOfConnections & """"
+    f.WriteLine "WebProxys.IncomingWebRequests.ResolveInArray = " & """" & WebProxySet.IncomingWebRequests.ResolveInArray & """"
+    f.WriteLine "WebProxys.IncomingWebRequests.SSLPort = " & """" & WebProxySet.IncomingWebRequests.SSLPort & """"
+    f.WriteLine "WebProxys.IncomingWebRequests.TCPPort = " & """" & WebProxySet.IncomingWebRequests.TCPPort & """"
+    f.WriteLine "WebProxys.IncomingWebRequests.UnlimitedNumberOfConnections = " & """" & WebProxySet.IncomingWebRequests.UnlimitedNumberOfConnections & """"
+    f.WriteLine "WebProxys.OutgoingWebRequests.AllInterfaces = " & """" & WebProxySet.OutgoingWebRequests.AllInterfaces & """"
+    f.WriteLine "WebProxys.OutgoingWebRequests.AlwaysAuthenticate = " & """" & WebProxySet.OutgoingWebRequests.AlwaysAuthenticate & """"
+    f.WriteLine "WebProxys.OutgoingWebRequests.CacheSSLResponses = " & """" & WebProxySet.OutgoingWebRequests.CacheSSLResponses & """"
+    f.WriteLine "WebProxys.OutgoingWebRequests.ConnectionTimeout = " & """" & WebProxySet.OutgoingWebRequests.ConnectionTimeout & """"
+    f.WriteLine "WebProxys.OutgoingWebRequests.NumberOfConnections = " & """" & WebProxySet.OutgoingWebRequests.NumberOfConnections & """"
+    f.WriteLine "WebProxys.OutgoingWebRequests.ResolveInArray = " & """" & WebProxySet.OutgoingWebRequests.ResolveInArray & """"
+    f.WriteLine "WebProxys.OutgoingWebRequests.SSLPort = " & """" & WebProxySet.OutgoingWebRequests.SSLPort & """"
+    f.WriteLine "WebProxys.OutgoingWebRequests.TCPPort = " & """" & WebProxySet.OutgoingWebRequests.TCPPort & """"
+    f.WriteLine "WebProxys.OutgoingWebRequests.UnlimitedNumberOfConnections = " & """" & WebProxySet.OutgoingWebRequests.UnlimitedNumberOfConnections & """"
+    f.WriteLine
+    f.WriteLine "WebProxys.Save"
+    f.WriteLine "CheckError"
+End Sub
+
+' -----------------------------------------------------------------------
+
+''''''''''''''''''''
+''' Main Program '''
+''''''''''''''''''''
+
+Set args = Wscript.Arguments
+NumCmdLineArguments = args.Count
+
+If NumCmdLineArguments = 2 Then
+	   SourceName = args(0)
+	   TargetName = args(1)
+End If  
+
+If NumCmdLineArguments = 0 Or NumCmdLineArguments = 2 Then
+    If InitScriptFile = True Then
+        If InputBoxAnswer("Do you want to export Protocol Definitions? (y/n)", "Export Protocol Definitions", "y") = True Then
+	    AddImportProtocolDefinitionsToScript
+	End If
+        If InputBoxAnswer("Do you want to export Client Sets? (y/n)", "Export Client Sets", "y") = True Then
+	    AddImportClientSetsToScript
+	End If
+        If InputBoxAnswer("Do you want to export Destination Sets? (y/n)", "Export Destination Sets", "y") = True Then
+	    AddImportDestinationSetsToScript
+	End If
+        If InputBoxAnswer("Do you want to export Protocol Rules? (y/n)", "Export Protocol Rules", "y") = True Then
+	    AddImportProtocolRulesToScript
+	End If
+        If InputBoxAnswer("Do you want to export Packet Filters? (y/n)", "Export Packet Filters", "y") = True Then
+	    AddImportPacketFiltersToScript
+	End If
+        If InputBoxAnswer("Do you want to export Site and Content Rules? (y/n)", "Export Site and Content Rules", "y") = True Then
+	    AddImportSiteContentRulesToScript
+	End If
+        If InputBoxAnswer("Do you want to export Web Proxy Settings? (y/n)", "Export Web Proxy Settings", "y") = True Then
+	    AddImportWebProxyToScript
+	End If
+        If InputBoxAnswer("Do you want to export Web Publishing Rules? (y/n)", "Export Web Publishing Rules", "y") = True Then
+	    AddImportWebPublishingRulesToScript
+	End If
+        If InputBoxAnswer("Do you want to export Server Publishing Rules? (y/n)", "Export Server Publishing Rules", "y") = True Then
+	    AddImportServerPublishingRulesToScript
+	End If
+	f.WriteLine "MsgBox ""ImportISASettings finished succesfully. It is recommended that you restart ISA services after importing."" "
+	MsgBox "Resulting import script ImportISASettings.vbs has been created.  Run script on destination ISA server."
+    Else
+		MsgBox "InitScriptFile failed. Exiting."
+    End If
+	CloseScriptFile
+Else ' invalid activation of this script
+    ' Show syntax
+    MsgBox "Invalid parameters" & vbCrLf & _
+           "Syntax:" & vbCrLf & _
+           "CreateImportScript [[source name|*] [target name|#]]" & vbCrLf & _
+		   vbCrLf & "Examples:" & vbCrLf & _
+		   "CreateImportScript - will prompt the user to input source and target names" & vbCrLf & _
+		   "CreateImportScript S T - will use S as source name and T as target name" & vbCrLf & _
+		   "CreateImportScript * T - will automatically select the source name and use T as target name" & vbCrLf & _
+           "CreateImportScript S # - will use S as source name and the enterprise as target" 
+End If
+

@@ -1,0 +1,34 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Install SQL Server 2000 unattended
+Option Explicit
+
+Dim WshNetwork, WshShell, fso, strComputerName, strSource
+Set WshNetwork = wscript.CreateObject("Wscript.Network")
+set Wshshell = wscript.CreateObject("Wscript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
+
+strComputerName = WshNetwork.ComputerName
+
+If UCase(strComputerName) = "LONDON" Then
+   strSource = "C:"
+Else
+   strSource = "\\LONDON"
+End If
+
+WshShell.Run strSource & "\SQL2KDE\SP3\x86\setup\setupsql.exe -s -SMS -f1 " & strSource & "\SETUP\SQL2KSP3.ISS", 6, true
+
+'Copy the logfile to the root of C: and rename it.  It could be helpful in debugging any problems.
+If fso.FileExists("C:\windows\setup.log") Then
+   fso.MoveFile "C:\windows\setup.log", "C:\sqlsp3_install.log"
+End If
+
+

@@ -1,0 +1,44 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+Dim objnet, wshShell, fso, ie, url, myfile
+Set objNet = WScript.CreateObject("WScript.Network")
+Set WshShell = WScript.CreateObject("WScript.Shell")
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+ie.left=0
+ie.top=0
+ie.height=570
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\moc\setup\mochtml\GLACUST4.HTM"
+ie.visible=1
+
+WScript.Sleep 5000
+
+'Remove runnext.vbs file from startup group to prevent this script from running again
+Set MyFile = fso.GetFile("C:\Documents and Settings\All Users\Start Menu\Programs\Startup\runnext.vbs")
+MyFile.Delete
+
+'Configuring router
+wshshell.run "c:\tools\routeon.cmd", 6, true
+
+'starting route service
+wshshell.run "c:\tools\router.cmd", 6, true
+
+'disabling auto logon
+wshshell.run "c:\tools\autolog0.vbs", 6, true
+
+ie.navigate "file:///c:\moc\setup\mochtml\GLAFINAL.HTM"
+

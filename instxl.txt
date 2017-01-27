@@ -1,0 +1,75 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Install Visual Studio .NET 2003
+
+
+set wshshell = wscript.CreateObject("wscript.shell")
+
+'--------------------------------------------------------------------------------------
+'Create unattend file
+'--------------------------------------------------------------------------------------
+
+dim filesys, contents
+Const ForReading = 1, ForWriting = 2, ForAppending = 8 
+Set filesys = CreateObject("Scripting.FileSystemObject")
+
+
+'Open vs2003_1.txt for reading
+Set vs2003_1 = filesys.OpenTextFile("c:\setup\instruct\vs2003_1.txt", ForReading, True)
+
+'open vs2003.ini for writing
+Set vssetup = filesys.OpenTextFile("c:\setup\vs2003.ini", ForWriting, True)
+
+'readall vs2003_1.txt
+contents = vs2003_1.ReadAll
+
+'write vs2003_1.txt to vs2003.ini
+vssetup.write contents
+
+'close vs2003.ini
+vssetup.close
+
+'open vsPID.txt for reading
+Set vsPID = filesys.OpenTextFile("c:\setup\instruct\vsPID.txt", ForReading, True)
+
+'get PID Key from vsPID.txt
+contents = vsPID.ReadAll
+
+'open vs2003.ini for appending
+Set vssetup = filesys.OpenTextFile("c:\setup\vs2003.ini", ForAppending, True)
+
+'append VL Key to vs2003.ini
+vssetup.write contents
+
+'open vs2003_2.txt for reading
+Set vs2003_2 = filesys.OpenTextFile("c:\setup\instruct\vs2003_2.txt", ForReading, True)
+
+'readall vs2003_2.txt
+contents = vs2003_2.ReadAll
+
+'append to vs2003.ini
+vssetup.write contents
+
+'close all files
+vs2003_1.close
+vs2003_2.close
+vssetup.close
+
+
+
+'--------------------------------------------------------------------------------------
+'Run Install with unattend file that was just created
+'--------------------------------------------------------------------------------------
+
+wshshell.Run "d:\VSNet2003\setup\SETUP.EXE /UnattendFile C:\SETUP\vs2003.ini", 1, true
+
+
+

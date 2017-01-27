@@ -1,0 +1,19 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set wshshell = wscript.CreateObject("wscript.shell")
+set fso = createobject("scripting.filesystemobject")
+x=0
+Do while x < 5
+	wshshell.Run "c:\tools\front1.exe", 6, true
+	x=x+1
+	wscript.sleep 10000
+loop
+

@@ -1,0 +1,54 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'
+' Copyright (c) 2001 Microsoft Corporation.  All rights reserved.
+'
+' Notwithstanding the terms of the license accompanying this Product,
+' this script is provided "as is" and Microsoft does not make any assurances
+' with regard to the accuracy of this script or to the accuracy of any results
+' which derive from the use of this script.
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'=================================================================================================
+'
+'Script para parar, iniciar serviços
+'
+'=================================================================================================
+
+'set obj = getobject("winmgmts:")
+
+'set svc = obj.execmethod("win32_service.name='Alerter'","stopservice")
+'wscript.Echo "Microsoft Avisa : Serviço Parado"
+
+'=================================================================================
+'
+'
+'
+'==================================================================
+set obj = getobject("winmgmts:\\london")
+set servico = obj.execquery("select * from win32_process")
+for each s in servico
+txt = txt & s.name & "   " &  s.   & vbnewline
+next
+wscript.Echo txt
+

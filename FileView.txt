@@ -1,0 +1,364 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'
+' Define a ADS_RIGHTS_ENUM constants:
+'
+  const ADS_RIGHT_DELETE                 = &h10000
+  const ADS_RIGHT_READ_CONTROL           = &h20000
+  const ADS_RIGHT_WRITE_DAC              = &h40000
+  const ADS_RIGHT_WRITE_OWNER            = &h80000
+  const ADS_RIGHT_SYNCHRONIZE            = &h100000
+  const ADS_RIGHT_ACCESS_SYSTEM_SECURITY = &h1000000
+  const ADS_RIGHT_GENERIC_READ           = &h80000000
+  const ADS_RIGHT_GENERIC_WRITE          = &h40000000
+  const ADS_RIGHT_GENERIC_EXECUTE        = &h20000000
+  const ADS_RIGHT_GENERIC_ALL            = &h10000000
+  const ADS_RIGHT_DS_CREATE_CHILD        = &h1
+  const ADS_RIGHT_DS_DELETE_CHILD        = &h2
+  const ADS_RIGHT_ACTRL_DS_LIST          = &h4
+  const ADS_RIGHT_DS_SELF                = &h8
+  const ADS_RIGHT_DS_READ_PROP           = &h10
+  const ADS_RIGHT_DS_WRITE_PROP          = &h20
+  const ADS_RIGHT_DS_DELETE_TREE         = &h40
+  const ADS_RIGHT_DS_LIST_OBJECT         = &h80
+  const ADS_RIGHT_DS_CONTROL_ACCESS      = &h100
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+' 
+' ADS_ACETYPE_ENUM
+' Ace Type definitions
+'
+  const ADS_ACETYPE_ACCESS_ALLOWED           = 0
+  const ADS_ACETYPE_ACCESS_DENIED            = &h1
+  const ADS_ACETYPE_SYSTEM_AUDIT             = &h2
+  const ADS_ACETYPE_ACCESS_ALLOWED_OBJECT    = &h5
+  const ADS_ACETYPE_ACCESS_DENIED_OBJECT     = &h6
+  const ADS_ACETYPE_SYSTEM_AUDIT_OBJECT      = &h7
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+'
+' ADS_ACEFLAGS_ENUM
+' Ace Flag Constants
+'
+  const ADS_ACEFLAG_UNKNOWN                  = &h1
+  const ADS_ACEFLAG_INHERIT_ACE              = &h2
+  const ADS_ACEFLAG_NO_PROPAGATE_INHERIT_ACE = &h4
+  const ADS_ACEFLAG_INHERIT_ONLY_ACE         = &h8
+  const ADS_ACEFLAG_INHERITED_ACE            = &h10
+  const ADS_ACEFLAG_VALID_INHERIT_FLAGS      = &h1f
+  const ADS_ACEFLAG_SUCCESSFUL_ACCESS        = &h40
+  const ADS_ACEFLAG_FAILED_ACCESS            = &h80
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
+'On Error Resume Next
+'------------------------------------------------------------------------
+' Sub to process the command line
+'
+Sub ProcessCommandLine( args, sPath, sTrustee )
+   if( args.Count < 2 ) then
+      WScript.Echo "ERROR: Wrong number of arguments." 
+      Call DisplayUsage ( )
+      WScript.Quit 1
+   else
+      sPath = args(0)
+      sTrustee = args(1)
+   end if
+end sub
+'========================================================================
+'------------------------------------------------------------------------
+' Sub to display the usage for the script
+'
+sub DisplayUsage
+  WScript.Echo "USAGE: cscipt.exe Exclusive_Access.vbs NTFS_PATH [USER_TO_GIVE_ACCESS | -Show]"
+  WScript.Echo VbCrLf & "Where: NTFS_PATH is a file path in the form of: \\Sever\share\Folder"
+  WScript.Echo "USER_TO_GIVE_ACCESS is in the form of DOMAIN\UserID"
+  WScript.Echo "-Show -> displays the ace type and trustee for all ACEs in"
+  WScript.Echo "       the NTFS_PATH DACL"
+  WScript.Echo
+end sub
+'========================================================================
+'------------------------------------------------------------------------
+' Error processing sub.  Takes 3 args, 
+' 1. is the error object
+' 2. is a flag, TRUE means terminate if an error was found, 
+'    FALSE- Display an error, clear the error object, continue
+' 3. A user defined error text to display with the error information
+'
+sub DisplayErrorAndBail( oErr, bFlag, sMsg )
+   if( oErr.Number <> 0 ) then
+      '
+      ' We have an error, display the error text and the error number
+      ' along with the error description
+      '
+      WScript.Echo sMsg
+      WScript.Echo "ERROR Number: " & hex( oErr.Number ) & " has occurred. "
+      WScript.Echo oErr.Description
+      oErr.Clear
+      if( bFlag ) then
+        WScript.Echo "Terminating script "
+        WScript.Quit 1
+      end if
+    end if
+end sub
+'==========================================================================
+'--------------------------------------------------------------------------
+' Delete the EveryOne Ace from the DACL
+'
+sub DeleteEveryoneAce ( oSd )
+  dim oDacl
+  set oDacl = oSd.DiscretionaryACL
+  for each ace in oDacl
+     if( ace.Trustee = "Everyone" ) then
+         oDacl.RemoveAce ace
+     end if
+  next 
+  oSd.DiscretionaryACL = oDacl
+end Sub
+'==========================================================================
+' Sub to reorder an ACL
+' Comments in the subroutine explain how the ACL should be ordered.
+' The IADsAccessControlList::AddAce method makes not attempt to properly
+' order the ACE being added.
+'
+Sub ReorderDacl( dacl )
+   '
+   ' Initialize all of the new ACLs
+   '
+   ' VBS methods of creating the ACL bins
+   '
+   Set newdacl = CreateObject("AccessControlList")
+   Set ImpDenyDacl = CreateObject("AccessControlList")
+   Set InheritedDacl = CreateObject("AccessControlList")
+   Set ImpAllowDacl = CreateObject("AccessControlList")
+   Set InhAllowDacl = CreateObject("AccessControlList")
+   Set ImpDenyObjectDacl = CreateObject("AccessControlList")
+   Set ImpAllowObjectDacl = CreateObject("AccessControlList")
+   '
+   ' Sift the DACL into 5 bins:
+   ' Inherited Aces
+   ' Implicit Deny Aces
+   ' Implicit Deny Object Aces
+   ' Implicit Allow Aces
+   ' Implicit Allow object aces
+   '
+   For Each ace In dacl 
+      ' 
+      ' Sort the original ACEs into their appropriate 
+      ' ACLs 
+      '
+      If ((ace.AceFlags And ADS_ACEFLAG_INHERITED_ACE) = ADS_ACEFLAG_INHERITED_ACE)Then    
+         '    
+         ' Don't really care about the order of inherited aces.  Since we are    
+         ' adding them to the top of a new list, when they are added back    
+         ' to the Dacl for the object, they will be in the same order as    
+         ' they were originally.  Just a positive side affect of adding items    
+         ' of a LIFO ( Last In First Out) type list.    
+         '
+         InheritedDacl.AddAce ace 
+      Else
+         '    
+         ' We have an Implicit ACE, lets put it the proper pool
+         '    
+         Select Case ace.AceType    
+         Case ADS_ACETYPE_ACCESS_ALLOWED       
+            '
+            ' We have an implicit allow ace       
+            '       
+            ImpAllowDacl.AddAce ace    
+         Case ADS_ACETYPE_ACCESS_DENIED       
+            '
+            ' We have a implicit Deny ACE       
+            '       
+            ImpDenyDacl.AddAce ace    
+         Case ADS_ACETYPE_ACCESS_ALLOWED_OBJECT       
+            '       
+            ' We have an object allowed ace       
+            ' Does it apply to a property? or an Object?       
+            '       
+            impAllowObjectDacl.AddAce ace    
+         Case ADS_ACETYPE_ACCESS_DENIED_OBJECT        
+            '       
+            ' We have a object Deny ace       
+            '       
+            ImpDenyObjectDacl.AddAce ace    
+         Case Else       
+            '       
+            ' Missed a bin?       
+            '       
+         End Select
+      End If
+   Next
+   '
+   ' Combine the ACEs in the proper order
+   ' Implicit Deny
+   ' Implicit Deny Object
+   ' Implicit Allow
+   ' Implicit Allow Object
+   ' Inherited aces
+   '
+   ' Implicit Deny
+   '
+   For Each ace In ImpDenyDacl 
+       newdacl.AddAce ace 
+   Next
+   '
+   ' Implicit Deny Object
+   '
+   For Each ace In ImpDenyObjectDacl 
+        newdacl.AddAce ace
+   Next
+   '
+   ' Implicit Allow
+   '
+   For Each ace In ImpAllowDacl
+        newdacl.AddAce ace
+   Next 
+   '
+   ' Implicit Allow Object
+   '
+   For Each ace In impAllowObjectDacl
+      newdacl.AddAce ace
+   Next 
+   '
+   ' Inherited Aces
+   '
+   For Each ace In InheritedDacl
+        newdacl.AddAce ace 
+   Next
+   '
+   ' Clean up
+   '
+   Set InheritedDacl     = Nothing
+   Set ImpAllowDacl      = Nothing
+   Set ImpDenyObjectDacl = Nothing
+   Set ImpDenyDacl       = Nothing
+   '
+   ' Set the appropriate revision level
+   '  for the DACL
+   '
+   newdacl.AclRevision = dacl.AclRevision
+   '
+   ' Replace the Security Descriptor
+   '
+   Set dacl = nothing
+   Set dacl = newdacl
+end Sub
+'==========================================================================
+' Sub to display the aces in an acl, Based on "-Show"
+' as a second argument
+'
+sub DisplayDacl( Dacl )
+  dim sDisplayText
+  WScript.Echo "Aces: "
+  for Each Ace in Dacl
+     sDisplayText = "Trustee: " & ace.Trustee & vbCrLf
+     sDisplayText = sDisplayText & "Ace Type: "
+         Select Case ace.AceType    
+         Case ADS_ACETYPE_ACCESS_ALLOWED       
+            '
+            ' We have an implicit allow ace       
+            '       
+            sDisplayText = sDisplayText & "ACCESS_ALLOWED" & vbCrLf  
+         Case ADS_ACETYPE_ACCESS_DENIED       
+            '
+            ' We have a implicit Deny ACE       
+            '       
+            sDisplayText = sDisplayText & "ACCESS_DENIED" & vbCrLf     
+         Case ADS_ACETYPE_ACCESS_ALLOWED_OBJECT       
+            '       
+            ' We have an object allowed ace       
+            ' Does it apply to a property? or an Object?       
+            '       
+            sDisplayText = sDisplayText & "ACCESS_ALLOWED_OBJECT" & vbCrLf    
+         Case ADS_ACETYPE_ACCESS_DENIED_OBJECT        
+            '       
+            ' We have a object Deny ace       
+            '       
+            sDisplayText = sDisplayText & "ACCESS_DENIED_OBJECT" & vbCrLf
+         CASE Default
+            '
+            ' This has to be some kind of mistake
+            '
+            sDisplayText = sDisplayText & "ACCESS_UNKOWN!" & vbCrLf       
+        End Select 
+        wscript.echo sDisplayText
+    next
+end sub
+'==========================================================================
+'--------------------------------------------------------------------------
+' Beginning of the main script
+'
+dim oFileSD
+dim oAce
+dim oAdsSecurity
+dim args
+dim sAceTrustee, sDirPath
+dim oADO
+ 
+'
+' Get the arguments
+'
+set Args = WScript.Arguments
+Call ProcessCommandLine( args, sDirPath, sAceTrustee )
+'Set oAdsSecurity = CreateObject("ADsSecurity")
+'Call DisplayErrorAndBail( err, TRUE, "Creating ADsSecurity Object")
+'
+' Build the FILE: provider path for the object
+'
+'sDirPath = "FILE://" & sDirPath
+'
+' Retrieve the SD for the file
+'
+'set oFileSD = oADsSecurity.GetSecurityDescriptor(CStr(sDirPath))
+set fso = CreateObject("Scripting.FileSystemObject")
+
+MsgBox sDirPath
+Set oADO = GetObject(sDirPath, "Folder")
+'Set oADO = fso.GetFolder(sDirPath)
+
+Set oFileSD = oADO.Get("ntSecurityDescriptor")
+
+if( sAceTrustee = "-Show" ) then
+   '
+   ' display the aces in the ACL for the file path
+   '
+   set oDacl = oFileSD.DiscretionaryACL
+   Call DisplayDacl( oDacl )
+   WScript.Echo "Display of aces for " & sDirpath & " Completed!"
+else
+   Call DisplayErrorAndBail( err, TRUE, "Retrieving Security Descriptor for " & sDirPath )
+   Call DeleteEveryoneAce( oFileSD )
+   oAdsSecurity.SetSecurityDescriptor oFileSD, CStr(sDirPath)
+   Call DisplayErrorAndBail( err, TRUE, "Setting Security Descriptor back on file " & sDirPath)
+   '
+   ' Create an IADsAccessControlEntry
+   '
+   set oAce = CreateObject("AccessControlEntry")  
+   Call DisplayErrorAndBail( err, TRUE, "Creating new ACE...") 
+   oAce.Trustee = sAceTrustee
+   oAce.AccessMask = ADS_RIGHT_GENERIC_READ Or ADS_RIGHT_GENERIC_EXECUTE _
+                or ADS_RIGHT_GENERIC_WRITE Or ADS_RIGHT_DELETE
+   oAce.AceFlags = ADS_ACEFLAG_UNKNOWN Or ADS_ACEFLAG_INHERIT_ACE
+   oAce.AceType = ADS_ACETYPE_ACCESS_ALLOWED
+   set oDacl = oFileSD.DiscretionaryAcl
+   oDacl.AddAce oAce 
+   '
+   ' Now Reorder the DACL, see comments in ReorderDacl 
+   ' subroutine for rules about reordering the DACL
+   '
+   oFileSD.DiscretionaryACL = oDacl
+   Call ReorderDacl( oDacl )
+   '
+   ' Replace the DACL into the Objects Discretionary ACL
+   '
+   oFileSD.DiscretionaryACL = oDacl
+   oADsSecurity.SetSecurityDescriptor oFileSD 
+   Call DisplayErrorAndBail( err, TRUE, "Setting SD back on File " & sDirPath)
+   WScript.Echo "Ace for " & sAceTrustee & " added to " & sDirPath & " Completed!"
+end if
+

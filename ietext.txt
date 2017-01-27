@@ -1,0 +1,26 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' ieshorts.vbs
+'
+' This script creates the missing Internet Explorer shortcuts.
+' For some reason, on glasgow and the students, the IE shortcuts are missing.
+
+set wshshell = wscript.CreateObject("wscript.shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+
+if not fso.FileExists("C:\Documents and Settings\Administrator\Application Data\Microsoft\Internet Explorer\Quick Launch\Launch Internet Explorer Browser.lnk") then
+	fso.MoveFile "c:\moc\setup\ieshort1.lnk", "C:\Documents and Settings\Administrator\Application Data\Microsoft\Internet Explorer\Quick Launch\Launch Internet Explorer Browser.lnk"
+end if
+
+if not fso.FileExists("C:\Documents and Settings\Administrator\Start Menu\Programs\Internet Explorer.lnk") then
+	fso.MoveFile "c:\moc\setup\ieshort2.lnk", "C:\Documents and Settings\Administrator\Start Menu\Programs\Internet Explorer.lnk"
+end if
+

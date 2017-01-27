@@ -1,0 +1,86 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' glashare.vbs
+'
+' This script creates the shared folder on Glasgow
+
+dim fso
+
+set fso = CreateObject("Scripting.FileSystemObject")
+set wshshell = Wscript.CreateObject("Wscript.Shell")
+
+if not(fso.FolderExists("C:\Share")) then fso.CreateFolder "C:\Share"
+   wshshell.Run "net share Share=C:\Share"
+
+WshShell.Run "C:\moc\setup\rmtshare.exe \\glasgow\Share /grant administrators:f", 6, true
+
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Dim IE, fso, MyFile
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set IE = CreateObject("InternetExplorer.Application")
+set wshshell = wscript.CreateObject("wscript.shell")
+ie.left=0
+ie.top=0
+ie.height=600
+ie.width=800
+ie.menubar=0
+ie.toolbar=0
+ie.addressbar=0
+ie.statusbar=0
+ie.navigate "file:///c:\moc\setup\glahtml\glacust7.htm"
+ie.visible=1
+
+'Wait for London to be available
+done = 0
+while done = 0
+	if fso.FolderExists("\\london\setup") then
+		done = 1
+	else
+		wscript.sleep 5000
+	end if
+wend
+
+'Setting Auto Logon
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\AutoAdminLogon", 1 ,"REG_SZ"
+wshshell.Regwrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultUserName", "Administrator", "REG_SZ"
+wshshell.Regwrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultPassword", "P@ssw0rd", "REG_SZ"
+wshshell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", "NWTRADERS", "REG_SZ"
+
+'set glafinal.vbs to run after reboot
+if fso.FileExists ("c:\moc\setup\glafinal.vbs") then
+	set strt = fso.getfolder("c:\documents and settings\all users\start menu\programs\startup")
+	fn = "runnext.vbs"
+	set nxt = fso.getfile("c:\moc\setup\glafinal.vbs")
+	set fl = fso.createtextfile(strt & "\" & fn, true)
+	fl.writeline("set wshshell = wscript.createobject" & chr(40) & chr(34) & "wscript.shell" & chr(34) & chr(41))
+	fl.writeline("wshshell.run " & chr(34) & nxt & chr(34))
+	fl.Close
+else
+	set MyFile = fso.GetFile("C:\Documents and Settings\All Users\Start Menu\Programs\Startup\runnext.vbs")
+	MyFile.Delete
+end if
+
+'Set the wallpaper now that we are logged in as GlasgowUser
+ie.navigate "file:///c:\moc\setup\glahtml\glacust7.htm"
+WshShell.run "c:\setup\images\display.vbs", 6, true
+
+'Reboot the machine
+WshShell.run "c:\tools\reboot.cmd", 6, true
+

@@ -1,0 +1,135 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'#######################################################################
+'# Install_POReqTotal.vbs
+'# Copyright (C) 2000 Microsoft Corporation
+'#######################################################################
+
+Dim cat  'COMAdminCatalog
+Dim apps 'COMAdminCatalogCollection
+Dim app  'COMAdminCatalogObject
+
+Const strAppName = "BizTalk Server Tutorial POReqTotal Component"
+Const guidLegacyProduct = "{75D98DE0-E0F9-4430-954E-9420FDF03DE5}"
+Const guidProduct = "{89E9C462-ABDC-47E6-883F-8BB2F32C3D4C}" 'Package App ID
+
+Dim objInstaller 'WindowsInstaller.Installer
+Dim pathDLL      'String
+Dim pathTLB      'String
+Dim pathPSDLL    'String
+
+'-----------------------------------------------------------------------
+
+Set FileSys = CreateObject("Scripting.FileSystemObject")
+pathDLL = FileSys.GetParentFolderName(FileSys.GetParentFolderName(Wscript.ScriptFullName)) & "\Components\POReqTotal\Solution\PORequest.dll"
+
+'Open a session with the catalog; Instantiate a COMAdminCatalog object
+'Create a new COM+ application; get the "Applications" collection from the catalog
+Set cat = CreateObject("COMAdmin.COMAdminCatalog")
+Set apps = cat.GetCollection("Applications")
+
+'Delete Previous Package from Beta If It Exists
+DeleteApp apps, guidLegacyProduct
+
+'Remove Current Package For Reinstall If It Exists
+DeleteApp apps, guidProduct
+
+'Create application
+Set app = apps.Add
+ConfigApp apps, app
+
+cat.InstallComponent guidProduct, pathDLL, "", ""
+ConfigComp apps, app
+
+Wscript.echo "Installation Complete"
+
+'-----------------------------------------------------------------------
+
+Private Sub DeleteApp(apps, strAppGuid)
+    Dim index 'Integer
+    Dim app   'COMAdminCatalogObject
+    
+    apps.Populate
+    For index = 0 To apps.Count - 1
+        Set app = apps.Item(index)
+        If app.Value("ID") = strAppGuid Then
+            apps.Remove (index)
+            apps.SaveChanges
+            Exit For
+        End If
+    Next
+End Sub
+
+Private Sub ConfigApp(apps, app)
+    '### General Properties
+    app.Value("Name") = strAppName
+    app.Value("Description") = strAppName
+    app.Value("CreatedBy") = "Microsoft BizTalk Server Tutorial"
+    app.Value("ID") = guidProduct
+
+    '### Security Properties
+    app.Value("ApplicationAccessChecksEnabled") = False
+    app.Value("AccessChecksLevel") = 0 'COMAdminAccessChecksApplicationLevel
+    app.Value("Authentication") = 0 'COMAdminAuthenticationDefault
+    app.Value("AuthenticationCapability") = 64 'COMAdminAuthenticationCapabilitiesDynamicCloaking
+    app.Value("ImpersonationLevel") = 4 'COMAdminImpersonationDelegate
+
+    '### Identity Properties
+    app.Value("Identity") = "Interactive User"
+    app.Value("Password") = ""
+
+    '### Activation Properties
+    app.Value("Activation") = 1 'COMAdminActivationLocal
+    
+    '### Queueing Properties
+    app.Value("QueuingEnabled") = False
+    app.Value("QueueListenerEnabled") = False
+
+    '### Advanced Properties
+    app.Value("RunForever") = False
+    app.Value("ShutdownAfter") = 1 '[0-1440] minutes
+    app.Value("Deleteable") = True
+    app.Value("Changeable") = True
+    'app.Value("CommandLine") = ""
+    app.Value("CRMEnabled") = False
+    'app.Value("CRMLogFile") = ""
+    app.Value("3GigSupportEnabled") = False
+
+    '### Other Properties
+    app.Value("EventsEnabled") = False
+
+    apps.SaveChanges
+    apps.Populate
+End Sub
+
+Private Sub ConfigComp(apps, app)
+    Dim comps 'COMAdminCatalogCollection
+    Dim comp  'COMAdminCatalogObject
+    
+    Set comps = apps.GetCollection("Components", app.Key)
+    comps.Populate
+    Set comp = comps.Item(0)
+
+    '### Transactions Properties
+    comp.Value("Transaction") = 2 'COMAdminTransactionSupported
+
+    '### Activation Properties
+    comp.Value("ObjectPoolingEnabled") = False
+    comp.Value("CreationTimeout") = 60000 '[0-2147483647] ms
+    comp.Value("ConstructionEnabled") = False
+    comp.Value("EventTrackingEnabled") = False
+    comp.Value("MustRunInClientContext") = False
+
+    comps.SaveChanges
+End Sub
+
+'#######################################################################
+

@@ -1,0 +1,24 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'	Install an msi package
+'step 1 obtain an SWbemServices object using the WinMgmts: moniker to connect to your own system
+Set objSvc = GetObject("WinMgmts:")
+'step 2 obtain an object representing the Win32_Product class
+Set obj = objSvc.Get("Win32_Product")
+'step 3 call the install method with the full path to the msi file
+retval = obj.Install("c:\source\scriptApp.msi")
+'step 4 test the return value
+If Retval <> 0 Then
+	wscript.echo "something went wrong"
+Else
+	wscript.echo "Package installed"
+End If
+

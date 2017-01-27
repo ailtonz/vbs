@@ -1,0 +1,264 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' security.vbs
+
+set wshshell = wscript.CreateObject("wscript.shell")
+set onet = CreateObject("wscript.network")
+dim username
+dim loginname
+dim organization
+
+dim DebugString
+dim testint
+
+
+const password = "P@ssw0rd"
+
+
+
+' Define a ADS_RIGHTS_ENUM constants:
+'
+  const ADS_RIGHT_DELETE                 = &h10000
+  const ADS_RIGHT_READ_CONTROL           = &h20000
+  const ADS_RIGHT_WRITE_DAC              = &h40000
+  const ADS_RIGHT_WRITE_OWNER            = &h80000
+  const ADS_RIGHT_SYNCHRONIZE            = &h100000
+  const ADS_RIGHT_ACCESS_SYSTEM_SECURITY = &h1000000
+  const ADS_RIGHT_GENERIC_READ           = &h80000000
+  const ADS_RIGHT_GENERIC_WRITE          = &h40000000
+  const ADS_RIGHT_GENERIC_EXECUTE        = &h20000000
+  const ADS_RIGHT_GENERIC_ALL            = &h10000000	
+  const ADS_RIGHT_DS_CREATE_CHILD        = &h1		
+  const ADS_RIGHT_DS_DELETE_CHILD        = &h2
+  const ADS_RIGHT_ACTRL_DS_LIST          = &h4
+  const ADS_RIGHT_DS_SELF                = &h8
+  const ADS_RIGHT_DS_READ_PROP           = &h10
+  const ADS_RIGHT_DS_WRITE_PROP          = &h20
+  const ADS_RIGHT_DS_DELETE_TREE         = &h40
+  const ADS_RIGHT_DS_LIST_OBJECT         = &h80
+  const ADS_RIGHT_DS_CONTROL_ACCESS      = &h100
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
+' 
+' ADS_ACETYPE_ENUM
+' Ace Type definitions
+'
+  const ADS_ACETYPE_ACCESS_ALLOWED           = 0
+  const ADS_ACETYPE_ACCESS_DENIED            = &h1
+  const ADS_ACETYPE_SYSTEM_AUDIT             = &h2
+  const ADS_ACETYPE_ACCESS_ALLOWED_OBJECT    = &h5
+  const ADS_ACETYPE_ACCESS_DENIED_OBJECT     = &h6
+  const ADS_ACETYPE_SYSTEM_AUDIT_OBJECT      = &h7
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+'
+' ADS_ACEFLAGS_ENUM
+' Ace Flag Constants
+'
+  const ADS_ACEFLAG_UNKNOWN                  = &h1
+  const ADS_ACEFLAG_INHERIT_ACE              = &h2		'' This object and all child objects
+  const ADS_ACEFLAG_NO_PROPAGATE_INHERIT_ACE = &h4		'' This object only
+  const ADS_ACEFLAG_INHERIT_ONLY_ACE         = &h8
+  const ADS_ACEFLAG_INHERITED_ACE            = &h10
+  const ADS_ACEFLAG_VALID_INHERIT_FLAGS      = &h1f
+  const ADS_ACEFLAG_SUCCESSFUL_ACCESS        = &h40
+  const ADS_ACEFLAG_FAILED_ACCESS            = &h80
+
+  const ADS_FLAG_OBJECT_TYPE_PRESENT            = &h1
+  const ADS_FLAG_INHERITED_OBJECT_TYPE_PRESENT  = &h2
+
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+'++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+Call AddSecuritiesToOU ( "Vancouver" )
+Call AddSecuritiesToOU ( "Denver"    )
+Call AddSecuritiesToOU ( "Perth"     )
+Call AddSecuritiesToOU ( "Brisbane"  )
+Call AddSecuritiesToOU ( "Lisbon"    )
+Call AddSecuritiesToOU ( "Bonn"      )
+Call AddSecuritiesToOU ( "Lima"      )
+Call AddSecuritiesToOU ( "Santiago"  )
+Call AddSecuritiesToOU ( "Bangalore" )
+Call AddSecuritiesToOU ( "Singapore" )
+Call AddSecuritiesToOU ( "Casablanca")
+Call AddSecuritiesToOU ( "Tunis"     )
+Call AddSecuritiesToOU ( "Acapulco"  )
+Call AddSecuritiesToOU ( "Miami"     )
+Call AddSecuritiesToOU ( "Auckland"  )
+Call AddSecuritiesToOU ( "Suva"      )
+Call AddSecuritiesToOU ( "Stockholm" )
+Call AddSecuritiesToOU ( "Moscow"    )
+Call AddSecuritiesToOU ( "Caracas"   )
+Call AddSecuritiesToOU ( "Montevideo")
+Call AddSecuritiesToOU ( "Manila"    )
+Call AddSecuritiesToOU ( "Tokyo"     )
+Call AddSecuritiesToOU ( "Khartoum"  )
+Call AddSecuritiesToOU ( "Nairobi"   )
+
+call SetManagedByGroup ( "Vancouver" )
+call SetManagedByGroup ( "Glasgow"   )
+call SetManagedByGroup ( "Denver"    )
+call SetManagedByGroup ( "Perth"     )
+call SetManagedByGroup ( "Brisbane"  )
+call SetManagedByGroup ( "Lisbon"    )
+call SetManagedByGroup ( "Bonn"      )
+call SetManagedByGroup ( "Lima"      )
+call SetManagedByGroup ( "Santiago"  )
+call SetManagedByGroup ( "Bangalore" )
+call SetManagedByGroup ( "Singapore" )
+call SetManagedByGroup ( "Casablanca")
+call SetManagedByGroup ( "Tunis"     )
+call SetManagedByGroup ( "Acapulco"  )
+call SetManagedByGroup ( "Miami"     )
+call SetManagedByGroup ( "Auckland"  )
+call SetManagedByGroup ( "Suva"      )
+call SetManagedByGroup ( "Stockholm" )
+call SetManagedByGroup ( "Moscow"    )
+call SetManagedByGroup ( "Caracas"   )
+call SetManagedByGroup ( "Montevideo")
+call SetManagedByGroup ( "Manila"    )
+call SetManagedByGroup ( "Tokyo"     )
+call SetManagedByGroup ( "Khartoum"  )
+call SetManagedByGroup ( "Nairobi"   )
+
+
+
+
+
+
+
+
+WScript.Quit 0
+
+
+
+
+
+'==========================================================================
+' Sub to add security settings to an existing OU (organizational unit)
+' Comments in the subroutine explain how it works
+' Note that this then calls the Reorder sub routine so if you
+' use this code in other projects, you will need that as well.
+'
+Sub AddSecuritiesToOU ( OU_Location )
+  'wscript.Echo "Adding: " & OU_Location & "...."
+  set loc    = GetObject ( "LDAP://OU=" & OU_Location & ", OU=Locations, DC=Corp, DC=nwtraders, DC=msft")
+
+  'Now for the tricky part.  Adding the security permissions.
+  Set sec = loc.Get("ntSecurityDescriptor")
+  Set acl = sec.DiscretionaryAcl
+  Set AdminAce1   = CreateObject("AccessControlEntry") 
+
+  '''''''''''''''''''''''''
+  '' This does the full control security settings
+  '''''''''''''''''''''''''
+  AdminAce1.Trustee               = "CORP\DL " & OU_Location & " OU Administrators"
+  AdminAce1.AceType               = 0
+  AdminAce1.AccessMask            = ADS_RIGHT_WRITE_OWNER or ADS_RIGHT_WRITE_DAC or ADS_RIGHT_READ_CONTROL or ADS_RIGHT_DELETE or ADS_RIGHT_DS_CONTROL_ACCESS or ADS_RIGHT_DS_LIST_OBJECT or ADS_RIGHT_DS_DELETE_TREE or ADS_RIGHT_DS_WRITE_PROP or ADS_RIGHT_DS_READ_PROP or ADS_RIGHT_DS_SELF or ADS_RIGHT_ACTRL_DS_LIST or ADS_RIGHT_DS_DELETE_CHILD  or ADS_RIGHT_DS_CREATE_CHILD  '983551
+  AdminAce1.AceFlags              = ADS_ACEFLAG_INHERIT_ACE
+  AdminAce1.Flags                 = 0
+  acl.AddAce AdminAce1
+  
+  ' Now make sure the ACL that we just created are at the front of the list.
+  Call ReorderDacl( acl )
+  
+  sec.DiscretionaryAcl = acl
+  loc.Put "ntSecurityDescriptor", sec
+  loc.SetInfo 
+
+  set loc = Nothing
+  set acl = Nothing
+  set sec = Nothing
+end Sub
+
+
+
+'==========================================================================
+' Sub to set the "managed by" properties of a group.
+'
+sub SetManagedByGroup ( groupName )
+  'wscript.Echo "Setting the managed-by user for group: " & groupName & "...."
+  set grp  = GetObject ( "LDAP://CN=G " &groupName& "Admins, OU=IT Groups, OU=IT Admin, DC=corp, DC=nwtraders, DC=msft")
+  grp.Put  "managedBy",         "CN="   &groupName& "Admin,  OU=IT Users,  OU=IT Admin, DC=corp, DC=nwtraders, DC=msft"
+  grp.SetInfo
+  set grp = Nothing
+end sub
+
+
+
+
+'==========================================================================
+' Sub to reorder an ACL
+' Comments in the subroutine explain how the ACL should be ordered.
+' The IADsAccessControlList::AddAce method makes not attempt to properly
+' order the ACE being added.
+'
+Sub ReorderDacl( dacl )
+   '
+   ' Initialize all of the new ACLs
+   '
+   ' VBS methods of creating the ACL bins
+   '
+   Set newdacl    = CreateObject("AccessControlList")
+   Set FirstDacl  = CreateObject("AccessControlList")
+   Set SecondDacl = CreateObject("AccessControlList")
+
+   '
+   For Each ace In dacl 
+      ' 
+      ' Sort the original ACEs into their appropriate 
+      ' ACLs.  If the Trustee is Admin or Student, then it should be first
+      '
+      if instr(ace.Trustee, "OU Administrators") then
+	      FirstDacl.AddAce ace
+      Else
+	      SecondDacl.AddAce ace
+      end if
+   Next
+   '
+   ' Combine the ACEs in the proper order
+   For Each ace In FirstDacl
+       newdacl.AddAce ace 
+   Next
+   For Each ace In SecondDacl
+        newdacl.AddAce ace
+   Next
+   Set FirstDacl         = Nothing
+   Set SecondDacl        = Nothing
+
+   newdacl.AclRevision = dacl.AclRevision
+
+   Set dacl = nothing
+   Set dacl = newdacl
+end Sub
+
+
+
+
+
+Sub EchoDacl( dacl )
+WScript.Echo "*****************************************"
+WScript.Echo "*****************************************"
+WScript.Echo "*****************************************"
+   for each aaa in dacl 
+	WScript.Echo "==========================================="
+	WScript.Echo "Trustee:       " & aaa.Trustee
+	WScript.Echo "AceType:       " & aaa.AceType
+	WScript.Echo "AccessMask:    " & aaa.AccessMask
+	WScript.Echo "ObjectType:    " & aaa.ObjectType
+	WScript.Echo "InheritedObj:  " & aaa.InheritedObjectType
+	WScript.Echo "AceFlags:      " & aaa.AceFlags
+	WScript.Echo "Flags:         " & aaa.Flags
+   next
+end sub
+

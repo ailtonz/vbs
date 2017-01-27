@@ -1,0 +1,44 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set f = fso.CreateFolder("c:\moc")
+Set f = fso.CreateFolder("c:\moc\win2267a")
+Set f = fso.CreateFolder("c:\moc\win2267a\Classroom")
+Set f = fso.CreateFolder("c:\moc\win2267a\Classroom\Home")
+Set f = fso.CreateFolder("c:\moc\win2267a\Classroom\Profiles")
+Set f = fso.CreateFolder("c:\moc\win2267a\Classroom\Student Folders")
+
+
+
+for x = 1 to 24
+
+y = x
+
+if y<10 then
+y= "0" & y
+end if
+
+bob = "c:\moc\win2267a\Classroom\Student Folders\Student" & y
+set f = fso.CreateFolder(bob)
+
+fred = bob & "\Research Data"
+set f = fso.CreateFolder(fred)
+
+bob = bob & "\User Data"
+set f = fso.CreateFolder(bob)
+
+next
+
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "c:\tools\filecopy.cmd", 6, true
+

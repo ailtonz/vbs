@@ -1,0 +1,186 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+wscript.echo "This script creates the OUs and Users for the labs in this module.", Chr(10), "Do not continue the lab until the script has finished executing.", Chr(10), "Please click OK to continue."
+'**************************************************
+'Script to create users in the Active Directory
+'**************************************************
+
+
+'**************************************************
+' Determine the LDAP path for your domain
+'**************************************************
+Set jRoot = GetObject("LDAP://RootDSE")
+DomainPath = jRoot.Get("DefaultNamingContext")
+Set Domain = GetObject("LDAP://" & DomainPath)
+
+Set WshShell = Wscript.CreateObject("Wscript.Shell")
+Set WshSysEnv = WshShell.Environment("Process")
+upnDomain = WshSysEnv("USERDOMAIN")
+
+' Create Top Level OUs
+Set jac_HR = Domain.Create("organizationalUnit", "OU=HR")
+jac_HR.Put "Description", "HR"
+jac_HR.SetInfo
+
+Set jac_ACCT = Domain.Create("organizationalUnit", "OU=Accounting")
+jac_ACCT.Put "Description", "Accounting"
+jac_ACCT.SetInfo
+
+'Create subordinate OUs
+
+Set jac_Compensation = jac_HR.Create("organizationalUnit", "OU=Compensation")
+jac_Compensation.Put "Description", "Compensation"
+jac_Compensation.SetInfo
+
+Set jac_Benefits = jac_HR.Create("organizationalUnit", "OU=Benefits")
+jac_Benefits.Put "Description", "Benefits"
+jac_Benefits.SetInfo
+
+Set jac_AR = jac_ACCT.Create("organizationalUnit", "OU=Accounts Receivable")
+jac_AR.Put "Description", "Accounts Receivable"
+jac_AR.SetInfo
+
+Set jac_AP = jac_ACCT.Create("organizationalUnit", "OU=Accounts Payable")
+jac_AP.Put "Description", "Accounts Payable"
+jac_AP.SetInfo
+
+
+'wscript.echo "OUs created. Now creating users.", Chr(10), "Please click OK to continue."
+
+'Create users in the Top Level OUs
+
+Set usr = jac_Compensation.Create("user", "CN=Comp1")
+usr.Put "samAccountName", "Comp1"
+usr.Put "userPrincipalName", "Comp1" & "@" & upnDomain '& ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Compensation.Create("user", "CN=Comp2")
+usr.Put "samAccountName", "Comp2"
+usr.Put "userPrincipalName", "Comp2" & "@" & upnDomain '& ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Compensation.Create("user", "CN=Comp3")
+usr.Put "samAccountName", "Comp3"
+usr.Put "userPrincipalName", "Comp3" & "@" & upnDomain '& ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Benefits.Create("user", "CN=Benefits1")
+usr.Put "samAccountName", "Benefits1"
+usr.Put "userPrincipalName", "Benefits1" & "@" & upnDomain '& ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_Benefits.Create("user", "CN=Benefits2")
+usr.Put "samAccountName", "Benefits2"
+usr.Put "userPrincipalName", "Benefits2" & "@" & upnDomain '& ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_AR.Create("user", "CN=AR1")
+usr.Put "samAccountName", "AR1"
+usr.Put "userPrincipalName", "AR1" & "@" & upnDomain '& ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_AR.Create("user", "CN=AR2")
+usr.Put "samAccountName", "AR2"
+usr.Put "userPrincipalName", "AR2" & "@" & upnDomain '& ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_AR.Create("user", "CN=AR3")
+usr.Put "samAccountName", "AR3"
+usr.Put "userPrincipalName", "AR3" & "@" & upnDomain '& ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_AP.Create("user", "CN=AP1")
+usr.Put "samAccountName", "AP1"
+usr.Put "userPrincipalName", "AP1" & "@" & upnDomain '& ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = jac_AP.Create("user", "CN=AP2")
+usr.Put "samAccountName", "AP2"
+usr.Put "userPrincipalName", "AP2" & "@" & upnDomain '& ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+'XXXXXXXXXXXXXXXXXXXXxxxxxx
+'Create root level users
+Set cn = GetObject("LDAP://CN=USERS, " & DomainPath)
+Set usr = cn.Create("user","CN=AccountingAdminUser")
+usr.Put "samAccountName", "AccountingAdminUser"
+usr.Put "userPrincipalName", "AccountingAdminUser" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = cn.Create("user","CN=HelpDeskUser")
+usr.Put "samAccountName", "HelpDeskUser"
+usr.Put "userPrincipalName", "HelpDeskUser" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = cn.Create("user","CN=HRAdminUser")
+usr.Put "samAccountName", "HRAdminUser"
+usr.Put "userPrincipalName", "HRAdminUser" & "@" & upnDomain 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+'Get handle to the Users Object
+Set Users = GetObject("LDAP://CN=USERS, " & DomainPath)
+
+'Create a group called Accounting Admins in the Users container
+Set Grp = Users.Create("group","CN=Accounting Admins")
+Grp.Put "samAccountName","Accounting Admins"
+Grp.SetInfo
+
+Set Grp = Users.Create("group","CN=Help Desk")
+Grp.Put "samAccountName","Help Desk"
+Grp.SetInfo
+
+Set Grp = Users.Create("group","CN=HR Admins")
+Grp.Put "samAccountName","HR Admins"
+Grp.SetInfo
+
+'Put the AccountingAdminUser account in the Accouting Admins group
+set grp = Users.GetObject("group","CN=Accounting Admins")
+set usr = Users.GetObject("user","CN=AccountingAdminUser")
+grp.add usr.AdsPath
+
+set grp = Users.GetObject("group","CN=Help Desk")
+set usr = Users.GetObject("user","CN=HelpDeskUser")
+grp.add usr.AdsPath
+
+set grp = Users.GetObject("group","CN=HR Admins")
+set usr = Users.GetObject("user","CN=HRAdminUser")
+grp.add usr.AdsPath
+
+
+
+
+wscript.echo "The Active Directory Structure has been created.", Chr(10), "Please click OK to finish.", Chr(10), "You may now proceed with the lab."
+

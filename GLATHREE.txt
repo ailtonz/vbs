@@ -1,0 +1,32 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' glashare.vbs
+'
+' This script creates the shared folder on the Student machine and copies ipsec.txt into it.
+
+dim fso
+
+set fso = CreateObject("Scripting.FileSystemObject")
+set wshshell = Wscript.CreateObject("Wscript.Shell")
+set onet = CreateObject("wscript.network")
+
+cname = ucase(onet.ComputerName)
+
+if not(fso.FolderExists("C:\IPSec_Test")) then fso.CreateFolder "C:\IPSec_Test"
+   WshShell.Run "net share IPSec_Test=C:\IPSec_Test", 6, true
+
+WshShell.Run "C:\moc\setup\rmtshare.exe \\" & cname & "\IPSec_Test /grant Toda a rede:r", 6, true
+
+'Copy C:\MOC\2192\Labfiles\Setup\ipsec.txt into the C:\IPSec_Test folder
+if fso.FileExists("C:\MOC\2192\Labfiles\Setup\ipsec.txt") then
+   fso.CopyFile "C:\MOC\2192\Labfiles\Setup\ipsec.txt", "C:\IPSec_Test\ipsec.txt"
+end if
+

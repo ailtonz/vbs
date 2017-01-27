@@ -1,0 +1,48 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' instasyn.vbs
+'
+' This script installs Microsoft ActiveSync 3.6
+
+set wshshell = wscript.CreateObject("wscript.shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+set onet = CreateObject("wscript.network")
+
+CurrDir = wshshell.CurrentDirectory
+Const TemporaryFolder = 2
+
+'Determine if this machine is a London machine or a secondary instructor/student
+CompName = ucase(onet.ComputerName)
+if (CompName = "LONDON") then
+	NotLondon = 0
+else
+	NotLondon = 1
+end if
+
+'Extract the files in MSASYNC.EXE to %temp%\async
+if (NotLondon) then
+	wshshell.run "\\London\ActiveSync36\MSASYNC.EXE /t:%temp%\async /c", 0, true
+else
+	wshshell.run "D:\ActiveSync36\MSASYNC.EXE /t:%temp%\async /c", 0, true
+end if
+
+'Temporarily set the working directory to %temp%\async for the next command
+wshshell.CurrentDirectory = fso.GetSpecialFolder(TemporaryFolder) & "\async"
+
+'Run setup.inf to create the comp, core, support, and sys folders that are necessary for installation
+wshshell.run "%SystemRoot%\System32\rundll32.exe setupapi,InstallHinfSection DefaultInstall 132 %temp%\async\setup.inf", 0, true
+
+'Run setup.exe to install the application.
+wshshell.run "%temp%\async\setup.exe /s silent", 0, true
+
+'Restore the working directory
+wshshell.CurrentDirectory = CurrDir
+

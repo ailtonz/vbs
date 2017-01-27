@@ -1,0 +1,135 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+rem "Building by Mauricio Palma - CPM"
+
+
+Const ForReading= 1, ForWriting =2 , ForAppending = 8
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set infile = objfso.opentextfile("C:\Inventario\hostname.txt",ForReading,False)
+Do Until infile.atendofstream
+	strComputer = infile.readline
+	Set objTextFile = objFSO.CreateTextFile("C:\Inventario\" & strComputer  & ".xls", True)
+	Set objWMIService = GetObject("winmgmts:{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+	Set colSettings = objWMIService.ExecQuery ("Select * from Win32_ComputerSystem")
+	For Each objComputer in colSettings
+	    objTextFile.WriteLine "Hostname" & vbTab & objComputer.Name
+	    objTextFile.WriteLine "Fabricante" & vbTab & objComputer.Manufacturer
+	    objTextFile.WriteLine "Modelo" & vbTab & objComputer.Model
+	Next
+	Set colBIOS = objWMIService.ExecQuery ("Select * from Win32_BIOS")
+	For each objBIOS in colBIOS
+	    objTextFile.WriteLine "Série" & vbTab & objBIOS.SerialNumber
+  	  objTextFile.WriteLine "Ver. Bios" & vbTab & objBIOS.Version
+	Next
+	Set colItems = objWMIService.ExecQuery ("Select * from Win32_Processor")
+	For Each objItem in colItems
+		objTextFile.WriteLine 
+		objTextFile.WriteLine "Processador" & vbTab & objItem.Name    
+		objTextFile.WriteLine "Descrição" & vbTab & objItem.Description
+		objTextFile.WriteLine "Qtde. Processador" & vbTab & objItem.CpuStatus
+		objTextFile.WriteLine "Clock" & vbTab & objItem.CurrentClockSpeed
+	Next
+	Set colSettings = objWMIService.ExecQuery ("Select * from Win32_ComputerSystem")
+	For Each objComputer in colSettings
+		objTextFile.WriteLine "Memória" & vbTab & objComputer.TotalPhysicalMemory
+	Next
+	Set colAdapters = objWMIService.ExecQuery ("SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = True")
+	For Each objAdapter in colAdapters
+		objTextFile.WriteLine
+		objTextFile.WriteLine "Placa de Rede" & vbTab & objAdapter.Description
+		objTextFile.WriteLine "Physical Address" & vbTab & objAdapter.MACAddress
+		If Not IsNull(objAdapter.IPAddress) Then
+			For i = 0 To UBound(objAdapter.IPAddress)
+				objTextFile.WriteLine "IP" & vbTab & objAdapter.IPAddress(i)
+			Next
+		End If
+		If Not IsNull(objAdapter.IPSubnet) Then
+			For i = 0 To UBound(objAdapter.IPSubnet)
+				objTextFile.WriteLine "Subnet Mask" & vbTab & objAdapter.IPSubnet(i)
+			Next
+		End If
+		If Not IsNull(objAdapter.DefaultIPGateway) Then
+			For i = 0 To UBound(objAdapter.DefaultIPGateway)
+				objTextFile.WriteLine "Default Gateway" & vbTab & objAdapter.DefaultIPGateway(i)
+			Next
+		End If
+		If Not IsNull(objAdapter.DNSServerSearchOrder) Then
+			For i = 0 To UBound(objAdapter.DNSServerSearchOrder)
+				objTextFile.WriteLine "DNS Server" & vbTab & objAdapter.DNSServerSearchOrder(i)
+			Next
+		End If
+		objTextFile.WriteLine "DNS domain" & vbTab & objAdapter.DNSDomain
+		If Not IsNull(objAdapter.DNSDomainSuffixSearchOrder) Then
+			For i = 0 To UBound(objAdapter.DNSDomainSuffixSearchOrder)
+				objTextFile.WriteLine "DNS Suffix" & vbTab & objAdapter.DNSDomainSuffixSearchOrder(i)
+			Next
+		End If
+		objTextFile.WriteLine "DHCP enabled" & vbTab & objAdapter.DHCPEnabled
+		objTextFile.WriteLine "DHCP server" & vbTab & objAdapter.DHCPServer
+		objTextFile.WriteLine "Primary WINS server" & vbTab & objAdapter.WINSPrimaryServer
+		objTextFile.WriteLine "Secondary WINS server" & vbTab & objAdapter.WINSSecondaryServer
+	Next
+	Set colSettings = objWMIService.ExecQuery ("Select * from Win32_OperatingSystem")
+	For Each objOperatingSystem in colSettings 
+		objTextFile.WriteLine
+		objTextFile.WriteLine "Sistema Operacional" & vbTab & objOperatingSystem.Caption & " " & objOperatingSystem.Version
+		objTextFile.WriteLine "Service Pack" & vbTab & objOperatingSystem.ServicePackMajorVersion _
+			& "." & objOperatingSystem.ServicePackMinorVersion
+	Next    
+	Set colSoftware = objWMIService.ExecQuery ("Select * from Win32_Product")
+	objTextFile.WriteLine
+	objTextFile.WriteLine "Softwares Instalados:"
+	For Each objSoftware in colSoftware
+		objTextFile.WriteLine "Software" & vbTab & objSoftware.Caption
+		objTextFile.WriteLine "Fabricante" & vbTab & objSoftware.Vendor
+		objTextFile.WriteLine "Versão" & vbTab & objSoftware.Version
+	Next
+	Set colQuickFixes = objWMIService.ExecQuery ("Select * from Win32_QuickFixEngineering")
+	objTextFile.WriteLine
+	objTextFile.WriteLine "Patch's / Hot Fixes:"
+	For Each objQuickFix in colQuickFixes
+		objTextFile.WriteLine "Hot Fix" & vbTab & objQuickFix.HotFixID
+		objTextFile.WriteLine "Descrição" & vbTab & objQuickFix.Description
+	Next
+	Set colAccounts = GetObject("WinNT://" & strComputer & "")
+	colAccounts.Filter = Array("user")
+    objTextFile.WriteLine
+    objTextFile.WriteLine "Usuários Locais:"
+	For Each objUser In colAccounts
+		objTextFile.WriteLine "Usuário" & vbTab & objUser.Name 
+	Next
+	Set colGroups = GetObject("WinNT://" & strComputer & "")
+	colGroups.Filter = Array("group")
+    objTextFile.WriteLine
+    objTextFile.WriteLine "Grupos Locais:"
+	For Each objGroup In colGroups
+		objTextFile.WriteLine "Grupo" & vbTab & objGroup.Name 
+	Next
+	Set colShares = objWMIService.ExecQuery("Select * from Win32_Share")
+    objTextFile.WriteLine
+    objTextFile.WriteLine "Listagem dos Compartilhamentos:"
+	For each objShare in colShares
+		objTextFile.WriteLine "Share" & vbTab &  objShare.Name   
+		objTextFile.WriteLine "Path" & vbTab &  objShare.Path
+	Next
+	Set colDisks = objWMIService.ExecQuery ("Select * from Win32_LogicalDisk")
+	objTextFile.WriteLine
+	objTextFile.WriteLine "Informações de Disco:"
+	For each objDisk in colDisks
+		objTextFile.WriteLine
+		objTextFile.WriteLine "Unidade de Disco" & vbTab &  objDisk.Name
+		objTextFile.WriteLine "Tipo de FileSystem" & vbTab &  objDisk.FileSystem  
+		objTextFile.WriteLine "Tamanho Total" & vbTab &  objDisk.Size
+		objTextFile.WriteLine "Espaço Livre" & vbTab &  objDisk.FreeSpace
+	Next
+loop
+Wscript.Echo "Inventario Concluído com Sucesso"
+

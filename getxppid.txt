@@ -1,0 +1,26 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Get Visual Studio .NET 2003 Product Key from user and create "vsPID.txt"
+
+set wshshell=wscript.createobject("wscript.shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+
+Dim sPid
+sPid = ""
+
+while (sPid = "")
+sPid = InputBox("Enter your Visual Studio .NET 2003 Product Key (WITHOUT dashes) and then click OK.", "Enter Visual Studio .NET 2003 Product Key") 
+wend
+
+Set ts = fso.CreateTextFile("C:\Setup\INSTRUCT\vsPID.txt", True)
+ts.writeline "gfn_ core pid 30=" & sPid
+ts.Close
+

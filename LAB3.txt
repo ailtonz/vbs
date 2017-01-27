@@ -1,0 +1,17 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Option Explicit
+Dim sName
+
+'Assign your name to the sName variable
+
+MsgBox sName,, "Hello to:"
+

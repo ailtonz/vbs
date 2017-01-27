@@ -1,0 +1,30 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Install Internet Explorer 6.0
+'Make sure that the setup files were copied to d:\IE6 on London.  If they were, then run the setup.
+'Otherwise, skip it.
+
+dim fso
+
+set wshshell = wscript.CreateObject("wscript.shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+
+' file to look for
+lookfor = "\\london\IE6\i386\en\ie6\ie6setup.exe"
+
+if fso.FileExists(lookfor) then
+	'The setup files exist at \\london\IE6, so go ahead and run the setup
+	wshshell.Run "\\london\IE6\i386\en\ie6\ie6setup.exe /Q", 1, true
+else
+	'The setup files were not copied to \\london\IE6, so skip the setup
+	' msgbox "ie6setup.exe was not found.  Skipping IE6 install..."
+end if
+

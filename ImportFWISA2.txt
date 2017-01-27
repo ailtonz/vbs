@@ -1,0 +1,297 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'
+' Copyright (c) 2001 Microsoft Corporation.  All rights reserved.
+'
+' Notwithstanding the terms of the license accompanying this Product,
+' this script is provided "as is" and Microsoft does not make any assurances
+' with regard to the accuracy of this script or to the accuracy of any results
+' which derive from the use of this script.
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+' This script imports policy elements, access policies and publishing rules of source "FWISA1" to target "fwisa1"
+
+Const ERROR_ALREADY_EXISTS = 183
+Sub CheckError()
+    On Error Resume Next
+    If (Err.Number <> 0) And (Err.Number <> ERROR_ALREADY_EXISTS) Then
+        MsgBox "An error has occured:" & vbCrLf & Err.Description & Err.Number
+        WScript.Quit Err.Number
+    End If
+End Sub
+
+On Error Resume Next
+Set ISA = CreateObject("FPC.Root")
+ISA.Refresh
+Set Elements = ISA.Arrays("fwisa1").PolicyElements
+Set APolicy = ISA.Arrays("fwisa1").ArrayPolicy
+Set Publishing = ISA.Arrays("fwisa1").Publishing
+
+'-------------------------------------------------------
+Set Protocols = Elements.Protocoldefinitions
+
+Set NewDefinition = Protocols.AddTCP ("Alteon",0,3270)
+NewDefinition.Description = "Alteon Heartbeat"
+
+Set NewDefinition = Protocols.AddTCP ("HTTP Server",0,80)
+NewDefinition.Description = "HTTP Inbound"
+
+Protocols.Save
+CheckError
+'-------------------------------------------------------
+Set ClientSets = Elements.ClientAddressSets
+Set NewDefinition = ClientSets.Add ("Alteon LBS3")
+CheckError
+NewDefinition.Description = ""
+NewDefinition.Add "10.1.3.1","10.1.3.1"
+CheckError
+NewDefinition.Add "10.1.4.1","10.1.4.1"
+CheckError
+
+Set NewDefinition = ClientSets.Add ("SMTP Bridgeheads")
+CheckError
+NewDefinition.Description = "SMTP Bridgehead Servers"
+NewDefinition.Add "192.168.12.70","192.168.12.71"
+CheckError
+
+ClientSets.Save
+CheckError
+'-------------------------------------------------------
+Set DestinationSets = Elements.DestinationSets
+DestinationSets.Save
+CheckError
+'-------------------------------------------------------
+Set ProtocolRules = APolicy.ProtocolRules
+Set NewRule = ProtocolRules.Add ("DNS Outbound (SMTP)")
+CheckError
+NewRule.Description = ""
+NewRule.Enabled = "True"
+NewRule.Action = "0"
+NewRule.SetSchedule (" ")
+NewRule.ProtocolSelectionMethod = "1"
+NewRule.SpecifiedProtocols.Add "DNS Query", "", "0"
+CheckError
+NewRule.AppliesToMethod = "2"
+NewRule.ClientAddressSetsUsed.Add "SMTP Bridgeheads", "", "0"
+CheckError
+
+Set NewRule = ProtocolRules.Add ("HTTP Alteon Heartbeat Outbound")
+CheckError
+NewRule.Description = ""
+NewRule.Enabled = "True"
+NewRule.Action = "0"
+NewRule.SetSchedule (" ")
+NewRule.ProtocolSelectionMethod = "1"
+NewRule.SpecifiedProtocols.Add "HTTP", "", "0"
+CheckError
+NewRule.AppliesToMethod = "2"
+NewRule.ClientAddressSetsUsed.Add "Alteon LBS3", "", "0"
+CheckError
+
+Set NewRule = ProtocolRules.Add ("SMTP Outbound")
+CheckError
+NewRule.Description = ""
+NewRule.Enabled = "True"
+NewRule.Action = "0"
+NewRule.SetSchedule (" ")
+NewRule.ProtocolSelectionMethod = "1"
+NewRule.SpecifiedProtocols.Add "SMTP", "", "0"
+CheckError
+NewRule.AppliesToMethod = "2"
+NewRule.ClientAddressSetsUsed.Add "SMTP Bridgeheads", "", "0"
+CheckError
+
+ProtocolRules.Save
+CheckError
+'-------------------------------------------------------
+Set PacketFilters = APolicy.IpPacketFilters
+
+Set NewPFilter = PacketFilters.Add ("HTTP Outbound 10.1.1.10 - 80", "1")
+CheckError
+NewPFilter.Description = ""
+NewPFilter.Enabled = "True"
+NewPFilter.FilterType = "1"
+NewPFilter.AllServers = "True"
+NewPFilter.ServerName = ""
+NewPFilter.ICMPCodeNumber = "0"
+NewPFilter.ICMPCodeOption = "1"
+NewPFilter.ICMPTypeNumber = "0"
+NewPFilter.ICMPTypeOption = "1"
+NewPFilter.LocalPortNumber = "80"
+NewPFilter.LocalPortType = "2"
+NewPFilter.LogMatchingPackets = "False"
+NewPFilter.PacketDirection = "2"
+NewPFilter.ProtocolNumber = "6"
+NewPFilter.RemotePortNumber = "0"
+NewPFilter.RemotePortType = "1"
+NewPFilter.UDPPacketDirection = "3"
+NewPFilter.SetLocalHost "2", "10.1.1.10", "255.255.255.255"
+NewPFilter.SetRemoteHost "1", "", ""
+
+Set NewPFilter = PacketFilters.Add ("HTTP Outbound 10.1.1.10 - dynamic", "1")
+CheckError
+NewPFilter.Description = ""
+NewPFilter.Enabled = "True"
+NewPFilter.FilterType = "1"
+NewPFilter.AllServers = "True"
+NewPFilter.ServerName = ""
+NewPFilter.ICMPCodeNumber = "0"
+NewPFilter.ICMPCodeOption = "1"
+NewPFilter.ICMPTypeNumber = "0"
+NewPFilter.ICMPTypeOption = "1"
+NewPFilter.LocalPortNumber = "0"
+NewPFilter.LocalPortType = "3"
+NewPFilter.LogMatchingPackets = "False"
+NewPFilter.PacketDirection = "2"
+NewPFilter.ProtocolNumber = "6"
+NewPFilter.RemotePortNumber = "80"
+NewPFilter.RemotePortType = "2"
+NewPFilter.UDPPacketDirection = "3"
+NewPFilter.SetLocalHost "2", "10.1.1.10", "255.255.255.255"
+NewPFilter.SetRemoteHost "1", "", ""
+
+PacketFilters.Save
+CheckError
+'-------------------------------------------------------
+Set SiteContentRules = APolicy.SiteAndContentRules
+Set NewSCRule = SiteContentRules.Add ("Allow rule")
+CheckError
+NewSCRule.Description = ""
+NewSCRule.Enabled = "True"
+NewSCRule.Action = "0"
+NewSCRule.AppliesToContentMethod = "0"
+NewSCRule.RedirectURL = ""
+NewSCRule.Action = "0"
+NewSCRule.AppliesToContentMethod = "0"
+NewSCRule.SetDestination "0", ""
+NewSCRule.SetSchedule (" ")
+NewSCRule.AppliesToMethod = "0"
+
+SiteContentRules.Save
+CheckError
+'-------------------------------------------------------
+Set WebProxys = APolicy.WebProxy
+CheckError
+WebProxys.EnableAutoDiscovery = "False"
+WebProxys.AutoDiscoveryPort = "80"
+WebProxys.LoadSize = "1"
+WebProxys.UpstreamResolveSystem = "0"
+WebProxys.IncomingWebRequests.AllInterfaces = "False"
+WebProxys.IncomingWebRequests.AlwaysAuthenticate = "False"
+WebProxys.IncomingWebRequests.CacheSSLResponses = "True"
+WebProxys.IncomingWebRequests.ConnectionTimeout = "120"
+WebProxys.IncomingWebRequests.NumberOfConnections = "0"
+WebProxys.IncomingWebRequests.ResolveInArray = "False"
+WebProxys.IncomingWebRequests.SSLPort = "0"
+WebProxys.IncomingWebRequests.TCPPort = "80"
+WebProxys.IncomingWebRequests.UnlimitedNumberOfConnections = "True"
+WebProxys.OutgoingWebRequests.AllInterfaces = "True"
+WebProxys.OutgoingWebRequests.AlwaysAuthenticate = "False"
+WebProxys.OutgoingWebRequests.CacheSSLResponses = "True"
+WebProxys.OutgoingWebRequests.ConnectionTimeout = "120"
+WebProxys.OutgoingWebRequests.NumberOfConnections = "0"
+WebProxys.OutgoingWebRequests.ResolveInArray = "True"
+WebProxys.OutgoingWebRequests.SSLPort = "0"
+WebProxys.OutgoingWebRequests.TCPPort = "8080"
+WebProxys.OutgoingWebRequests.UnlimitedNumberOfConnections = "True"
+
+WebProxys.Save
+CheckError
+'-------------------------------------------------------
+
+Set ServerPubRules = Publishing.ServerPublishingRules
+CheckError
+Set NewPubRule = ServerPubRules.Add ("Alteon 3270 heartbeat (OWA)")
+CheckError
+NewPubRule.Description = ""
+NewPubRule.Enabled = "True"
+NewPubRule.InternalIp = "192.168.15.30"
+NewPubRule.ExternalIp = "192.168.11.101"
+NewPubRule.SetProtocol "Alteon", ""
+NewPubRule.AppliesToMethod = "0"
+
+Set NewPubRule = ServerPubRules.Add ("Alteon 3270 heartbeat (RPC1)")
+CheckError
+NewPubRule.Description = ""
+NewPubRule.Enabled = "True"
+NewPubRule.InternalIp = "192.168.12.81"
+NewPubRule.ExternalIp = "192.168.11.103"
+NewPubRule.SetProtocol "Alteon", ""
+NewPubRule.AppliesToMethod = "0"
+
+Set NewPubRule = ServerPubRules.Add ("Alteon 3270 heartbeat (RPC2)")
+CheckError
+NewPubRule.Description = ""
+NewPubRule.Enabled = "True"
+NewPubRule.InternalIp = "192.168.12.70"
+NewPubRule.ExternalIp = "192.168.11.104"
+NewPubRule.SetProtocol "Alteon", ""
+NewPubRule.AppliesToMethod = "0"
+
+Set NewPubRule = ServerPubRules.Add ("Alteon 3270 heartbeat (SMTP)")
+CheckError
+NewPubRule.Description = ""
+NewPubRule.Enabled = "True"
+NewPubRule.InternalIp = "192.168.15.20"
+NewPubRule.ExternalIp = "192.168.11.102"
+NewPubRule.SetProtocol "Alteon", ""
+NewPubRule.AppliesToMethod = "0"
+
+Set NewPubRule = ServerPubRules.Add ("Exchange RPC1 (EXBE)")
+CheckError
+NewPubRule.Description = ""
+NewPubRule.Enabled = "True"
+NewPubRule.InternalIp = "192.168.12.81"
+NewPubRule.ExternalIp = "192.168.11.103"
+NewPubRule.SetProtocol "Exchange RPC Server", "{E331F638-AB86-4AA5-9B6A-2B0248C7B4FB}"
+NewPubRule.AppliesToMethod = "0"
+
+Set NewPubRule = ServerPubRules.Add ("Exchange RPC2 (EXSMTP1)")
+CheckError
+NewPubRule.Description = ""
+NewPubRule.Enabled = "True"
+NewPubRule.InternalIp = "192.168.12.70"
+NewPubRule.ExternalIp = "192.168.11.104"
+NewPubRule.SetProtocol "Exchange RPC Server", "{E331F638-AB86-4AA5-9B6A-2B0248C7B4FB}"
+NewPubRule.AppliesToMethod = "0"
+
+Set NewPubRule = ServerPubRules.Add ("HTTP Alteon Heartbeat Inbound")
+CheckError
+NewPubRule.Description = ""
+NewPubRule.Enabled = "True"
+NewPubRule.InternalIp = "10.1.3.1"
+NewPubRule.ExternalIp = "10.1.1.10"
+NewPubRule.SetProtocol "HTTP Server", ""
+NewPubRule.AppliesToMethod = "0"
+
+Set NewPubRule = ServerPubRules.Add ("HTTPS Inbound")
+CheckError
+NewPubRule.Description = ""
+NewPubRule.Enabled = "True"
+NewPubRule.InternalIp = "192.168.15.30"
+NewPubRule.ExternalIp = "192.168.11.101"
+NewPubRule.SetProtocol "HTTPS Server", ""
+NewPubRule.AppliesToMethod = "0"
+
+Set NewPubRule = ServerPubRules.Add ("SMTP Inbound")
+CheckError
+NewPubRule.Description = ""
+NewPubRule.Enabled = "True"
+NewPubRule.InternalIp = "192.168.15.20"
+NewPubRule.ExternalIp = "192.168.11.102"
+NewPubRule.SetProtocol "SMTP Server", ""
+NewPubRule.AppliesToMethod = "0"
+
+ServerPubRules.Save
+CheckError
+MsgBox "ImportISASettings finished succesfully. It is recommended that you restart ISA services after importing." 
+

@@ -1,0 +1,103 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Option Explicit
+
+On Error Resume Next
+
+Dim objRootDSE
+Dim strSearchRoot
+Dim strADServer
+Dim strConfigDN 
+Dim strSQL
+Dim strValue
+Dim strExchServer
+
+Dim objIADs
+Dim objIADsClass
+
+Dim objConnection 
+Dim objRSExchServers
+Dim objRSSMTPVirtualServers
+Dim objCommand
+Dim objArgs
+
+Sub ConfigureExternalDNS(strObject, strValue)
+
+   On Error Resume Next
+
+   Dim objSMTPVS
+   Dim objClass
+   Dim strCurrentValue
+
+   Set objSMTPVS = GetObject(strObject)
+   Set objClass = GetObject(objSMTPVS.Schema)
+
+   strCurrentValue = objSMTPVS.Get("msExchSmtpExternalDNSServers")
+   if err.number <> 0 then 
+      strCurrentValue = ""
+   end if
+   
+   if strCurrentValue = "" then 
+      objSMTPVS.Put "msExchSmtpExternalDNSServers", strValue
+      objSMTPVS.SetInfo
+   else
+      objSMTPVS.Put "msExchSmtpExternalDNSServers", strCurrentValue & "," & strValue
+      objSMTPVS.SetInfo
+   end if
+
+End Sub
+
+Set objRootDSE = GetObject("LDAP://RootDSE")
+strADServer = objRootDSE.Get("dnshostname")
+strConfigDN = objRootDSE.Get("configurationNamingContext")
+strSearchRoot = "LDAP://" & strADServer & "/" & strConfigDN
+
+Set objConnection= CreateObject("ADODB.Connection")
+with objConnection
+   .Provider = "ADsDSOobject"
+   .Open strSearchRoot
+end With
+
+Set objArgs = Wscript.Arguments
+strExchServer = objArgs (0)
+strValue = objArgs (1)
+
+WScript.DisconnectObject objArgs
+Set objArgs = Nothing
+ 
+strSearchRoot = "LDAP://" & strExchServer & "/" & strConfigDN
+
+strSQL = "Select adsPath, cn, distinguishedname " & _
+         "From '" & strSearchRoot & "' " & _
+         "Where objectCategory='protocolCfgSMTPServer'"
+
+Set objCommand = CreateObject("ADODB.Command")
+with objCommand
+   Set .ActiveConnection = objConnection
+       .CommandText = strSQL
+       .Properties("Page Size") = 99
+End With
+
+
+Set objRSSMTPVirtualServers = objCommand.Execute
+
+Do Until objRSSMTPVirtualServers.EOF
+   ConfigureExternalDNS objRSSMTPVirtualServers.Fields("adspath"), strValue
+   objRSSMTPVirtualServers.MoveNext
+Loop
+
+objRSSMTPVirtualServers.Close
+objConnection.Close
+
+Set objRootDSE = Nothing 
+Set objRSSMTPVirtualServers = Nothing
+Set objConnection = Nothing
+

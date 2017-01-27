@@ -1,0 +1,203 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'// This file contains variale declarations and functions that will be used
+'// on many of the pages in the DTA application
+
+Option Explicit
+
+'// Specify a variable to flag when components were installed
+Dim g_blnNeedToReload		'// As Boolean
+
+'// Speficy a variable to flag when we have already kicked off the installer
+Dim g_blnObjectLoadErrorHandled	'// As Boolean
+
+Private Function strHelpLocation () ' as String
+	dim loc
+	set loc = document.location
+	strHelpLocation = "mk:@MSITStore:" & loc.protocol & "//" & loc.hostname & "/BizTalkServerDocs/BizTalk_Server.chm"	
+End Function
+
+Private Sub GetLocalFont (strFontFamily, strFontCharset, lngFontSize)
+	strFontFamily = ""
+	dim strSystemLanguage
+	strSystemLanguage = window.navigator.systemlanguage
+	Select Case strSystemLanguage
+      Case "zh-tw" ' Taiwan gets Traditional Chinese 
+          strFontCharset = 136 ' CHINESEBIG5_CHARSET 
+          strFontFamily= ChrW(&H65B0) + ChrW(&H7D30) + ChrW(&H660E) _ 
+                     + ChrW(&H9AD4)   'New Ming-Li 
+          lngFontSize= 9 
+
+      Case "ja"  ' Japan 
+          strFontCharset= 128 ' SHIFTJIS_CHARSET 
+          strFontFamily= ChrW(&HFF2D) + ChrW(&HFF33) + ChrW(&H20) + ChrW(&HFF30) + _ 
+                     ChrW(&H30B4) + ChrW(&H30B7) + ChrW(&H30C3) + ChrW(&H30AF) 
+          lngFontSize= 9 
+
+      Case "ko"  'Korea UserLCID 
+          strFontCharset= 129 ' HANGEUL_CHARSET 
+          strFontFamily= ChrW(&HAD74) + ChrW(&HB9BC)     'Korea FontName 
+          lngFontSize= 9        'Korea FontSize 
+
+      Case "zh-cn" ' PRC gets Simplified Chinese 
+          strFontCharset = 134 ' CHINESESIMPLIFIED_CHARSET 
+          strFontFamily= ChrW(&H5B8B) + ChrW(&H4F53) 
+          lngFontSize= 9 
+
+      Case Else   ' The other countries 
+          strFontCharset= 1 ' DEFAULT_CHARSET 
+          strFontFamily= "Tahoma" 
+          lngFontSize= 8
+    End Select 
+End Sub
+
+Private Sub InitializeDSC(objDSC)
+	'// Set the connection string of a data source control to
+	'// our 'global' connection string for this application
+	
+	'// INPUTS
+	'// objDSC should be a valid data source control
+	
+	objDSC.ConnectionString = g_ConnectionString
+End Sub
+
+Private Sub ClearRecordsets(objDSC)
+	'// Given a data source control this routine will delete all of the
+	'// recordset definitions it contains.
+	
+	'// INPUTS
+	'// objDSC should be a valid data source control	
+
+	Dim i
+	
+	For i = 1 to objDSC.RecordsetDefs.Count
+		objDSC.RecordsetDefs.Delete(0)
+	Next
+
+End Sub
+ 
+Sub ObjectLoadError
+	'// This routine should be called by all onerror events of the <OBJECT> tags.
+	'// Usage:  e.g. <OBJECT CLASSID=clsid:xxx-xx-xx onerror="ObjectLoadError">
+	'// 	    and don't specify a codebase, we don't want automatic cab installation.
+	'// We rely on the onerror event to signal that an object doesn't exist and that 
+	'// the installation pages need to be displayed.
+
+	Dim lngRetVal		'// As Variant
+
+	'// If we have displayed these dialogs before then don't do it again
+	If g_blnObjectLoadErrorHandled = "" Then  
+		g_blnObjectLoadErrorHandled = "True"
+
+		'// Show the dialog that will let the user know which components they are missing and how big they are
+		lngRetVal = window.showModalDialog("DTAComponentInstall.htm","","dialogWidth=450px;dialogHeight=240px;scrollbars=no" & _
+		   "center=yes;border=thin;help=no;status=no")
+
+		If lngRetVal = 1 Then
+			lngRetVal = window.showModalDialog("DTAComponentDownload.htm","","dialogWidth=450px;dialogHeight=180px;scrollbars=no" & _
+			"center=yes;border=thin;help=no;status=no")	
+				
+			g_blnNeedToReload = True
+		else
+			g_blnNeedToReload = False
+		End If
+	End If
+End Sub
+
+Private Sub BuildParameterDictionary(strURL, objDictParameter)
+	'// Given the URL text this routine will create a dictionary object
+	'// and fill the dictionary with the URL parameters
+	'// Assumes http://...?para1=value1&para2=value2 ... format
+	
+	'// INPUTS
+	'// strURL = The URL to parse.
+	'// objDictParameter = An reference to hold the created dictionary
+
+	Dim strTemp	
+	Dim strName
+	Dim strValue
+	Dim i
+	Dim j
+	Dim vntArray
+
+	Set objDictParameter = CreateObject("Scripting.Dictionary")
+	
+	'// Get whatever comes after the ? in the URL
+	strTemp = Mid(window.location.search,2)
+	
+	If Len(strTemp) > 0 Then
+	
+		vntArray = Split(strTemp, PARAM_SEP)
+	
+		For i = 0 to UBound(vntArray)
+			strTemp = vntArray(i)
+			j = InStr(1, strTemp, PARAM_EQ)
+			strName = Mid(strTemp, 1, j - 1)
+			strValue = Mid(strTemp, j + 1)
+			objDictParameter.Add strName, strValue
+		Next
+		
+	End If
+		
+End Sub
+
+'//Function to pad a number with leading characters (usually zeroes).
+'//Input:
+'//lngPadThis: the number to pad
+'//strPadWith: the character with which to pad (usually "0")
+'//intLength: the number of characters the string should have when done
+'//Output: A string containing the number padded with leading pad characters.
+Function Pad(lngPadThis, strPadWith, intLength)
+	Dim strPadThis
+    
+	If IsNull(lngPadThis) Then
+		strPadThis = ""
+	Else
+		strPadThis = CStr(lngPadThis)
+	End If
+	strPadThis = String(intLength, strPadWith) & strPadThis
+	Pad = Right(strPadThis, intLength)
+End Function
+
+'Create a temporary file on the client machine.
+'Name: file name
+'Content: content to be written to the file.
+'Private Function CreateTempFile(Name, Content)
+'    Dim objFSO
+'    Dim objFolder
+'    Dim strFileName
+'    Dim strFileContent
+'    Dim objFileStream
+    
+'    strFileName = Name
+'    strFileContent = Content
+    
+'    Set objFSO = CreateObject("Scripting.FileSystemObject")
+'    Set objFolder = objFSO.GetSpecialFolder(2)
+        
+'    'Create a new file in the temp directory
+'    Set objFileStream = objFolder.CreateTextFile(strFileName)
+      
+'    objFileStream.Write CStr(strFileContent)
+'	'MsgBox objFolder.Path
+'    CreateTempFile = objFolder.Path & "\" & strFileName
+'
+'End Function
+
+'Delete a temporary file.
+'Private Sub DeleteTempFile(Path)
+'	Dim objFSO
+'	
+'	Set objFSO = CreateObject("Scripting.FileSystemObject")
+'	objFSO.DeleteFile Path, True
+'	
+'End Sub
+

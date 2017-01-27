@@ -1,0 +1,28 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'configure IIS with WMI
+ 
+' File name: CreateIISApp.vbs
+Dim objIIS 'ADSI IIS Object
+
+'Now use IIS administration objects to create the IIS application in the metabase. 
+'Create the IIS application
+Set objIIS = GetObject("IIS://localhost/W3SVC/1/Root")
+
+objIIS.HTTPExpires = "D, 0"
+objIIS.SetInfo
+
+
+ 
+ 
+ 
+
+

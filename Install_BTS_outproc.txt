@@ -1,0 +1,199 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'#######################################################################
+'# Install_BTS_inproc.vbs
+'# Copyright (C) 2000 Microsoft Corporation
+'# a-aluty, 01-Feb-2000
+'# Installs "BizTalk Server In-Process Package" COM+ Application.
+'#######################################################################
+
+Dim cat  'COMAdminCatalog
+Dim apps 'COMAdminCatalogCollection
+Dim app  'COMAdminCatalogObject
+
+Const strAppName = "BizTalk Server Internal Utilities"
+Const strOldAppName = "BizTalk Server In-Process Package"
+Const strAppID = "{6ECD95AC-3C06-4A9B-9D43-4565C1BD3319}"
+Const L_str_AppDesc = "The BizTalk Server Internal Utilities contains various components that are used internally by BizTalk Server. These components must not be accessed directly." 
+
+Const strEngineProgId = "BizTalk.InterchangeStateEngineTx"
+Const strEngineCLSID = "{50E28142-0D63-11D3-BF41-00C04F682DE1}"
+
+Const strBYOTWrapProgId = "BizTalk.WrapBYOT"
+Const strBYOTWrapCLSID = "{9349943E-8245-400F-8FA7-FADA27FEA3BD}"
+
+Const strBTSSubmitProgId = "BizTalk.BTSSubmit"
+Const strBTSSubmitCLSID = "{B1D43DAB-D236-4B4B-AD68-B57FBEAEBEEB}"
+
+'-----------------------------------------------------------------------
+'Deletes specified COMAdminCatalogObject from COMAdminCatalog
+'
+Private Sub DeleteApp(apps, strAppName)
+    Dim index 'Integer
+    Dim app   'COMAdminCatalogObject
+    
+    apps.Populate
+    For index = 0 To apps.Count - 1
+        Set app = apps.Item(index)
+        If app.Value("Name") = strAppName Then
+            UnlockApp apps, app
+            apps.Remove (index)
+            apps.SaveChanges
+            Exit For
+        End If
+    Next
+End Sub
+
+'-----------------------------------------------------------------------
+'Sets the application properties as read-only
+'Reference: MSDN; Platform SDK: COM+ (Component Services); Index="Applications Collection"
+'
+Private Sub LockApp(apps, app)
+
+    '### Advanced Properties
+    app.Value("Deleteable") = False
+    app.Value("Changeable") = False
+
+    apps.SaveChanges
+End Sub
+
+
+'-----------------------------------------------------------------------
+'Sets the application properties as read/write
+'Reference: MSDN; Platform SDK: COM+ (Component Services); Index="Applications Collection"
+'
+Private Sub UnlockApp(apps, app)
+
+    '### Advanced Properties
+    app.Value("Deleteable") = True
+    app.Value("Changeable") = True
+
+    apps.SaveChanges
+End Sub
+
+'-----------------------------------------------------------------------
+'Creates application in COMAdminCatalog
+'Reference: MSDN; Platform SDK: COM+ (Component Services); Index="Applications Collection"
+'
+Private Sub ConfigApp(apps, app)
+    '### General Properties
+    app.Value("Name") = strAppName
+    app.Value("Description") = L_str_AppDesc 
+    app.Value("CreatedBy") = "Microsoft BizTalk Server 2000"
+    app.Value("ID") = strAppID
+
+    '### Security Properties
+    app.Value("ApplicationAccessChecksEnabled") = False
+    app.Value("AccessChecksLevel") = 0 'COMAdminAccessChecksApplicationLevel
+    app.Value("Authentication") = 0 'COMAdminAuthenticationDefault
+    app.Value("AuthenticationCapability") = 64 'COMAdminAuthenticationCapabilitiesDynamicCloaking
+    app.Value("ImpersonationLevel") = 4 'COMAdminImpersonationDelegate
+
+    '### Identity Properties
+    app.Value("Identity") = "Interactive User"
+    app.Value("Password") = ""
+
+    '### Activation Properties
+    app.Value("Activation") = 0 'COMAdminActivationInproc
+    
+    '### Queueing Properties
+    app.Value("QueuingEnabled") = False
+    app.Value("QueueListenerEnabled") = False
+
+    '### Advanced Properties
+    app.Value("RunForever") = False
+    app.Value("ShutdownAfter") = 1 '[0-1440] minutes
+    app.Value("Deleteable") = True
+    app.Value("Changeable") = True
+    'app.Value("CommandLine") = ""
+    app.Value("CRMEnabled") = False
+    'app.Value("CRMLogFile") = ""
+    app.Value("3GigSupportEnabled") = False
+
+    '### Other Properties	
+    app.Value("EventsEnabled") = False
+
+    apps.SaveChanges
+    'apps.Populate
+End Sub
+
+'-----------------------------------------------------------------------
+'Configures Component
+'Reference: MSDN; Platform SDK: COM+ (Component Services); Index="Components Collection"
+'
+Private Sub ConfigComp(apps, app)
+    Dim comps 'COMAdminCatalogCollection
+    Dim comp  'COMAdminCatalogObject
+    
+    Set comps = apps.GetCollection("Components", app.Key)
+    comps.Populate
+    'Set comp = comps.Item(index)
+
+	for each comp in comps
+		'### Transactions Properties
+		if comp.Value("CLSID") = strEngineCLSID then
+			comp.Value("Transaction") = 3 'COMAdminTransactionRequired
+			comp.Value("ComponentTransactionTimeoutEnabled") = 1 'Enabled
+			comp.Value("ComponentTransactionTimeout") = 3600 'Max Timeout
+		end if
+		if comp.Value("CLSID") = strBYOTWrapCLSID or comp.Value("CLSID") = strBTSSubmitCLSID then
+			comp.Value("Transaction") = 2 'COMAdminTransactionSupported
+		end if
+
+		'### Security Properties
+		'app.Value("ComponentAccessChecksEnabled") = False
+
+		'### Activation Properties
+		if comp.Value("CLSID") = strEngineCLSID or comp.Value("CLSID") = strBTSSubmitCLSID then
+			comp.Value("ObjectPoolingEnabled") = True
+			comp.Value("MinPoolSize") = 0 '[0-] objects
+			comp.Value("MaxPoolSize") = 1048576 '[0-] objects
+			comp.Value("CreationTimeout") = 60000 '[0-2147483647] ms
+			comp.Value("ConstructionEnabled") = False
+			'comp.Value("ConstructorString") = ""
+			'comp.Value("JustInTimeActivation") = False
+			comp.Value("EventTrackingEnabled") = False
+			comp.Value("MustRunInClientContext") = False
+		end if
+
+		'### Concurrency Properties
+		comp.Value("Synchronization") = 3 'COMAdminSynchronizationRequired 
+		'comp.Value("ThreadingModel") = 0 'COMAdminThreadingModelApartment
+
+		'### Advanced Properties
+		'comp.Value("ExceptionClass") = ""
+	Next
+
+    comps.SaveChanges
+End Sub
+
+'-----------------------------------------------------------------------
+
+'Open a session with the catalog; Instantiate a COMAdminCatalog object
+'Create a new COM+ application; get the "Applications" collection from the catalog
+Set cat = CreateObject("COMAdmin.COMAdminCatalog")
+Set apps = cat.GetCollection("Applications")
+
+'Delete any existing application
+DeleteApp apps, strAppName
+DeleteApp apps, strOldAppName
+
+'Create application
+Set app = apps.Add
+ConfigApp apps, app
+cat.ImportComponent strAppName, strEngineProgId
+cat.ImportComponent strAppName, strBYOTWrapProgId
+cat.ImportComponent strAppName, strBTSSubmitProgId
+ConfigComp apps, app
+LockApp apps, app
+
+'-----------------------------------------------------------------------
+

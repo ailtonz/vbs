@@ -1,0 +1,259 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+' Determine the LDAP path for your domain
+
+Set Root = GetObject("LDAP://RootDSE")
+DomainPath = Root.Get("DefaultNamingContext")
+Set Domain = GetObject("LDAP://" & DomainPath)
+Set adminGroup = GetObject("LDAP://CN=Administrators,CN=Builtin," & DomainPath)
+' Wscript.Echo Domain.Get("name")
+Set WshShell = Wscript.CreateObject("Wscript.Shell")
+Set WshSysEnv = WshShell.Environment("Process")
+upnDomain = WshSysEnv("USERDOMAIN")
+
+
+
+
+' Create Top Level OUs
+
+Set ouIS1 = Domain.Create("organizationalUnit", "OU=Information Services")
+ouIS1.Put "Description", "Information Services"
+ouIS1.SetInfo
+
+Set ou_ACCT = Domain.Create("organizationalUnit", "OU=Accounting")
+ou_ACCT.Put "Description", "Accounting"
+ou_ACCT.SetInfo
+
+
+Set ou_PH = Domain.Create("organizationalUnit", "OU=Package Handling")
+ou_PH.Put "Description", "Package Handling"
+ou_PH.SetInfo
+
+Set ouSales = Domain.Create("organizationalUnit", "OU=Sales")
+ouSales.Put "Description", "Sales"
+ouSales.SetInfo
+
+Set ouTM = ouSales.Create("organizationalUnit", "OU=Telemarketing")
+ouTM.Put "Description", "Telemarketing OU"
+ouTM.SetInfo
+
+Set ouRetail = ouSales.Create("organizationalUnit", "OU=Retail")
+ouRetail.Put "Description", "Retail OU"
+ouRetail.SetInfo
+
+
+Set ouAP1 = ou_ACCT.Create("organizationalUnit", "OU=Accounts Payable")
+ouAP1.Put "Description", "Accounts Payable"
+ouAP1.SetInfo
+
+Set ouAR1 = ou_ACCT.Create("organizationalUnit", "OU=Accounts Receivable")
+ouAR1.Put "Description", "Accounts Receivable"
+ouAR1.SetInfo
+
+
+
+Set ouCSupp = ouIS1.Create("organizationalUnit", "OU=Customer Support")
+ouCSupp.Put "Description", "Customer Support"
+ouCSupp.SetInfo
+
+Set ouHDesk = ouIS1.Create("organizationalUnit", "OU=Help Desk")
+ouHDesk.Put "Description", "Help Desk"
+ouHDesk.SetInfo
+
+Set ouDev = ouIS1.Create("organizationalUnit", "OU=Development")
+ouDev.Put "Description", "Development"
+ouDev.SetInfo
+
+
+
+
+'Create a group called Accounts Payable  in the Accounting OU
+Set APGrp = ou_ACCT.Create("group","CN=Accts Payable")
+APGrp.Put "samAccountName","Accts Payable"
+APGrp.SetInfo
+
+Set ARGrp = ou_ACCT.Create("group","CN=Accts Receivable")
+ARGrp.Put "samAccountName","Accts Receivable"
+ARGrp.SetInfo
+
+Set DAGrp = ou_ACCT.Create("group","CN=Domain Accountants")
+DAGrp.Put "samAccountName","Domain Accountants"
+DAGrp.SetInfo
+
+DAgrp.add APGrp.AdsPath
+DAGrp.SetInfo
+DAgrp.add ARGrp.AdsPath
+DAGrp.SetInfo
+
+Set AADGrp = ou_ACCT.Create("group","CN=All Acct Data")
+AADGrp.Put "samAccountName","All Acct Data"
+AADGrp.groupType=-2147483644
+AADGrp.SetInfo
+
+AADGrp.add DAGrp.AdsPath
+AADGrp.SetInfo
+
+Set APDGrp = ou_ACCT.Create("group","CN=Acct Payable Data")
+APDGrp.Put "samAccountName","Acct Payable Data"
+APDGrp.groupType=-2147483644
+APDGrp.SetInfo
+
+APDGrp.add APGrp.AdsPath
+APDGrp.SetInfo
+
+Set ARDGrp = ou_ACCT.Create("group","CN=Acct Receivable Data")
+ARDGrp.Put "samAccountName","Acct Receivable Data"
+ARDGrp.groupType=-2147483644
+ARDGrp.SetInfo
+
+ARDGrp.add ARGrp.AdsPath
+ARDGrp.SetInfo
+
+'Create users in the Top Level OUs
+
+Set usr = ou_PH.Create("user", "CN=Amie Baldwin")
+usr.Put "samAccountName", "Amie Baldwin"
+usr.Put "userPrincipalName", "Amie Baldwin" & "@" & Domain.Get("name") 
+usr.Put "userAccountControl", "002"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ou_PH.Create("user", "CN=Matthew Dunn")
+usr.Put "samAccountName", "Matthew Dunn"
+usr.Put "userPrincipalName", "Payroll2" & "@" & Domain.Get("name")
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ou_PH.Create("user", "CN=Scott Culp")
+usr.Put "samAccountName", "Scott Culp"
+usr.Put "userPrincipalName", "Scott Culp" & "@" & Domain.Get("name") 
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ou_PH.Create("user", "CN=Derek Graham")
+usr.Put "samAccountName", "Derek Graham"
+usr.Put "userPrincipalName", "Derek Graham" & "@" & Domain.Get("name")
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+
+' ********************************************************************************
+' * Create Users  (acct.vbs)
+' ********************************************************************************
+Set usr = ou_ACCT.Create("user", "CN=Accounting Admin")
+usr.Put "samAccountName", "AcctAdmin"
+usr.Put "userPrincipalName", "AcctAdmin" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ou_ACCT.Create("user", "CN=Accounting User")
+usr.Put "samAccountName", "Acctguser"
+usr.Put "userPrincipalName", "Acctguser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ou_ACCT.Create("user", "CN=Application User")
+usr.Put "samAccountName", "Appuser"
+usr.Put "userPrincipalName", "Appuser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ouAP1.Create("user", "CN=AP User")
+usr.Put "samAccountName", "APuser"
+usr.Put "userPrincipalName", "APuser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ouAR1.Create("user", "CN=AR User")
+usr.Put "samAccountName", "ARuser"
+usr.Put "userPrincipalName", "ARuser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ouSales.Create("user", "CN=Sales User")
+usr.Put "samAccountName", "SalesUser"
+usr.Put "userPrincipalName", "SalesUser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ouTM.Create("user", "CN=Telemarketing User")
+usr.Put "samAccountName", "TMUser"
+usr.Put "userPrincipalName", "TMUser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ouRetail.Create("user", "CN=Retail User")
+usr.Put "samAccountName", "RetailUser"
+usr.Put "userPrincipalName", "RetailUser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ouIS1.Create("user", "CN=ISAdmin")
+usr.Put "samAccountName", "isadmin1"
+usr.Put "userPrincipalName", "isadmin" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ouHDesk.Create("user", "CN=HDUser")
+usr.Put "samAccountName", "hduser"
+usr.Put "userPrincipalName", "hduser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+adminGroup.Add("LDAP://CN=hduser,OU=Help Desk,OU=Information Services," & DomainPath)
+
+Set usr = ouCSupp.Create("user", "CN=CSUser")
+usr.Put "samAccountName", "csuser"
+usr.Put "userPrincipalName", "csuser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+Set usr = ouDev.Create("user", "CN=DUser")
+usr.Put "samAccountName", "duser"
+usr.Put "userPrincipalName", "duser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+usr.SetInfo
+
+
+' v-ntxgh ** Removed for Autosetup functionality ** wscript.echo "Active Directory Structure Created", Chr(10), "Please click OK to finish."
+

@@ -1,0 +1,90 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set objLocator = CreateObject("WbemScripting.SWbemLocator")
+Set objService = objLocator.ConnectServer(".", "root\cimv2")
+objService.Security_.ImpersonationLevel = 3
+Set Jobs = _
+    objService.ExecQuery("SELECT * FROM Win32_ScheduledJob")
+i=0
+For each Job in Jobs
+    i = i+1   
+    WScript.Echo Job.JobId & "  " _
+        & Job.Command & VBNewLine
+Next
+If i = 0 Then
+    WScript.Echo "No Jobs Scheduled with the AT command were found"
+End If
+
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set WshShell = CreateObject("WScript.Shell")
+WshShell.Run "control"
+wscript.sleep 1000
+WshShell.SendKeys "{RIGHT}"
+WshShell.SendKeys "{RIGHT}"
+WshShell.SendKeys "{RIGHT}"
+WshShell.SendKeys "{RIGHT}"
+WshShell.SendKeys "{RIGHT}"
+wscript.sleep 1000
+WshShell.SendKeys "{DOWN}"
+WshShell.SendKeys "{DOWN}"
+wscript.sleep 1000
+WshShell.SendKeys "{ENTER}"
+wscript.sleep 1000
+WshShell.SendKeys "{RIGHT}"
+WshShell.SendKeys "{LEFT}"
+wscript.sleep 1000
+WshShell.SendKeys "{ENTER}"
+wscript.sleep 1000
+WshShell.SendKeys "{ENTER}"
+WshShell.SendKeys "{ENTER}"
+WshShell.SendKeys "{ENTER}"
+wscript.sleep 1000
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{DOWN}"
+wscript.sleep 1000
+WshShell.SendKeys "{DOWN}"
+wscript.sleep 1000
+WshShell.SendKeys "{DOWN}"
+wscript.sleep 1000
+WshShell.SendKeys "{DOWN}"
+wscript.sleep 1000
+WshShell.SendKeys "{DOWN}"
+wscript.sleep 1000
+WshShell.SendKeys "{DOWN}"
+wscript.sleep 1000
+WshShell.SendKeys "{DOWN}"
+wscript.sleep 1000
+WshShell.SendKeys "{DOWN}"
+wscript.sleep 1000
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+wscript.sleep 1000
+WshShell.SendKeys "{ENTER}"
+WshShell.SendKeys "{ENTER}"
+WshShell.SendKeys "{ENTER}"
+WshShell.SendKeys "{ENTER}"
+wscript.sleep 1000
+WshShell.SendKeys "{ENTER}"
+WshShell.SendKeys "{ENTER}"
+WshShell.SendKeys "{ENTER}"
+WshShell.SendKeys "{ENTER}"
+WshShell.SendKeys "%{F4}"
+
