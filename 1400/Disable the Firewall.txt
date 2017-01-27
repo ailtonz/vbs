@@ -1,0 +1,14 @@
+###
+###
+###
+### Category1 : Networking
+### Category2 : Windows Firewall
+### Category3 : 
+### Description : Disables the Windows Firewall for the current profile.
+###
+###
+###
+Set objFirewall = CreateObject("HNetCfg.FwMgr")
+Set objPolicy = objFirewall.LocalPolicy.CurrentProfile
+
+objPolicy.FirewallEnabled = FALSE

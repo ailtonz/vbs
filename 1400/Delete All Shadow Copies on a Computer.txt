@@ -1,0 +1,19 @@
+###
+###
+###
+### Category1 : Shadow Copy
+### Category2 : 
+### Category3 : 
+### Description : Deletes all the shadow copies stored on a server.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+)
+Set colItems = objWMIService.ExecQuery("Select * From Win32_ShadowCopy")
+
+For Each objItem in colItems
+    objItem.Delete_
+Next

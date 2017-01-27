@@ -1,0 +1,27 @@
+###
+###
+###
+### Category1 : Operating System
+### Category2 : Registry
+### Category3 : 
+### Description : Uses WMI to delete all the registry values under HKLM\SOFTWARE\System Admin Scripting Guide.
+###
+###
+###
+Const HKEY_LOCAL_MACHINE = &H80000002
+
+strComputer = "."
+ 
+Set oReg=GetObject("winmgmts:{impersonationLevel=impersonate}!\\" & _ 
+    strComputer & "\root\default:StdRegProv")
+ 
+strKeyPath = "SOFTWARE\System Admin Scripting Guide"
+strDWORDValueName = "DWORD Value Name"
+strExpandedStringValueName = "Expanded String Value Name"
+strMultiStringValueName = "Multi String Value Name"
+strStringValueName = "String Value Name"
+ 
+oReg.DeleteValue HKEY_LOCAL_MACHINE,strKeyPath,strDWORDValueName
+oReg.DeleteValue HKEY_LOCAL_MACHINE,strKeyPath,strExpandedStringValueName
+oReg.DeleteValue HKEY_LOCAL_MACHINE,strKeyPath,strMultiStringValueName
+oReg.DeleteValue HKEY_LOCAL_MACHINE,strKeyPath,strStringValueName

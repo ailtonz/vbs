@@ -1,0 +1,13 @@
+###
+###
+###
+### Category1 : Other Directory Services
+### Category2 : Local Computer and NT 4 Accounts
+### Category3 : Groups
+### Description : Deletes a local group named FinanceUsers from a computer named atl-ws-01.
+###
+###
+###
+strComputer = "atl-ws-01"
+Set objComputer = GetObject("WinNT://" & strComputer & "")
+objComputer.Delete "group", "FinanceUsers"

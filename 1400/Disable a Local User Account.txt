@@ -1,0 +1,15 @@
+###
+###
+###
+### Category1 : Other Directory Services
+### Category2 : Local Computer and NT 4 Accounts
+### Category3 : User Accounts
+### Description : Disables the local Guest account on a computer named atl-ws-01.
+###
+###
+###
+strComputer = "atl-ws-01"
+Set objUser = GetObject("WinNT://" & strComputer & "/Guest")
+
+objUser.AccountDisabled = True
+objUser.SetInfo

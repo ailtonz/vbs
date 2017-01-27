@@ -1,0 +1,12 @@
+###
+###
+###
+### Category1 : Virtual Server
+### Category2 : Virtual Server Client Information
+### Category3 : 
+### Description : Displays the About Box for the Virtual Server client control.
+###
+###
+###
+Set objClientControl = CreateObject("MSVMRCActiveXClient.VMRCClientControl")
+objClientControl.AboutBox

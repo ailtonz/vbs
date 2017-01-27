@@ -1,0 +1,28 @@
+###
+###
+###
+### Category1 : Scripting Techniques
+### Category2 : Comments
+### Category3 : 
+### Description : Demonstrates the use of the FileSystemObject as a way to remove debugging comments from a script. Requires comments to have been marked as '* BUG.
+###
+###
+###
+Const ForReading = 1
+Const ForWriting = 2
+
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set objTextFile = objFSO.OpenTextFile("C:\Scripts\CreateUser.vbs", ForReading)
+ 
+Do While objTextFile.AtEndOfStream <> true
+    strNextLine = objTextFile.Readline
+    intCheckForBugComment = Instr(strNextLine, "'* BUG")
+    If intCheckForBugComment = 0 Then
+        strSavedLines = strSavedLines & strNextLine & VbCrLf
+    End If
+Loop
+ 
+Set objTextFile = objFSO.OpenTextFile _
+    ("c:\scripts\CreateUser.vbs ", ForWriting)
+objTextFile.Write strSavedLines 
+objTextFile.Close

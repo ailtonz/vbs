@@ -1,0 +1,20 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 6.0
+### Category3 : Basic Administration
+### Description : Disables a Web service extension named WEBDAV.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject _
+    ("winmgmts:{authenticationLevel=pktPrivacy}\\" _
+        & strComputer & "\root\microsoftiisv2")
+
+Set colItems = objWMIService.ExecQuery("Select * From IIsWebService")
+
+For Each objItem in colItems
+    objItem.DisableWebServiceExtension("WEBDAV")
+Next

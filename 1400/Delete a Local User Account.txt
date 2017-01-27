@@ -1,0 +1,15 @@
+###
+###
+###
+### Category1 : Other Directory Services
+### Category2 : Local Computer and NT 4 Accounts
+### Category3 : User Accounts
+### Description : Deletes the local user account Admin2 from a computer named atl-ws-01.
+###
+###
+###
+strComputer = "atl-ws-01"
+strUser = "Admin2"
+
+Set objComputer = GetObject("WinNT://" & strComputer & "")
+objComputer.Delete "user", strUser

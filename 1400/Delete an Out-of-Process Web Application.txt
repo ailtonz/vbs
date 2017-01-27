@@ -1,0 +1,15 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 5.x
+### Category3 : Applications and Application Pools
+### Description : Deletes an out-of-process Web application in the W3SVC/2142295254/root/aspnet_client_folder directory.
+###
+###
+###
+strComputer = "LocalHost"
+Set objIIS = GetObject _
+    ("IIS://" & strComputer & "/W3SVC/2142295254/root/aspnet_client_folder")
+
+objIIS.AppDeleteRecursive

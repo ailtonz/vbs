@@ -1,0 +1,20 @@
+###
+###
+###
+### Category1 : Scripting Techniques
+### Category2 : Web Pages and HTAs
+### Category3 : 
+### Description : Sample HTML function that displays information in a new Internet Explorer window.
+###
+###
+###
+Sub RunScript
+    Set objIE = CreateObject("InternetExplorer.Application")
+    objIE.Navigate("about:blank")
+    objIE.ToolBar = 0
+    objIE.StatusBar = 0
+    Set objDoc = objIE.Document.Body
+    strHTML = "<B>This information is displayed in a separate window.</B>"
+    objDoc.InnerHTML = strHTML
+    objIE.Visible = True
+End Sub

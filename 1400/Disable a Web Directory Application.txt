@@ -1,0 +1,37 @@
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 5.x
+### Category3 : Applications and Application Pools
+### Description : Disables the Web application in the W3SVC/2142295254/root/aspnet_client_folder directory.
+###
+###
+###
+strComputer = "LocalHost"
+Set objIIS = GetObject _
+    ("IIS://" & strComputer & "/W3SVC/2142295254/root/aspnet_client_folder")
+
+objIIS.AppDisable
+###
+###
+###
+### Category1 : IIS
+### Category2 : IIS 6.0
+### Category3 : Applications and Application Pools
+### Description : Disables the application found in the Web directoryW3SVC/2142295254/root/aspnet_client_folder.
+###
+###
+###
+strComputer = "."
+Set objWMIService = GetObject _
+    ("winmgmts:{authenticationLevel=pktPrivacy}\\" _
+        & strComputer & "\root\microsoftiisv2")
+
+Set colItems = objWMIService.ExecQuery _
+    ("Select * From IIsWebDirectory Where Name = " & _
+        "'W3SVC/2142295254/root/aspnet_client_folder'")
+
+For Each objItem in colItems
+   objItem.AppDisable(True)
+Next

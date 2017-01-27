@@ -1,0 +1,13 @@
+###
+###
+###
+### Category1 : Scripting Techniques
+### Category2 : Web Pages and HTAs
+### Category3 : 
+### Description : Sample HTML function that displays the Print dialog box in a Web page or HTA.
+###
+###
+###
+Sub RunScript
+    Window.Print()
+End Sub
