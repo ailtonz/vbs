@@ -1,0 +1,76 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+
+Dim Input
+Dim InputChecker
+
+
+dim rootDSE
+set rootDSE = GetObject("LDAP://RootDSE")
+domainname=rootDSE.Get("defaultnamingcontext")
+
+Input = 24
+
+For x = 1 to Input
+
+Select Case x
+	Case 1 ServerName="Vancouver"
+	Case 2 ServerName="Denver"
+	Case 3 ServerName="Perth"
+	Case 4 ServerName="Brisbane"
+	Case 5 ServerName="Lisbon"
+	Case 6 ServerName="Bonn"
+	Case 7 ServerName="Lima"
+	Case 8 ServerName="Santiago"
+	Case 9 ServerName="Bangalore"
+	Case 10 ServerName="Singapore"
+	Case 11 ServerName="Casablanca"
+	Case 12 ServerName="Tunis"
+	Case 13 ServerName="Acapulco"
+	Case 14 ServerName="Miami"
+	Case 15 ServerName="Auckland"
+	Case 16 ServerName="Suva"
+	Case 17 ServerName="Stockholm"
+	Case 18 ServerName="Moscow"
+	Case 19 ServerName="Caracas"
+	Case 20 ServerName="Montevideo"
+	Case 21 ServerName="Manila"
+	Case 22 ServerName="Tokyo"
+	Case 23 ServerName="Khartoum"
+	Case 24 ServerName="Nairobi"
+End Select
+
+	ComputerName = ServerName
+
+
+
+
+	OuName = ServerName & " OU"
+	GrpName= ServerName & " Admins (G)"
+	ouName2= ServerName
+	if x<10 then
+	usrName = "Admin0" & x
+	usrName2 = "Admin0" & x
+	else
+	usrName = "Admin" & x
+	usrName2 = "Admin" & x
+	end if
+	set domain = GetObject("LDAP://" & domainname)
+	set ou2 = domain.GetObject("organizationalUnit", "OU=" & OUName )
+	set grp = ou2.GetObject("group", "CN=" & grpName )
+	set usr = ou2.GetObject("user", "CN= "  & usrName)
+	grp.Add usr.AdsPath
+
+
+
+Next
+

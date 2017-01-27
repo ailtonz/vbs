@@ -1,0 +1,26 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set Msg = CreateObject("CDO.Message")
+
+With Msg
+
+      .To = "LondonAdmin@nwtraders.msft"
+       .From = "samsmith@nwtraders.msft"
+       .Subject = "Configuring Security"
+       .TextBody = "Hello again, we need to secure the London Exchange server. I need you to complete the following tasks: " & chr(10) & chr(10) & "* Start thinking about how we are going to approach creating policies and procedures for recovering from viruses that may attack the Exchange organization." & chr(10) & "* Configure the Exchange organization to point to msftblocklist99999.msft for blocklist services." & chr(10) & "* Block the account nodebt4u@contoso.msft from sending e-mail into our organization." & chr(10) & "* Configure connection filtering to block the domain evildomainspamsender99999.msft from connecting to the London server." & chr(10) & "* Enable Exchange to support signed and encrypted e-mail." & chr(10) & "* Create an administrative group named Policy AG and then move all the existing system policies into it." & chr(10) & "* Grant Greg Weber permissions on the Policy AG administrative group." & chr(10) & "* Configure the Exchange organization so that new administrative groups automatically allow Jim Kim to have read access on them, but do not allow him to have any access on the existing ones." & chr(10) & chr(10) & " Thanks!!"
+       .Send
+
+ 
+
+End With
+
+MsgBox "Script Complete"
+

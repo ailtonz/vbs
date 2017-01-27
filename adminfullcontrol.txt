@@ -1,0 +1,160 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set objNet = WScript.CreateObject("WScript.Network")
+CompName = objNet.ComputerName
+
+
+
+
+if CompName = "VANCOUVER" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql1.reg", 1, true
+end if
+
+
+if CompName = "DENVER" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql2.reg", 1, true
+end if
+
+
+if CompName = "PERTH" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql3.reg", 1, true
+end if
+
+
+if CompName = "BRISBANE" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql4.reg", 1, true
+end if
+
+
+if CompName = "LSIBON" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql5.reg", 1, true
+end if
+
+
+if CompName = "BONN" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql6.reg", 1, true
+end if
+
+
+if CompName = "LIMA" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql7.reg", 1, true
+end if
+
+
+if CompName = "SANTIAGO" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql8.reg", 1, true
+end if
+
+
+if CompName = "BANGALORE" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql9.reg", 1, true
+end if
+
+
+if CompName = "SINGAPORE" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql10.reg", 1, true
+end if
+
+
+if CompName = "CASABLANCA" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql11.reg", 1, true
+end if
+
+
+if CompName = "TUNIS" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql12.reg", 1, true
+end if
+
+
+if CompName = "ACAPULCO" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql13.reg", 1, true
+end if
+
+
+if CompName = "MIAMI" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql14.reg", 1, true
+end if
+
+
+if CompName = "AUCKLAND" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql15.reg", 1, true
+end if
+
+
+if CompName = "SUVA" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql16.reg", 1, true
+end if
+
+
+if CompName = "STOCKHOLM" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql17.reg", 1, true
+end if
+
+
+if CompName = "MOSCOW" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql18.reg", 1, true
+end if
+
+
+if CompName = "CARACAS" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql19.reg", 1, true
+end if
+
+
+if CompName = "MONTEVIDEO" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql20.reg", 1, true
+end if
+
+
+if CompName = "MANILA" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql21.reg", 1, true
+end if
+
+
+if CompName = "TOKYO" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql22.reg", 1, true
+end if
+
+
+if CompName = "KHARTOUM" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql23.reg", 1, true
+end if
+
+
+if CompName = "NAIROBI" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.run "regedit /s c:\tools\profiles\sql24.reg", 1, true
+end if
+
+

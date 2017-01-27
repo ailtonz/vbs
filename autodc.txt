@@ -1,0 +1,25 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+set wshshell = wscript.CreateObject("wscript.shell")
+set objnet = wscript.CreateObject("wscript.network")
+cname=objnet.ComputerName
+A = array("VANCOUVER","DENVER","PERTH","BRISBANE","LISBON","BONN","LIMA","SANTIAGO","BANGALORE","SINGAPORE","CASABLANCA","TUNIS","ACAPULCO","MIAMI","AUCKLAND","SUVA","STOCKHOLM","MOSCOW","CARACAS","MONTEVIDEO","MANILA","TOKYO","KHARTOUM","NAIROBI")
+for each i in A
+	if i = cname then
+		WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultDomainName", cname & "dom" ,"REG_SZ"
+	end if
+next
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Defaultpassword", "password" ,"REG_SZ"
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Autoadminlogon", 1 ,"REG_SZ"
+WshShell.RegWrite "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\DefaultUserName", "administrator" ,"REG_SZ"		
+			
+		
+

@@ -1,0 +1,112 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' ********************************************************************************
+' * MOC Win1558A Setup Script
+' * 	
+' *  Creates the following OUs:
+' * 	Accounting 1
+' * 	  Accounts Payable
+' * 	  Accounts Receivable
+' * 	Accounting 2
+' * 	  Accounts Payable
+' * 	  Accounts Receivable
+' *
+' *  Creates the following users:
+' * 	Accounting Admin 1
+' * 	Accounting User 1
+' * 	Accounts Payable User 1
+' * 	Accounts Receivable User 1
+' * 	Application User 1
+' * 	Accounting Admin 2
+' * 	Accounting User 2
+' * 	Accounts Payable User 2
+' * 	Accounts Receivable User 2
+' * 	Application User 2
+' * 	
+' ********************************************************************************
+
+' ********************************************************************************
+' * Prepare the environment for this script
+' ********************************************************************************
+' Determine the LDAP path for your domain
+Set Root = GetObject("LDAP://RootDSE")
+DomainPath = Root.Get("DefaultNamingContext")
+Set Domain = GetObject("LDAP://" & DomainPath)
+
+Set WshShell = Wscript.CreateObject("Wscript.Shell")
+Set WshSysEnv = WshShell.Environment("Process")
+upnDomain = WshSysEnv("USERDOMAIN")
+
+'Disable error messages
+'On Error Resume Next
+
+
+' ********************************************************************************
+' * Create Top Level OUs
+' ********************************************************************************
+Set ouAcct1 = Domain.Create("organizationalUnit", "OU=Accounting")
+ouAcct1.Put "Description", "Accounting 1"
+'ouAcct1.Put "gpLink", "[LDAP://CN={5987CB33-2743-47F7-8C33-6216B1D1A5F1},CN=Policies,CN=System," & DomainPath & ";0]"
+ouAcct1.SetInfo
+
+
+
+' ********************************************************************************
+' * Create Subordinate OUs
+' ********************************************************************************
+Set ouAP1 = ouAcct1.Create("organizationalUnit", "OU=Accounts Payable")
+ouAP1.Put "Description", "Accounts Payable"
+ouAP1.SetInfo
+
+Set ouAR1 = ouAcct1.Create("organizationalUnit", "OU=Accounts Receivable")
+ouAR1.Put "Description", "Accounts Receivable"
+ouAR1.SetInfo
+
+
+
+' ********************************************************************************
+' * Create Users
+' ********************************************************************************
+Set usr = ouAcct1.Create("user", "CN=Accounting Admin")
+usr.Put "samAccountName", "AcctAdmin"
+usr.Put "userPrincipalName", "AcctAdmin" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = ouAcct1.Create("user", "CN=Accounting User")
+usr.Put "samAccountName", "Acctguser"
+usr.Put "userPrincipalName", "Acctguser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = ouAcct1.Create("user", "CN=Application User")
+usr.Put "samAccountName", "Appuser"
+usr.Put "userPrincipalName", "Appuser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = ouAP1.Create("user", "CN=AP User")
+usr.Put "samAccountName", "APuser"
+usr.Put "userPrincipalName", "APuser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+
+Set usr = ouAR1.Create("user", "CN=AR User")
+usr.Put "samAccountName", "ARuser"
+usr.Put "userPrincipalName", "ARuser" & "@" & upnDomain & ".nwtraders.msft"
+usr.Put "userAccountControl", "0020"
+usr.SetInfo
+usr.SetPassword "password"
+

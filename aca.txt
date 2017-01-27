@@ -1,0 +1,80 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+dim fso, d, dc, dl, run
+set wshshell=wscript.CreateObject("Wscript.Shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+set dc = fso.drives
+
+' Separate paths with a coma (,)
+pathSet = Array("","\ENGLISH")
+
+' file to look for
+lookfile = "\Microsoft Application Center 2000.msi"
+
+do until resp = VBCANCEL
+	' check each drive
+    For each d in dc
+        set dl = fso.GetDrive(d)
+        ' check each possible path
+        For each path in pathSet
+	    	lookfor=dl & path & lookfile
+        	if dl.IsReady then
+            	if (fso.FileExists(lookfor)) then
+            		copyFiles(path)
+            	end if
+        	End If
+        Next
+    Next
+    resp = Msgbox ("Please insert the Application Center 2000 compact disc into the CD drive." & CHR(10) & _
+    			   "After you have inserted the CD, click OK or click Cancel to specify a path.", _
+    			   vbOKCancel or vbinformation, "CD Path")
+loop
+
+valid = false
+Do While valid = false
+	path = InputBox("Please specify the path to the installation folder on the Application Center 2000 compact disc.", "CD Path", dl)
+	If path <> "" Then
+		'format input string
+		If right(path, 1) = "\" Then
+			path = left(path, len(path)-1)
+		End IF
+		
+		'verify path and copy if correct
+		if (fso.FileExists(path & lookfile)) then
+        	copyFiles(path)
+        	valid = true
+        End If
+	Else	' cannot copy files.  User clicked cancel on input box
+		valid = true
+		msgbox "Setup cannot copy the Application Center 2000 files. After the automated setup finishes, " & chr(10) & _
+		       "complete the installation of the instructor computer by following the instructions " & chr(10) & _
+	    	   "for installing Application Center 2000 in the automated setup guide.", vbcritical, "CD Path"
+	End If
+Loop
+
+
+
+sub copyfiles(path)
+	Set ts = fso.CreateTextFile("c:\tools\copycd.vbs", True)
+	'copy setup folder
+	ts.WriteLine "Set oSHApp = CreateObject(" & chr(34) & "Shell.Application" & chr(34) & ")" 
+	ts.writeline "sSrc = " & chr(34) & dl & path & "\*.*" & chr(34)
+	ts.writeline "sDest = " & chr(34) & "c:\AC" & chr(34)
+	ts.writeline "oSHApp.Namespace(sDest).CopyHere sSrc, &H10&"
+	ts.writeline "Set oSHApp = nothing"
+	ts.writeline "WScript.Quit"
+	ts.Close
+	WshShell.run "c:\tools\ac.cmd", 6, true
+	WshShell.run "c:\tools\copycd.vbs", 1, true
+	wscript.quit
+end sub
+

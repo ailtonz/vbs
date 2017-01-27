@@ -1,0 +1,47 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+Private Sub AddUserQuery(objDSC, strUserName, datTime, strName, strExpression, blnAdvanced)
+	'// This routine will add a user's custom query into the DTA database	
+	
+	'// PARAMETERS
+	'// objDSC should be a data source connection object
+	'// strUserName is the current user
+	'// strName is the name used to refer to this saved query
+	'// strExpression is the SQL compliant query
+	'// blnAdvanced specifies the query was custom built by the user
+
+	Dim objConn, strArg1, strArg2, strArg3, strArg4, datArg, strCmdString
+	
+	'// Build the stored procedure call to execute
+	Set objConn = objDSC.Connection
+	strArg1 = "N'" & strUserName & "'"
+	strArg2 = "N'" & strName & "'"
+	strArg3 = "N'" & strExpression & "'"
+	strArg4 = blnAdvanced
+	'//Convert date strings to datetime values
+	'//using ODBC Canonical style (style 120), as the SProc will be expecting
+	'//this format
+	datArg = "N'" & Year(datTime) & "-" & Pad(Month(datTime), "0", 2) _
+		& "-" & Pad(Day(datTime), "0", 2) & " " & Pad(Hour(datTime), "0", 2) _
+		& ":" & Pad(Minute(datTime), "0", 2) & ":" & Pad(Second(datTime), "0", 2) _
+		& "'"
+	strCmdString = "dta_ui_add_userquery(" & strArg1 & ", " & datArg & ", " & strArg2 & ", " & strArg3 & _
+					", " & strArg4 & ")"
+				
+	'// Execute the stored procedure
+	objConn.Execute strCmdString,,4
+	
+	'// Release our reference to the connection
+	Set objConn = Nothing
+
+End Sub
+

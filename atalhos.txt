@@ -1,0 +1,35 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'====================================================
+'
+'             criar arquivo
+'
+'=====================================================
+SET FSO = CREATEOBJECT("SCRIPTING.FILESYSTEMOBJECT")
+'set arquivo = fso.CreateTextFile("c:\lista.txt")
+'wscript.Echo "ok"
+
+'====================================================
+'		Editar arquivo				
+'
+'=====================================================
+'arquivo.Write("Arquivo criado em : "& now())
+'arquivo.Close
+
+'====================================================
+'		Ler conteúdo do arquivo				
+'
+'=====================================================
+set arqLAB = fso.OpenTextFile("C:\boot.ini")
+
+wscript.Echo arqlab.ReadAll
+
+

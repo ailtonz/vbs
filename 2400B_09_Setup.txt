@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set Msg = CreateObject("CDO.Message")
+
+With Msg
+      .To = "LondonAdmin@nwtraders.msft"
+       .From = "samsmith@nwtraders.msft"
+       .Subject = "Public folder management"
+       .TextBody = "Hello! I need you to do some public folder management. Here is the list of items that need to be completed:" & chr(10) & chr(10) & "* Create a custom MMC for public folder management and save it to your desktop." & chr(10) & "* Create a general-purpose public folder tree and a new public folder store for the engineering group." & chr(10) & "* Grant permission to Christie Moon so that she can manage the top-level public folder structure of the MAPI folder tree." & chr(10) & "* Create an HR public folder and a Research public folder in the MAPI folder tree." & chr(10) & "* Mail-enable the HR folder, set the default access to Reviewer, and remove anonymous access permissions to it." & chr(10) & "* Replicate the HR folder to Miami." & chr(10) & "* Create a public folder index." & chr(10) & "* Move the public folder index catalog to C:\MOC, which is a RAID volume mounted on the C drive." & chr(10) & "* Create an organizational forms library." & chr(10) & chr(10) & "Thanks :-)" 
+       .Send
+End With
+
+MsgBox "Script Complete"
+

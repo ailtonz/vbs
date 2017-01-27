@@ -1,0 +1,233 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Course 2433A VBScript and WSH Essentials
+'
+' Title:	2433A Class Setup Script
+' Copyright: 	Microsoft
+' Description: 	This script will do the following:
+'
+' Create the Following Folders and Shares:
+' Labs, LabShare	
+' Office, Reskit
+'
+' Create the ClassPRN Printer
+'
+' Check the PPT files are in the correct folder
+' Create Shortcuts to each PPT file in the Start Menu
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Require Variants to be declared
+Option Explicit
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Initialization
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Dim oFSO, oShell, sPPTPath, sProgFiles
+Dim sMachineName, sName, oMaster, oPrinter
+Dim sDest, nButVal, oLMServer, oNewShare
+Dim sDesktop, sStartup, x, sShortCutFolder
+Dim oShortcut
+'
+Set oFSO = WScript.CreateObject("Scripting.FileSystemObject")
+Set oShell = WScript.CreateObject("WScript.Shell")
+'
+'Get Program Files path
+sProgFiles = oShell.ExpandEnvironmentStrings("%ProgramFiles%")
+'
+'Check this is the LONDON computer
+sMachineName = oShell.ExpandEnvironmentStrings("%COMPUTERNAME%")
+'
+If sMachineName <> "LONDON" Then
+	' If not LONDON Machine then exit script
+	MsgBox "This Script is only for the LONDON Server.", 64, "2433A Course Setup"
+	WScript.Quit
+End If
+'
+' Display Welcome Message
+nButVal = Msgbox("This Script will setup the MSDN course 2433A," _
+		         & " is that what you want?",vbYesNo ,"2433A Course Setup")
+If nButVal <> 6 Then
+	Msgbox "Quiting Script",vbCritical ,"2433A Course Setup"
+	WScript.Quit
+End If
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Check for presence of Office and Reskit Folders on D:
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Check if Office Setup.exe exists
+sDest = "D:\Office\Setup.ini"
+' Check that D:\Office exists
+If IfExist(sDest) = False Then
+	Msgbox "Office Folder has not been correctly setup" & vbCRLF _
+		 & "Please ensure all files were copied to the folder" & vbCRLF _
+		 & "Including the hidden files" & vbCRLF _
+		 & "Please correct the problem and then restart the script"
+	Wscript.Quit
+End If
+' Check if Reskit Setup.exe exists
+sDest = "D:\Reskit\Setup.exe"
+' Check that D:\Office exists
+If IfExist(sDest) = False Then
+	Msgbox "Reskit Folder has not been correctly setup" & VBCRLF _
+	     & "Please correct the problem and then restart the script"
+	Wscript.Quit
+End If
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Create C:\LabFiles folder
+' Share the following Folders
+	' C:\Setup as Setup
+	' C:\Program Files\MSDNTrain\2433A\Labs as Labs
+	' C:\LabShare as LabShare
+	' D:\ResKit as Reskit
+	' D:\Office as Office
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+On Error Resume Next
+'Bind to Server service on LONDON machine
+Set oLMServer = GetObject("WinNT://LONDON/LANMANSERVER")
+If Err.Number <> 0 Then
+	Msgbox "Something went wrong with ADSI Binging" & vbCRLF _
+	& "Error No.= " & Err.Number
+	wscript.Quit
+End If
+'Create LabShare Folder
+oFSO.CreateFolder "C:\LabShare"
+'Create all the new shares
+Set oNewShare = oLMServer.Create("FileShare", "Setup")
+oNewShare.Path = "C:\Setup"
+oNewShare.Description = "Course Setup Share"
+oNewShare.MaxUserCount = "50"
+oNewShare.SetInfo
+'
+Set oNewShare = oLMServer.Create("FileShare", "Labs")
+oNewShare.Path = "C:\Program Files\MSDNTrain\2433A\Labs"
+oNewShare.Description = "Labs Share"
+oNewShare.MaxUserCount = "50"
+oNewShare.SetInfo
+'
+Set oNewShare = oLMServer.Create("FileShare", "LabShare")
+oNewShare.Path = "C:\LabShare"
+oNewShare.Description = "LabShare"
+oNewShare.MaxUserCount = "50"
+oNewShare.SetInfo
+'
+Set oNewShare = oLMServer.Create("FileShare", "Reskit")
+oNewShare.Path = "D:\Reskit"
+oNewShare.Description = "Windows 2000 Server Resource Kit"
+oNewShare.MaxUserCount = "50"
+oNewShare.SetInfo
+'
+Set oNewShare = oLMServer.Create("FileShare", "Office")
+oNewShare.Path = "D:\Office"
+oNewShare.Description = "Microsoft Office 2000"
+oNewShare.MaxUserCount = "50"
+oNewShare.SetInfo
+'
+Set oNewShare = Nothing
+Set oLMServer = Nothing
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Create Class Printer
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Err.Clear
+Set oMaster = CreateObject("PrintMaster.PrintMaster.1")
+Set oPrinter = CreateObject("Printer.Printer.1")
+With oPrinter
+	.ServerName  = ""
+	.PrinterName = "ClassPrn"
+	.DriverName  = "HP DeskJet 550C"
+	.PortName    = "lpt3:"
+End With
+'Create Printer
+oMaster.PrinterAdd oPrinter
+'Check for error
+if Err <> 0 then
+	Msgbox "An error has occurred creating the printer" _
+	& vbCRLF & "Error No. " & Hex(err.Number) _
+	& vbCRLF & "Please make sure that the Windows 2000 Resource Kit has been installed"
+	WScript.Quit
+end if
+' Set Printer Properties
+oMaster.PrinterGet "", "ClassPrn", oPrinter
+With oPrinter
+	.ShareName = "ClassPrn"
+	.Location = "Instructors Desk"
+	.Comment = "Printer for Script course Labs"
+	.Default = true 
+	.Shared = true
+	.Published = true
+End With
+'update settings
+oMaster.PrinterSet oPrinter
+if Err <> 0 then
+	Msgbox "An error has occurred setting the printer properties" _
+	& vbCRLF & "Error No. " & Hex(err.Number)
+	WScript.Quit
+end if
+' Pause Printer
+oMaster.PrinterPause "", "ClassPrn"
+' Set ClassPrn as default printer
+oMaster.DefaultPrinter = "ClassPrn"
+if Err <> 0 then
+	Msgbox "An error has occurred pausing or setting default printer" _
+	& vbCRLF & "Error No. " & Hex(err.Number)
+	WScript.Quit
+end if
+'
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Check PPT path
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+sPPTPath = sProgFiles & "\Msdntrain\2433A\PowerPnt"
+If IfExist(sPPTPath) = False Then
+		MsgBox "Error: " & sPPTPath & " not found!" _ 
+		& "Please check the file paths are correct and try again"
+		WScript.Quit
+End If
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Create Desktop Shortcuts
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+sStartup = oShell.SpecialFolders("Programs")
+sShortCutFolder = sStartup & "\2433A Slides"
+' Created Folder for shortcuts
+If IfExist(sShortCutFolder) = False Then
+	oFSO.CreateFolder sShortCutFolder
+	If Err.Number <> 0 Then
+		MsgBox "Something went wrong Shortcut Folder creation"
+		WScript.Quit
+	End If
+End If
+For x = 0 to 8
+	Set oShortCut = oShell.CreateShortcut(sShortCutFolder & "\Module " & x & ".lnk")
+	oShortCut.TargetPath = sPPTPath & "\2433A_0" & x & ".ppt"
+	oShortCut.Save
+Next
+'
+MsgBox "Script Complete", vbInformation,"2433A Course Setup"
+'
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'END OF SCRIPT
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'FUNCTIONS
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Function: Check for existence of file system object
+' Name : IfExist
+' Argument: Name of Object (file or Directory) to check for.
+'''''''''''''''''''''''''''''''''''''''
+Function IfExist(sName)
+	IfExist = False
+	On Error Resume Next
+	If oFSO.FileExists(sName) Then IfExist = True
+	If oFSO.FolderExists(sName) Then IfExist = True
+End Function
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'END OF FUNCTIONS
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+

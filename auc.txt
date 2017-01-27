@@ -1,0 +1,22 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+On Error Resume Next
+Set objSvc = getObject("WinMgmts:")
+'Warning: There must be no white spaces inside the {curly-brackets}
+Set assocSet = objSvc.ExecQuery("Associators Of {win32_networkAdapter.deviceID='0'}Where resultClass=Win32_NetworkAdapterConfiguration")
+If Err <> 0 or assocSet.count=0 Then
+	Wscript.Echo "Something went wrong " & Hex(err.number), err.description, err,source
+End If
+For Each assoc in assocSet
+	strAssoc = strAssoc & assoc.Path_.RelPath & vbcrlf
+Next
+MsgBox strAssoc,vbInformation,"Associations of " & " Win32_NetWorkAdapter"
+

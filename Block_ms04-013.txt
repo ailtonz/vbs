@@ -1,0 +1,611 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'*****************************************************************
+' This program is Copyright (c) 2004 Microsoft Corporation.  
+'
+' All rights reserved.
+'
+' THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+' ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+' THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+' PARTICULAR PURPOSE.
+'
+' IN NO EVENT SHALL MICROSOFT AND/OR ITS RESPECTIVE SUPPLIERS BE
+' LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY
+' DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+' WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS
+' ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+' OF THIS CODE OR INFORMATION.
+
+' Version 1.1
+
+' This script modifies the HTTP Filter configuration data to block 
+' instances of a fake Google IE task bar installer.
+
+' This script only works on ISA 2004
+
+' Usage: cscript Block_Fake_Google.vbs
+
+' History:
+'  	1.0	08/25/04 - Initial version
+'  	1.1	08/26/04 - Fixed self-update and save logic
+
+'*****************************************************************
+
+Option Explicit
+
+Dim TitleMsg
+Dim IsaArray
+Dim Defaults1
+Dim Defaults2
+Dim DeniedSigs
+
+Const Version = "1.1"
+Const S_OK = 0
+
+'HTTP Filter Denied Signatures
+DeniedSigs = "<DeniedSignatures>" & _
+		"<Signature Name=""Fake_GoogleBar-1"" Description=""" & _
+		"Blocks 'valuebar_setup.exe' in body text"" SearchInType=""4"" " & _
+		"SearchInHeader="""" From=""1"" To=""100"" Pattern=" & _
+		"""[valuebar_setup.exe]"" FormatIsText=""true"" Enabled=""true""/>" & _
+		"<Signature Name=""Fake_GoogleBar-2"" Description=""" & _
+		"Blocks 'valuebar_setup.exe' in Request URLs"" SearchInType=""0"" " & _
+		"SearchInHeader="""" From=""1"" To=""100"" Pattern=" & _
+		"""[valuebar_setup.exe]"" FormatIsText=""true"" Enabled=""true""/>" & _
+		"</DeniedSignatures>"
+
+'default HTTP Filter settings with a hole where the denied signatures get added
+Defaults1 = "<Configuration BlockExecutables=""false"" ViaHeaderAction=""0"" " & _
+		"NewViaHeaderValue="""" ServerHeaderAction=""0"" NewServerHeaderValue="""" " & _
+		"MaxRequestBodyLen=""-1""><UrlValidation NormalizeBeforeScan=""true"" " & _
+		"VerifyNormalization=""false"" AllowHighBitCharacters=""true"" BlockDotInPath=""false"" " & _
+		"MaxLength=""10240"" MaxQueryLength=""10240""><Extensions AllowCondition=""0""/>" & _
+		"</UrlValidation><Verbs AllowCondition=""0""/><RequestHeaders/><ResponseHeaders/>"
+
+Defaults2 = "</Configuration>"
+
+TitleMsg = WScript.ScriptName & " version " & Version
+
+Main
+
+'**********************************************************************
+' Main()
+' This function:
+'	1. validates that the script is running under 'cscript.exe' and 
+'	- restarts the script if not (avoids popups from console output)
+'	- obtains the current array object
+'	- presents a final status to the user based on the return value from DoArray()
+'	2. calls into
+'		GetISA()
+'		Backup()
+'		DoArray()
+'	3. called by 
+'		user
+'
+' if successful:
+'	1. ISA 2004 HTTP-enabled protocols are modified 
+'
+' if no changes are needed, indicates same to the user
+'**********************************************************************
+Sub Main
+
+	Dim ISA
+	Dim Banner
+	Dim WshShell
+	Dim Rtn
+
+	Const Bar = "*******************************************************"
+	Const NTD = -1
+	
+	Set WshShell = CreateObject( "WScript.Shell" )
+	If LCase( Right( WScript.FullName, 11 ) ) <> "cscript.exe" Then 
+		WshShell.Run "cscript """ & WScript.ScriptFullName & """", 10, False
+		WScript.Quit
+	End If
+
+	WScript.Echo vbCrLf & Bar & vbCrLf & TitleMsg & vbCrLf & Bar
+
+	If GetISA( ISA ) Then 
+
+		Set IsaArray = ISA.GetContainingArray
+		If Backup( ) = S_OK Then
+			Rtn = DoArray( IsaArray )
+			Select Case Rtn
+				Case S_OK
+					MsgBox "Successfully added or updated the HTTP Filter policies." & _
+							vbCrLf & vbCrLf & _
+							"You will need to re-run this script if you add any new" & _
+							vbCrLf & _
+							"access rules." & _
+							vbCrLf & "You should verify that your normal policy " & _
+							"actions have not changed.", _
+							vbOkOnly, TitleMsg
+				Case NTD
+					MsgBox "No changes were needed to the HTTP Filter policies.", _
+							vbOkOnly, TitleMsg
+				Case Else
+					MsgBox "Encountered " & Rtn & " errors trying to add or update" & _
+							"HTTP Filter policies.", _
+							vbOkOnly, TitleMsg
+			End Select
+		End If
+	End If
+	
+End Sub
+
+'**********************************************************************
+' DoArray( ISAArray )
+' This function:
+'	1. enumerates the array policy rules
+'	- applies HTTP Filter blocking settings to all HTTP-enabled allow rules
+'	2. calls into
+'		CheckPolicyRule()
+'		AddSignatures()
+'	3. called by 
+'		Main()
+'
+' if successful:
+'	1. returns -1 if no changes were needed, S_OK if changes were successful
+'	2. Modifies ISA 2004 HTTP-enabled protocols to filter denied signatures
+'
+' if unsuccessful:
+'	1. a positive number indicating the error count
+'**********************************************************************
+Function DoArray( ISAArray )
+
+	On Error Resume Next
+	
+	DoArray = False
+
+	Dim PolicyRule
+	Dim Errors: Errors = 0
+	Dim Changes: Changes = 0
+	
+	Const Default = "{4cf0f1c2-b10b-11d2-9a1d-006094eb634c}"
+	Const fpcAccessRule = 0
+	Const fpcWebPublishingRule = 2
+	Const NTD = -1	'nothing to do
+
+	WScript.Echo "Examining Access Rules in """ & ISAArray.Name & """..."
+	For Each PolicyRule in ISAArray.ArrayPolicy.PolicyRules
+		If PolicyRule.Type = fpcAccessRule And _
+			PolicyRule.PersistentName <> Default Then
+
+			WScript.Echo vbCrLf & "- Examining Access Rule """ & _
+					PolicyRule.Name & """..."
+			If CheckPolicyRule( PolicyRule ) Then
+				If AddSignatures( PolicyRule ) = True Then
+					Changes = Changes + 1
+				Else
+					Errors = Errors + 1
+				End If
+			Else
+				WScript.Echo "  ** Nothing to do here..."
+			End If
+		End If
+	Next
+
+	If Errors = 0 Then
+		WScript.Echo vbCrLf & "Saving the updates..."
+		ISAArray.ArrayPolicy.PolicyRules.Save True, True
+		If Err.Number <> S_OK Then
+			MsgBox "Error 0x" & Hex( Err.Number ) & _ 
+					" while trying to save the Policy Rules updates" & _
+					vbCrLf & "Error 0x" & Hex( Err.Number ) & _
+					vbCrLf & "Description: " & err.Description, _
+					vbOkOnly, TitleMsg
+			Errors = Errors + 1			
+		End If
+	End If
+	
+	If Errors > 0 Then
+		DoArray = Errors
+	ElseIf Changes > 0 Then
+		DoArray = S_OK
+	Else
+		DoArray = NTD
+	End If
+
+End Function
+
+'**********************************************************************
+' CheckPolicyRule( Rule )
+' This function:
+'	1. evaluates the rule action to determine if the rule supports HTTP 
+'		Filter settings
+'		note: only "allow" rules include HTTP Filter settings, even if 
+'		the rule is "deny all except http"
+'	2. calls into
+'		FindHttp()
+'	3. called by 
+'		DoArray()
+'
+' if successful:
+'	1. returns 'true if policy rule supports HTTP Filter settings, 'false' 
+'		otherwise
+'
+' if unsuccessful:
+'	1. any errors are reported by called functions
+'**********************************************************************
+Function CheckPolicyRule( Rule )
+
+	Dim AccessProperties
+
+	Const fpcActionAllow = 0
+
+	Set AccessProperties = Rule.AccessProperties
+	If Rule.Action = fpcActionAllow Then
+ 		CheckPolicyRule = FindHttp( AccessProperties ) 
+ 	Else
+ 		CheckPolicyRule = False	'deny rules don't use the HTTP filter
+ 	End If
+
+End Function
+
+''**********************************************************************
+' FindHttp( AccessProperties )
+' This function:
+'	1. searches for HTTP protocol
+'	    evaluates the state of the protocol selection method
+'	    returns 'true' if the ISA-defined HTTP protocol is found
+'	    We use the protocol GUID to avoid localization problems
+'	2. calls into
+'		-nothing -
+'	3. called by 
+'		CheckPolicyRule()
+'
+' if successful:
+'	1. returns 'true' or 'false' according to the presence of the ISA-defined HTTP 
+'	    protocol
+'
+' if unsuccessful:
+'	1. returns 'false'
+'**********************************************************************
+Function FindHttp( AccessProperties )
+
+	Dim ProtocolSelectionMethod
+	Dim Protocol
+	Dim FpcRef
+	
+	Const fpcAllIpTraffic = 0
+	Const fpcSelectedProtocols = 1
+	Const fpcAllExceptSelected = 2
+	Const HTTP = "{df6cabc0-d4a3-11d2-bbc4-00a0c9d785a6}"
+
+	Select Case AccessProperties.ProtocolSelectionMethod
+		Case fpcAllIpTraffic:
+			FindHttp = True
+		Case fpcSelectedProtocols:
+			FindHttp = False
+			For Each FpcRef In AccessProperties.SpecifiedProtocols
+				Set Protocol = IsaArray.RuleElements.ProtocolDefinitions( FpcRef.Name )
+				If Protocol.Guid = HTTP Then
+					FindHttp = True
+					Exit For
+				End If
+			Next
+		Case fpcAllExceptSelected:
+			FindHttp = True		'need to reverse our logic
+			For Each FpcRef In AccessProperties.SpecifiedProtocols
+				Set Protocol = IsaArray.RuleElements.ProtocolDefinitions( FpcRef.Name )
+				If Protocol.Guid = HTTP Then 
+					FindHttp = False
+					Exit For
+				End If
+			Next
+	End Select
+	
+End Function
+
+'**********************************************************************
+' AddSignatures( Rule )
+' This function:
+'	1. examines the HTTP Filter settings to determine if it needs to add 
+'		or modify the filter settings
+'	2. calls into
+'		ModifySignatures()
+'	3. called by 
+'		DoArray()
+'
+' if successful:
+'	1. returns 'true'
+'	2. HTTP filter settings are added to the policy rule
+'
+' if unsuccessful:
+'	1. returns 'false'
+'	2. error message is displayed
+'**********************************************************************
+Function AddSignatures( Rule )
+
+	On Error Resume Next
+
+	AddSignatures = False
+
+	Dim HttpFilter
+	Dim XmlFilter
+	Dim FilterRoot
+	Dim FilterData 
+	Dim Item
+
+	Const HttpFilterGuid = "{f1076e51-bbaf-48ba-a2d7-b0875211e80d}"
+	Const ValueName = "XML_POLICY"
+
+	Set HttpFilter = Rule.VendorParametersSets( HttpFilterGuid )
+	If Err.Number = S_OK Then
+		FilterData = ModifySignatures( HttpFilter.Value( ValueName ) )
+		HttpFilter.Value( ValueName ) = FilterData
+	Else
+		Err.Clear
+		Set HttpFilter = Rule.VendorParametersSets.Add( HttpFilterGuid )
+		If Err.Number = S_OK Then
+			WScript.Echo "  ++ Adding HTTP Filter settings"
+			HttpFilter.Value( ValueName ) = Defaults1 & DeniedSigs & Defaults2
+		End If
+	End If
+	
+	If Err.Number = S_OK Then 
+			AddSignatures = True
+	Else
+		MsgBox "*** Failed to create the HTTP Filter settings..." & _
+			vbCrLf & "Error 0x" & Err.Number & _
+			vbCrLf & "Error: " & Err.Description, vbOkOnly, TitleMsg
+	End If
+
+	On Error Goto 0
+
+End Function
+
+'**********************************************************************
+' ModifySignatures( FilterData )
+' This function:
+'	1. modifies the HTTP Filter settings "DeniedSignatures" section
+'	2. calls into
+'		- nothing -
+'	3. called by 
+'		AddSignatures()
+'
+' if successful:
+'	1. FilterData is returned with modified data
+'
+' if unsuccessful:
+'	1. FilterData is unchanged
+'**********************************************************************
+Function ModifySignatures( FilterData )
+
+	Dim HttpFilter
+	Dim Item
+	Dim DeniedRoot
+	Dim BadBoy
+	Dim XmlData
+	Dim DataRoot
+	Dim ItemName
+
+	Set HttpFilter = CreateObject( "MSXML2.DomDocument" )
+	HttpFilter.async = False
+	HttpFilter.loadXML( FilterData )
+	If HttpFilter.parseError.errorCode <> S_OK Then _
+		DisplayXmlDomError HttpFilter, "Failed to load the ""FilterData"" XML data."
+	Set DeniedRoot = HttpFilter.selectSingleNode( "//DeniedSignatures" )
+
+	Set XmlData = Createobject( "MSXML2.DomDocument" )
+	XmlData.async = False
+	XmlData.loadXML( DeniedSigs )
+	if XmlData.parseError.errorCode <> S_OK Then _
+		DisplayXmlDomError XmlData, "Failed to load ""DeniedSignatures"""
+	Set DataRoot = XmlData.selectSingleNode( "DeniedSignatures" )
+	
+	' add new HTTP Filter settings and replace any existing settings
+	For Each Item in DataRoot.childNodes
+		ItemName = Item.getAttribute( "Name" )
+		Set BadBoy = DeniedRoot.selectSingleNode( "Signature[@Name='" & _
+												ItemName & "']" )
+		If Not( BadBoy Is Nothing ) Then
+			WScript.Echo "  -- Removing old """ & ItemName & """ definition"
+			DeniedRoot.removeChild BadBoy
+			If HttpFilter.parseError.errorCode <> S_OK Then _
+				DisplayXmlDomError HttpFilter, "Failed to remove """ & _
+						ItemName & """ from DeniedRoot."
+		End If
+
+		WScript.Echo "  ++ Adding the """ & ItemName & """ definition"
+		DeniedRoot.appendChild( Item )
+		If HttpFilter.parseError.errorCode <> S_OK Then _
+			DisplayXmlDomError HttpFilter, "Failed to append " & ItemName & _
+										" to DeniedRoot."
+	Next
+
+	ModifySignatures = HttpFilter.xml
+	
+End Function
+
+'**********************************************************************
+' GetISA( ISA )
+' This function:
+'	1. accesses the ISA COM and validates the correct context fro this script
+'	2. calls into
+'		- nothing -
+'	3. called by 
+'		Main()
+'
+' if successful:
+'	1. 'ISA' is a valid ISA ADmin COM object
+'	2. returns 'true'
+'
+' if unsuccessful:
+'	1. returns 'false'
+'	2. complains to the user about the wrong ISA context
+'**********************************************************************
+Function GetISA( ISA )
+
+	On Error Resume Next
+
+	GetISA = False
+
+	Const Standalone = "FPC.Root" 
+
+	Set ISA = CreateObject ( Standalone )
+
+	ISA.Refresh
+	If Err.Number = 0 Then 
+		'must be ISA 2000
+		MsgBox "This script only works on ISA 2004.", _
+				vbOkOnly, TitleMsg
+	Else
+		'might be ISA 2004
+		Err.Clear
+		ISA.GetContainingArray
+		If Err.Number = S_OK Then
+			GetISA = True
+		Else
+			'possibly a remote mgmt server
+			MsgBox "This must be run on an ISA 2004 server.", _
+					vbOkOnly, TitleMsg
+		End If			
+	End If
+
+	On Error Goto 0
+
+End Function
+
+'**********************************************************************
+' NewElement( oParentNode, szNodeName, szNodeText )
+' This function:
+'	1. Creates a new DomElement and appends it to oParentNode
+'	2. calls into
+'		- nothing -
+'	3. called by 
+'		ModifyHttpFilter()
+'
+' if successful:
+'	1. oParentNode has a new child element names "szNodeName"
+'
+' if unsuccessful:
+'	no special logic
+'**********************************************************************
+Function NewElement( oParentNode, szNodeName, szNodeText )
+
+	Dim oNewNode
+
+	Set oNewNode = oParentNode.ownerDocument.createElement( szNodeName )
+	oParentNode.appendChild( oNewNode )
+	oNewNode.text = szNodeText
+	
+End Function
+
+
+'**********************************************************************
+' Backup( )
+' This function:
+'	1. Creates a backup of the current firewall policies
+'	   - detects the presence of a previous backup and provide an option to cancel
+'	2. calls into
+'		- nothing -
+'	3. called by 
+'		Main()
+'
+' if successful:
+'	1. ISA Firewall policies are exported to the users desktop
+'	2. returns S_OK
+'
+' if unsuccessful:
+'	1. reports the error code to the user
+'	2. returns the error object
+'**********************************************************************
+Function Backup( )
+
+	'On Error Resume Next
+
+	Dim WshShell
+	Dim FSO
+	Dim UserName
+	Dim Comment
+	Dim FileName
+	Dim BackupExists
+	Dim Options
+
+	Const Abort = -1
+	Const fpcExportImportServerSpecific = 4
+
+	'modal dialog with "critical" icon, "Yes" and "No" buttons with "No" as default choice
+	Options = vbSystemModal + vbCritical + vbYesNo + vbDefaultButton2
+
+	Set WshShell = CreateObject( "WScript.Shell" )
+
+	UserName = WshShell.ExpandEnvironmentStrings( "%UserDomain%" ) & _
+				"\" & WshShell.ExpandEnvironmentStrings( "%UserName%" )
+	Comment = IsaArray.Name & " Firewall Policy backup created by " & _
+				WScript.ScriptName & " running as " & UserName & _
+				" at " & Now
+
+	FileName = Left( WScript.ScriptName, Len( WScript.ScriptName ) - 4 ) & "_Backup.xml"
+	FileName = WshShell.SpecialFolders( "Desktop" ) & "\" & FileName
+
+	BackupExists = "A " & WScript.ScriptName & " backup file was found at " & FileName & _
+				vbCrLf & vbCrLf & _
+				" Do you wish to overwrite it (This action is NOT reversible)?"
+				
+	Set FSO = CreateObject( "Scripting.FileSystemObject" )
+	If FSO.FileExists( FileName ) Then
+		If MsgBox( BackupExists, Options, TitleMsg) = vbNo Then
+			WScript.Echo TitleMsg & " canceled by operator."
+			Backup = Abort
+			Exit Function
+		End If
+	End If
+
+	WScript.Echo vbCrLf & "Backing up up your firewall policies to " & FileName
+
+	If ISAArray.ArrayPolicy.ExportToFile( FileName, fpcExportImportServerSpecific , _
+									"", Comment ) = S_OK Then
+		Backup = S_OK
+		WScript.Echo "..Successful.." & vbCrLf
+	Else
+		Backup = Err.Number
+		MsgBox "*** Failed to export the Firewall policies..." & _
+			vbCrLf & "Error 0x" & Err.Number & _
+			vbCrLf & "Error: " & Err.Description, vbOkOnly, TitleMsg
+	End If
+
+	On Error Goto 0
+
+End Function
+
+'**********************************************************************
+' DisplayXmlDomError( Context, ErrMsg )
+' This function:
+'	1. Displays the XmlDom error details
+'	2. calls into
+'		- nothing -
+'	3. called by 
+'		ModifyHttpFilter
+'
+' if successful:
+'	1. ISA Firewall policies are exported to the users desktop
+'	2. returns S_OK
+'
+' if unsuccessful:
+'	1. reports the error code to the user
+'	2. returns the error object
+'**********************************************************************
+Function DisplayXmlDomError( Context, ErrMsg )
+
+	MsgBox "Error 0x" & Hex( Context.parseError.errorCode ) & _ 
+			" in " & Context.parseError.url & _ 
+			vbCrLf & "Description: " & Context.parseError.reason & _ 
+			vbCrLf & "Line #     : " & Context.parseError.line & _ 
+			vbCrLf & "Column #   : " & Context.parseError.linepos & _ 
+			vbCrLf & "Text       : " & Context.parseError.srcText, _
+			vbOkOnly, TitleMsg
+End Function
+
+
+

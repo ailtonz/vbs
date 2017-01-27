@@ -1,0 +1,75 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'=======================================================================
+'  ADMT Constants File
+'
+'  Defines constants for use in ADMT scripts
+'=======================================================================
+'  Copyright(c) 2001, Microsoft
+'=======================================================================
+
+Option Explicit
+' RenameOption constants
+
+Const admtDoNotRename      = 0
+Const admtRenameWithPrefix = 1
+Const admtRenameWithSuffix = 2
+
+' PasswordOption constants
+
+Const admtPasswordFromName = 0
+Const admtComplexPassword  = 1
+Const admtCopyPassword     = 2
+
+' ConflictOptions constants
+
+Const admtIgnoreConflicting           = &H0000
+Const admtReplaceConflicting          = &H0001
+Const admtRenameConflictingWithPrefix = &H0002
+Const admtRenameConflictingWithSuffix = &H0003
+Const admtRemoveExistingUserRights    = &H0010
+Const admtRemoveExistingMembers       = &H0020
+Const admtMoveReplacedAccounts        = &H0040
+
+' DisableOption constants
+
+Const admtDisableNeither = 0
+Const admtDisableSource  = 1
+Const admtDisableTarget  = 2
+
+' SourceExpiration constant
+
+Const admtNoExpiration = -1
+
+' Translation Option
+
+Const admtTranslateReplace = 0
+Const admtTranslateAdd     = 1
+Const admtTranslateRemove  = 2
+
+' Report Type
+
+Const admtReportMigratedAccounts  = 0
+Const admtReportMigratedComputers = 1
+Const admtReportExpiredComputers  = 2
+Const admtReportAccountReferences = 3
+Const admtReportNameConflicts     = 4
+
+' Option constants
+
+Const admtNone     = 0
+Const admtData     = 1
+Const admtFile     = 2
+Const admtDomain   = 3
+Const admtRecurse           = &H0100
+Const admtFlattenHierarchy  = &H0000
+Const admtMaintainHierarchy = &H0200
+

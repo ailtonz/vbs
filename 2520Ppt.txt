@@ -1,0 +1,379 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+
+on error resume next
+
+ 
+Const UF_DONT_EXPIRE_PASSWD =&H10000
+Const UF_PASSWORD_CANT_CHANGE=&H40
+
+
+
+Dim Input
+Dim InputChecker
+Input = ""
+
+
+
+Do until Input <>""
+
+
+
+dim rootDSE
+set rootDSE = GetObject("LDAP://RootDSE")
+domainname=rootDSE.Get("defaultnamingcontext")
+
+
+
+Input = 24
+
+
+
+If Input = "" then
+	Msgbox "Active Directory setup cancelled."
+	Exit do
+End if
+
+
+
+InputChecker = IsNumeric(Input)
+
+
+If InputChecker = False then
+	Msgbox "You must enter a number (for example, 8, 15, 22, etc.)."
+	Input=""
+end if
+
+
+
+
+If InputChecker = True and Input < 1 then
+	Msgbox "You must have at least one computer."
+	Input=""
+end if
+
+
+
+If InputChecker = True and Input > 24 then
+	Msgbox "You may not enter more than 24 computers."
+	Input=""
+end if
+
+
+
+If InputChecker = True and Input > 0 then
+	InputChecker = CInt(Input)
+
+
+
+	Dim Cont
+	Dim OU
+	Dim OUName
+	Dim ServerName
+
+ 
+
+For x = 1 to InputChecker
+
+
+
+Select Case x
+	Case 1 ServerName="Vancouver"
+	Case 2 ServerName="Denver"
+	Case 3 ServerName="Perth"
+	Case 4 ServerName="Brisbane"
+	Case 5 ServerName="Lisbon"
+	Case 6 ServerName="Bonn"
+	Case 7 ServerName="Lima"
+	Case 8 ServerName="Santiago"
+	Case 9 ServerName="Bangalore"
+	Case 10 ServerName="Singapore"
+	Case 11 ServerName="Casablanca"
+	Case 12 ServerName="Tunis"
+	Case 13 ServerName="Acapulco"
+	Case 14 ServerName="Miami"
+	Case 15 ServerName="Auckland"
+	Case 16 ServerName="Suva"
+	Case 17 ServerName="Stockholm"
+	Case 18 ServerName="Moscow"
+	Case 19 ServerName="Caracas"
+	Case 20 ServerName="Montevideo"
+	Case 21 ServerName="Manila"
+	Case 22 ServerName="Tokyo"
+	Case 23 ServerName="Khartoum"
+	Case 24 ServerName="Nairobi"
+End Select
+
+	ComputerName = ServerName
+
+
+	OUName = ServerName & " OU"
+	Set cont = GetObject("LDAP://" & domainname)
+	Set OU = cont.Create("organizationalUnit", "OU=" & OUName)
+	OU.SetInfo
+
+
+' set ou = domain.GetObject("organizationalUnit", "OU=" & OUName)
+' set comp = ou.Create("computer", "cn=" & ServerName )
+' comp.Put "samAccountName", ServerName
+' comp.setinfo
+
+' set comp=GetObject("LDAP:// CN=" & ServerName & ", OU=" & ServerName & "," & domainname)
+' comp.AccountDisabled=false
+' comp.setinfo
+
+
+	
+
+	ServerName = ServerName & " OU"
+
+	OUName = ServerName
+
+	if x<10 then
+		usrName = "Admin0" & x
+		usrName2 = "Admin0" & x
+	else
+		usrName = "Admin" & x
+		usrName2 = "Admin" & x
+	end if
+
+	Set domain = GetObject("LDAP://OU=" & ServerName & "," & domainname)
+	set ou = domain.GetObject("organizationalUnit", "OU=" & ServerName )
+
+
+	set usr = ou.Create("user", "cn=" & usrName )
+	usr.Put "samAccountName", usrName2
+	usr.Put "userPrincipalName", usrName2
+	usr.SetInfo
+
+
+
+	set usr = GetObject("LDAP:// CN=" & usrName & ", OU=" & ServerName & "," & domainname)
+
+
+
+	usr.AccountDisabled = FALSE
+usr.SetPassword "domain"
+
+
+	flag = usr.Get("UserAccountControl")
+	newFlag = flag Or UF_DON'T_EXPIRE_PASSWD
+	usr.Put "userAccountControl", newFlag
+
+
+
+	usr.Put "pwdLastSet", CLng(-1)
+	usr.SetInfo
+
+
+set usr = GetObject("LDAP:// CN=" & usrName & ", OU=" & ServerName & "," & domainname)
+flag = usr.Get("UserAccountControl")
+newFlag = flag Or UF_PASSWORD_CANT_CHANGE
+usr.Put "userAccountControl", newFlag
+usr.SetInfo
+ 
+
+
+
+	ServerName = ServerName & " OU"
+
+	OUName = ServerName
+
+	if x<10 then
+		usrName = "IS Manager0" & x
+		usrName2 = "Ismanager0" & x
+	else
+		usrName = "IS Manager" & x
+		usrName2 = "ISmanager" & x
+	end if
+
+	Set domain = GetObject("LDAP://OU=" & ServerName & "," & domainname)
+	set ou = domain.GetObject("organizationalUnit", "OU=" & ServerName )
+
+
+	set usr = ou.Create("user", "cn=" & usrName )
+	usr.Put "samAccountName", usrName2
+	usr.Put "userPrincipalName", usrName2
+	usr.SetInfo
+
+
+
+	set usr = GetObject("LDAP:// CN=" & usrName & ", OU=" & ServerName & "," & domainname)
+
+
+
+	usr.AccountDisabled = FALSE
+usr.SetPassword "domain"
+
+
+	flag = usr.Get("UserAccountControl")
+	newFlag = flag Or UF_DON'T_EXPIRE_PASSWD
+	usr.Put "userAccountControl", newFlag
+
+
+
+	usr.Put "pwdLastSet", CLng(-1)
+	usr.SetInfo
+
+
+set usr = GetObject("LDAP:// CN=" & usrName & ", OU=" & ServerName & "," & domainname)
+flag = usr.Get("UserAccountControl")
+newFlag = flag Or UF_PASSWORD_CANT_CHANGE
+usr.Put "userAccountControl", newFlag
+usr.SetInfo
+ 
+
+
+
+
+
+
+	OUName = ServerName
+
+	if x<10 then
+		usrName = "Student0" & x
+		usrName2 = "Student0" & x
+	else
+		usrName = "Student" & x
+		usrName2 = "Student" & x
+	end if
+
+	Set domain = GetObject("LDAP://OU=" & ServerName & "," & domainname)
+	set ou = domain.GetObject("organizationalUnit", "OU=" & ServerName )
+
+
+
+	set usr = ou.Create("user", "cn=" & usrName )
+	usr.Put "samAccountName", usrName2
+	usr.Put "userPrincipalName", usrName2
+	usr.SetInfo
+
+
+
+	set usr = GetObject("LDAP:// CN=" & usrName & ", OU=" & ServerName & "," & domainname)
+
+
+	usr.AccountDisabled = FALSE
+
+
+
+	usr.SetPassword "domain"
+
+
+
+	flag = usr.Get("UserAccountControl")
+	newFlag = flag Or UF_DON'T_EXPIRE_PASSWD
+	usr.Put "userAccountControl", newFlag
+
+
+
+	usr.Put "pwdLastSet", CLng(-1)
+	usr.SetInfo
+
+
+set usr = GetObject("LDAP:// CN=" & usrName & ", OU=" & ServerName & "," & domainname)
+flag = usr.Get("UserAccountControl")
+newFlag = flag Or UF_PASSWORD_CANT_CHANGE
+usr.Put "userAccountControl", newFlag
+usr.SetInfo
+
+
+
+	OUName = ServerName
+	if x<10 then
+	usrName = "Backup0" & x
+	usrName2 = "Backup0" & x
+	else
+	usrName = "Backup" & x
+	usrName2 = "Backup" & x
+	end if
+	Set domain = GetObject("LDAP://OU=" & ServerName & "," & domainname)
+	set ou = domain.GetObject("organizationalUnit", "OU=" & ServerName )
+	set usr = ou.Create("user", "cn=" & usrName )
+	usr.Put "samAccountName", usrName2
+	usr.Put "userPrincipalName", usrName2
+	usr.SetInfo
+	set usr = GetObject("LDAP:// CN=" & usrName & ", OU=" & ServerName & "," & domainname)
+	usr.AccountDisabled = FALSE
+	usr.SetPassword "domain"
+	flag = usr.Get("UserAccountControl")
+	newFlag = flag Or UF_DON'T_EXPIRE_PASSWD
+	usr.Put "userAccountControl", newFlag
+	usr.Put "pwdLastSet", CLng(-1)
+	usr.SetInfo
+	set usr = GetObject("LDAP:// CN=" & usrName & ", OU=" & ServerName & "," & domainname)
+	flag = usr.Get("UserAccountControl")
+	newFlag = flag Or UF_PASSWORD_CANT_CHANGE
+	usr.Put "userAccountControl", newFlag
+	usr.SetInfo
+ 
+
+	OUName = ServerName
+	GrpName= ComputerName & " Admins (G)"
+	Set domain = GetObject("LDAP://OU=" & ServerName & "," & domainname)
+	set ou = domain.GetObject("organizationalUnit", "OU=" & ServerName )
+	set grp = ou.Create("group", "cn=" & grpName )
+	grp.Put "samAccountName", grpName
+	grp.SetInfo
+
+
+	
+	OUName = ServerName
+	if x<10 then
+	grpName = "Customer Support0" & x
+	else
+	grpName = "Customer Support" & x
+	end if
+	Set domain = GetObject("LDAP://OU=" & ServerName & "," & domainname)
+	set ou = domain.GetObject("organizationalUnit", "OU=" & ServerName )
+	set grp = ou.Create("group", "cn=" & grpName )
+	grp.Put "samAccountName", grpName
+	grp.SetInfo
+
+
+
+	OUName = ServerName
+	if x<10 then
+	grpName = "Help Desk0" & x
+	else
+	grpName = "Help Desk" & x
+	end if
+	Set domain = GetObject("LDAP://OU=" & ServerName & "," & domainname)
+	set ou = domain.GetObject("organizationalUnit", "OU=" & ServerName )
+	set grp = ou.Create("group", "cn=" & grpName )
+	grp.Put "samAccountName", grpName
+	grp.SetInfo
+
+
+	OUName = ServerName
+	if x<10 then
+	grpName = "IS Managers0" & x
+	else
+	grpName = "IS Managers" & x
+	end if
+	Set domain = GetObject("LDAP://OU=" & ServerName & "," & domainname)
+	set ou = domain.GetObject("organizationalUnit", "OU=" & ServerName )
+	set grp = ou.Create("group", "cn=" & grpName )
+	grp.Put "samAccountName", grpName
+	grp.SetInfo
+
+
+
+
+Next
+
+
+
+end if
+loop
+
+

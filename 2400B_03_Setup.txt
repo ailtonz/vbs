@@ -1,0 +1,29 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set Msg = CreateObject("CDO.Message")
+
+With Msg
+
+       .To = "LondonAdmin@nwtraders.msft"
+       .From = "samsmith@nwtraders.msft"
+       .Subject = "Configuring Exchange"
+       .TextBody = "Hello, I wanted to follow up with you with details for configuring the London Exchange server.  Today I need you to complete the following: " & chr(10) & chr(10) & "* Create a system policies container." & chr(10) & "* Create and apply system policies (see the policydetail.doc attachment)." & chr(10) & "* Create and apply recipient policies (see the rpolicydetail.doc attachment)." & chr(10) & "* Create a new storage group named Executive SG and a new mailbox store named Executive Mailbox Store." & chr(10) & "* Configure resource monitoring on the Exchange server to monitor the SMTP queue thresholds with a threshold of 5." & chr(10) & "* Configure notifications to send you an e-mail notification when the London server enters a critical state." & chr(10) & "* Configure performance logs (see the perfloginfo.doc attachment)." & chr(10) & "* Configure an alert that sends you a network message when the London MsExchangeIS Mailbox object send queue reaches 25." & chr(10) & "* Create a server policy that enables message tracking and apply it to the London server." & chr(10) & "* Configure SMTP logging on the SMTP virtual server." & chr(10) & "* Add an SMTP virtual server (see the smtpvs.doc attachment)." & chr(10) & "* Apply a hot fix." & chr(10) & chr(10) & "Thanks!"
+       .AddAttachment "c:\moc\2400\practices\Mod02\policydetail.doc"
+       .AddAttachment "c:\moc\2400\practices\Mod02\rpolicydetail.doc"
+       .AddAttachment "c:\moc\2400\practices\Mod02\perfloginfo.doc"
+       .AddAttachment "c:\moc\2400\practices\Mod02\smtpvs.doc"  
+       .Send
+
+
+End With
+
+MsgBox "Script Complete"
+

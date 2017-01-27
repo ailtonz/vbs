@@ -1,0 +1,72 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+on error resume next
+set fso = createobject("scripting.filesystemobject")
+set wshshell = wscript.CreateObject("wscript.shell")
+wshshell.Run "c:\moc\setup\bootini.cmd", 6, true
+
+set f = fso.OpenTextFile("c:\moc\setup\boot2.txt")
+ln1 = f.ReadLine 
+ln2 = f.ReadLine
+ln3 = f.ReadLine
+ln4 = f.readline
+ln5 = f.ReadLine
+ln6 = f.ReadLine
+ln7 = f.ReadLine
+ln8 = f.ReadLine
+ln9 = f.ReadLine
+
+wshshell.RegWrite "HKLM\SOFTWARE\Microsoft\Windows NT\Currentversion\winlogon\autoadminlogon", 0, true
+
+ln = array(ln1,ln2,ln3,ln4,ln5,ln6,ln7,ln8,ln9)
+
+done = 0
+do while done = 0
+for each i in ln
+	if i = "" then
+		done = 1
+	else
+		lng = len(i)
+		src = "="
+		xpos = instr(i,src)
+		posad = lng-xpos
+		os = right(i,posad)
+		if os = chr(34) & "Microsoft Windows 2000 Advanced Server" & chr(34) & " /fastdetect" then
+			osa = left(i,xpos-1)
+			set fl = fso.GetFile("c:\boot.ini")
+			fl.Delete
+			set fln = fso.CreateTextFile("c:\boot.ini")
+			fln.writeline "[boot loader]"
+			fln.WriteLine "timeout=30"
+			fln.WriteLine "default=" & osa
+			fln.WriteLine "[operating systems]"
+			fln.Close
+		end if
+	end if
+next
+loop
+
+done = 0
+do while done = 0
+for each i in ln
+	if i = "" then
+		done = 1
+	else
+		set fln = fso.OpenTextFile("c:\boot.ini",8)
+		fln.WriteLine i
+		fln.Close
+	end if
+next
+loop
+
+wshshell.Run "attrib c:\boot.ini +r +h +s", 6, true
+wshshell.run "c:\moc\setup\shutdown.exe /L /R /T:5 /C /Y", 1, true
+

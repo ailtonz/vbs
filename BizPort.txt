@@ -1,0 +1,212 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+	<SCRIPT LANGUAGE='VBScript'>
+	<!--
+	
+	' NOTE: window.event.XMLrecord returns an XML Node with child nodes for each column.
+	'	<RECORD>
+	'		<GUID>...</GUID>
+	'		<NAME>...</NAME>
+	'		<DESCRIPTION>...</DESCRIPTION>
+	'		...
+	'	</RECORD>
+	'	oSelection.firstChild.nodeName					would return the first column name
+	'	oSelection.childNodes(0).nodeName				is the same as oSelection.firstChild.nodeName
+	'	oSelection.firstChild.text							would return the first column value (contained text)
+	'	oSelection.selectSingleNode("./name").text	would return the value for the column named "name"
+		
+	const PAGE_SIZE = 20
+	Dim g_aSelectedKey1
+	Dim g_aSelectedKey2
+	Dim g_nItemsSelected
+	Dim g_sKeyString1
+	Dim g_sKeyString2
+
+	ReDim g_aSelectedKey1(PAGE_SIZE)
+	ReDim g_aSelectedKey2(PAGE_SIZE)
+	
+	Sub AddItem ()
+		Dim oSelection, sKey1, sKey2, iCount   
+
+		g_sKeyString1 = ""
+		g_sKeyString2 = ""
+		g_nItemsSelected = g_nItemsSelected +1
+		Set oSelection = window.event.XMLrecord
+		sKey1 = oSelection.selectSingleNode("./auction_id").text
+		sKey2 = oSelection.selectSingleNode("./shopper_id").text
+		
+		iCount = UBound(g_aSelectedKey1)
+		select case iCount
+			case PAGE_SIZE
+				redim preserve g_aSelectedKey1(0)
+				redim preserve g_aSelectedKey2(0)
+				g_aSelectedKey1(0) = sKey1
+				g_aSelectedKey2(0) = sKey2
+				g_sKeyString1 = sKey1
+				g_sKeyString2 = sKey2
+			case else
+				iCount = iCount +1
+				redim preserve g_aSelectedKey1(iCount)
+				redim preserve g_aSelectedKey2(iCount)	
+				g_aSelectedKey1(iCount) = sKey1
+				g_aSelectedKey2(iCount) = sKey2
+				g_sKeyString1 = Join(g_aSelectedKey1)
+				g_sKeyString2 = Join(g_aSelectedKey2)
+		end select
+	End Sub
+
+	Sub RemoveItem ()
+		Dim oSelection, sKey1, sKey2, iCount, i
+        
+		g_sKeyString1 = ""
+		g_sKeyString2 = ""
+		g_nItemsSelected = g_nItemsSelected - 1
+		Set oSelection = window.event.XMLrecord
+		sKey1 = oSelection.selectSingleNode("./auction_id").text
+		sKey2 = oSelection.selectSingleNode("./shopper_id").text
+		
+		iCount = UBound(g_aSelectedKey1)
+		select case iCount
+			case 0
+				g_aSelectedKey1(0) = empty
+				g_aSelectedKey2(0) = empty
+			case else
+				for i = 1 to iCount
+					if g_aSelectedKey1(i) = sKey1 and g_aSelectedKey2(i) = sKey2 then
+						g_aSelectedKey1(i) = empty
+						g_aSelectedKey2(i) = empty
+						g_aSelectedKey1(i) = g_aSelectedKey1(iCount)
+						g_aSelectedKey2(i) = g_aSelectedKey2(iCount)
+						redim preserve g_aSelectedKey1(iCount -1)
+						redim preserve g_aSelectedKey2(iCount -1)
+						g_sKeyString1 = Join(g_aSelectedKey1)
+						g_sKeyString2 = Join(g_aSelectedKey2)
+						exit for
+					end if
+				next
+		end select
+	End Sub
+
+	Sub SetTaskButtons()
+		If g_nItemsSelected = 0 then
+			DisableTask "delete"
+		Else
+			EnableTask "delete"	
+		End If	
+	End Sub
+	
+	Sub DisplaySelectedCount ()
+	' Display the selected item count
+		if selectform.seltype.value = "all" then
+			sText = "<%=L_AllItemsSelected_Message%>"
+		else
+			select case g_nItemsSelected
+				case 0
+					sText = "<%= L_NoItemsSelected_Message %>"
+				case 1
+					sText = "<%=L_OneItemSelected_Message%>"
+				case else
+					sText = sFormatString("<%= L_NItemsSelected_Message%>", Array(g_nItemsSelected))
+			end select
+		end if
+		setStatusText sText
+	End Sub   
+ 
+	sub OnUnSelectRow()
+		selectform.seltype.value = ""
+		call RemoveItem()
+		call SetTaskButtons()
+		call DisplaySelectedCount()
+	 end sub
+
+	sub OnSelectRow()
+		selectform.seltype.value = ""
+		call AddItem()
+		call SetTaskButtons()     
+		call DisplaySelectedCount()
+	end sub
+
+	sub OnSelectAllRows()
+		selectform.seltype.value = "all"
+		g_aSelectedKey1(0) = empty
+		redim g_aSelectedKey1(0)
+		g_aSelectedKey2(0) = empty
+		redim g_aSelectedKey2(0)
+		g_nSelectedItems = 0
+		call SetTaskButtons()
+		call DisplaySelectedCount()	
+	end sub
+	  
+	sub OnUnSelectAllRows()
+		selectform.seltype.value = ""
+		g_aSelectedKey1(0) = empty
+		redim g_aSelectedKey1(0)
+		g_aSelectedKey2(0) = empty
+		redim g_aSelectedKey2(0)
+		g_nItemsSelected = 0
+		call SetTaskButtons()
+		call DisplaySelectedCount()	
+	end sub  
+	
+	Sub EnableFind()
+		Dim sValue
+		
+		sValue = selfindby.value
+		select case sValue
+			case "ProductName"
+				if ProductName.value <> "" And ProductName.valid Then
+					findbyform.btnfindby.disabled = false
+				else
+					findbyform.btnfindby.disabled = true
+				end If
+			case "AuctionId"
+				if AuctionID.value <> "" and AuctionID.valid then
+					findbyform.btnfindby.disabled = false
+				else
+					findbyform.btnfindby.disabled = true
+				end if
+			case "Bidder"
+				if Bidder.value <> "" and Bidder.valid then
+					findbyform.btnfindby.disabled = false
+				else
+					findbyform.btnfindby.disabled = true
+				end if
+			case "ProductAndDate"
+				if ProductName.value = "" or ProductName.valid = false Then
+					findbyform.btnfindby.disabled = true
+				else
+					if selfindby.value = "from" then
+						if bIsDate(EndDate.value) and bIsDate(StartDate.value) then
+							' Disable find if end date is less than start date
+							if 0 > DateDiff("d", StartDate.value, EndDate.value) then
+								findbyform.btnfindby.disabled = true
+							else
+								findbyform.btnfindby.disabled = false
+							end if
+						else
+							findbyform.btnfindby.disabled = true
+						end if	
+					else
+						if bIsDate(StartDate.value) then
+							findbyform.btnfindby.disabled = false
+						else
+							findbyform.btnfindby.disabled = true
+						end if
+					end if
+				end if
+			case "All"
+				findbyform.btnfindby.disabled = false
+		end select
+	end sub	
+
+ -->
+ </SCRIPT>  
+

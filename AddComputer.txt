@@ -1,0 +1,39 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'Connect to Operations Manager
+
+set dse = GetObject("LDAP://RootDSE") 
+sDN = dse.Get("schemaNamingContext") 
+set sch = GetObject("LDAP://" & sDN ) 
+
+'Create the new Class Object
+
+set newcl = sch.create("classSchema","cn=Trainerchangeme") 
+
+'Set the parameters of the New Class Object
+
+newcl.put "cn", "Trainerchangeme" 
+newcl.put "governsId", "1.2.840.x.1.4.2500" 
+newcl.put "objectClassCategory", 1
+newcl.put "subClassOf", "User"
+newcl.put "mustContain","MCPchangeme" 
+newcl.put "mayContain","department"
+
+'Commit the new Class
+
+newcl.SetInfo 
+dse.Put "schemaUpdateNow",1 
+
+'Verify Completion
+msgbox "New Class added successfully ..."
+
+
+

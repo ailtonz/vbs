@@ -1,0 +1,245 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+
+' ----------------------------------------------------------
+' 1. Create CONTENT Catalog.
+'
+' 2. Define FIELDS and CATEGORIES for CONTENT Catalog.
+'-----------------------------------------------------------
+Option Explicit
+' ----------------------------------------------------------
+' CONST Definitions
+'
+'---- CursorLocationEnum Values ----
+Const adUseServer = 2
+Const adUseClient = 3
+
+'---- CursorTypeEnum Values ----
+Const adOpenStatic = 3
+
+'---- LockTypeEnum Values ----
+Const adLockPessimistic = 2
+
+'---- FieldAttributeEnum Values ----
+Const adFldUpdatable = &H00000004
+
+'---- DataTypeEnum Values ----
+Const adTinyInt = 16
+Const adInteger = 3
+Const adBoolean = 11
+Const adGUID = 72
+Const adDBTimeStamp = 135
+Const adBSTR = 8
+
+Const FIELD_CATALOGNAME = "u_CatalogName"
+Const FIELD_CATEGORYUID = "u_CategoryUID"
+
+' ----------------------------------------------------------
+' PUBLIC Declarations
+'
+Public g_OCatalog
+Public g_sMSCSContentConnectionString
+
+Public SITE_NAME
+Public CONTENT_CATALOG
+' ----------------------------------------------------------
+' !!! Values you might want to change !!!
+'
+SITE_NAME = "BlankSite"
+CONTENT_CATALOG = GetSiteConfigField (SITE_NAME, _
+									  "Content System", "s_CatalogName")
+
+' ----------------------------------------------------------
+' MAIN  Procedure
+'
+g_sMSCSContentConnectionString = _
+	GetSiteConfigField (SITE_NAME, "Content System", "connstr_db_Content")
+
+Call CTDSInitContentCatalogMgm ("")
+	Call CTDSDefineFieldsInContentCatalog ()
+	Call CTDSAddContentCatalog (CONTENT_CATALOG)
+Call CTDSCloseContentCatalogMgm ()
+
+Call CTDSInitContentCatalogMgm (CONTENT_CATALOG)
+	Call CTDSDefineCategoriesInContentCatalog ()
+Call CTDSCloseContentCatalogMgm ()
+
+' ----------------------------------------------------------
+Sub CTDSInitContentCatalogMgm (ByVal sCatalogName)
+	Set g_OCatalog = CreateObject ("Commerce.ProductCatalog")
+    If ("" = sCatalogName) Then
+		Call g_OCatalog.Initialize (g_sMSCSContentConnectionString, , 1)
+    Else
+        Call g_OCatalog.Initialize (g_sMSCSContentConnectionString, sCatalogName, 1)
+    End If
+End Sub
+' ----------------------------------------------------------
+Sub CTDSCloseContentCatalogMgm ()
+	Set g_OCatalog = Nothing
+End Sub    
+' ----------------------------------------------------------
+Sub CTDSDefineField (ByVal sFieldName, ByVal iDataType, ByVal iLength)
+	Dim rsDefinition
+        
+    Set rsDefinition = CreateObject ("ADODB.Recordset")
+    rsDefinition.CursorLocation = adUseClient
+    rsDefinition.Fields.Append "name", adBSTR, 128, adFldUpdatable
+    rsDefinition.Fields.Append "i_DataType", adInteger, ,adFldUpdatable
+    If (adBSTR = iDataType) Then
+		rsDefinition.Fields.Append "i_Elements", adInteger, ,adFldUpdatable    
+    End If
+
+	rsDefinition.Open , ,adOpenStatic, adLockPessimistic
+    rsDefinition.AddNew
+    rsDefinition.Fields("name").Value = sFieldName
+    rsDefinition.Fields("i_DataType").Value = iDataType
+    If (adBSTR = iDataType) Then
+		rsDefinition.Fields("i_Elements").Value = iLength
+    End If
+    
+    g_OCatalog.DefineFields rsDefinition
+End Sub
+' ----------------------------------------------------------
+Sub CTDSDefineFieldsInContentCatalog ()
+       
+	Call CTDSDefineField ("GUID", adInteger, 4)             
+    Call CTDSDefineField ("CreationTime", adDBTimeStamp, 4) 
+    Call CTDSDefineField ("ModifiedTime", adDBTimeStamp, 4) 
+    Call CTDSDefineField ("ModifiedBy", adBSTR, 32) 
+    Call CTDSDefineField ("State", adTinyInt, 1)    
+    Call CTDSDefineField ("EntityType", adTinyInt, 1)
+    Call CTDSDefineField ("Version", adInteger, 4)   
+
+    Call CTDSDefineField ("PropertyName",  adBSTR, 64)
+    Call CTDSDefineField ("PropertyValue", adBSTR, 200)
+    Call CTDSDefineField ("ItemName", adBSTR, 32)
+    Call CTDSDefineField ("ItemValue", adBSTR, 2048)
+    Call CTDSDefineField ("ItemType", adTinyInt, 1)
+    Call CTDSDefineField ("ItemRequired", adBoolean, 1)
+    Call CTDSDefineField ("FragmentName", adBSTR, 32)
+    Call CTDSDefineField ("FragmentSource", adTinyInt, 1)
+    Call CTDSDefineField ("Prerendable", adBoolean, 1)
+    Call CTDSDefineField ("Cacheable", adBoolean, 1)
+    Call CTDSDefineField ("FragmentProgId", adBSTR, 64)
+    Call CTDSDefineField ("FragmentRefCounter", adInteger, 4)
+    Call CTDSDefineField ("ContentSelectorName", adBSTR, 32)
+    Call CTDSDefineField ("ContentSelectorRefCounter", adInteger, 4)
+    Call CTDSDefineField ("TypeName", adBSTR, 32)
+    Call CTDSDefineField ("Type", adTinyInt, 1)
+    Call CTDSDefineField ("TypeRefCounter", adInteger, 4)
+	Call CTDSDefineField ("TypeFriendlyName", adBSTR, 32)
+	Call CTDSDefineField ("TypeProgID", adBSTR, 32)
+    Call CTDSDefineField ("AssetName", adBSTR, 32)
+    Call CTDSDefineField ("AssetSource", adTinyInt, 1) 
+    Call CTDSDefineField ("AssetType", adBSTR, 32)
+    Call CTDSDefineField ("AssetProgId", adBSTR, 64)
+    Call CTDSDefineField ("AssetRefCounter", adInteger, 4)
+    Call CTDSDefineField ("TargetExprId", adInteger, 4)
+    Call CTDSDefineField ("SelectionExprId", adInteger, 4)
+    Call CTDSDefineField ("SlotName", adBSTR, 32)  
+    Call CTDSDefineField ("SlotType", adTinyInt, 1)
+    Call CTDSDefineField ("MaxFragments", adTinyInt, 1)
+    Call CTDSDefineField ("DefaultFragment", adBSTR, 32)
+    Call CTDSDefineField ("TemplateName", adBSTR, 32)  
+    Call CTDSDefineField ("TemplateType", adTinyInt, 1)
+    Call CTDSDefineField ("TemplateLocation", adTinyInt, 1)
+    Call CTDSDefineField ("TemplateContent", adBSTR, 4000) 
+    Call CTDSDefineField ("TemplateRefCounter", adInteger, 4)
+End Sub
+' ----------------------------------------------------------
+Sub CTDSDefineCategoriesInContentCatalog ()
+	Dim AFields1
+	AFields1 = Array ("GUID", "CreationTime", "ModifiedTime", "ModifiedBy", _
+                      "State", "EntityType", "Version", _
+                      "PropertyName", "PropertyValue")
+    Call g_OCatalog.CreateDefinition ("Property", AFields1)
+
+    Dim AFields2
+    AFields2 = Array ("GUID", "CreationTime", "ModifiedTime", "ModifiedBy", _
+                      "State", "EntityType", "Version", _
+                      "ItemName", "ItemValue", "ItemType", "ItemRequired")
+    Call g_OCatalog.CreateDefinition ("ContentItem", AFields2)
+
+    Dim AFields3
+    AFields3 = Array ("GUID", "CreationTime", "ModifiedTime", "ModifiedBy", _
+                      "State", "EntityType", "Version", _
+                      "TypeName", "Type", "TypeRefCounter", "TypeFriendlyName", "TypeProgID")
+    Call g_OCatalog.CreateDefinition ("AssetType", AFields3)
+
+    Dim AFields4
+    AFields4 = Array ("GUID", "CreationTime", "ModifiedTime", "ModifiedBy", _
+                      "State", "EntityType", "Version", _
+                      "AssetName", "AssetSource", "AssetType", "AssetProgId", _
+                      "AssetRefCounter")
+    Call g_OCatalog.CreateDefinition ("Asset", AFields4)
+
+    Dim AFields5
+    AFields5 = Array ("GUID", "CreationTime", "ModifiedTime", "ModifiedBy", _
+                      "State", "EntityType", "Version", _
+                      "TemplateName", "TemplateType", "TemplateLocation", "TemplateContent", _
+                      "TemplateRefCounter")
+    Call g_OCatalog.CreateDefinition ("Template", AFields5)
+
+    Dim AFields6
+    AFields6 = Array ("GUID", "CreationTime", "ModifiedTime", "ModifiedBy", _
+                      "State", "EntityType", "Version", _
+                      "FragmentName", "FragmentSource", "Prerendable", "Cacheable", _
+                      "FragmentProgId", "FragmentRefCounter")
+    Call g_OCatalog.CreateDefinition ("Fragment", AFields6)
+
+    Dim AFields7
+    AFields7 = Array ("GUID", "CreationTime", "ModifiedTime", "ModifiedBy", _
+                      "State", "EntityType", "Version", _
+                      "TargetExprId", "SelectionExprId")
+    Call g_OCatalog.CreateDefinition ("Rule", AFields7)
+
+    Dim AFields8
+    AFields8 = Array ("GUID", "CreationTime", "ModifiedTime", "ModifiedBy", _
+                      "State", "EntityType", "Version", _
+                      "ContentSelectorName", "ContentSelectorRefCounter")
+    Call g_OCatalog.CreateDefinition ("ContentSelector", AFields8)
+
+    Dim AFields9
+    AFields9 = Array ("GUID", "CreationTime", "ModifiedTime", "ModifiedBy", _
+                      "State", "EntityType", "Version", _
+                      "SlotName", "SlotType", "DefaultFragment", "MaxFragments")
+    Call g_OCatalog.CreateDefinition ("Slot", AFields9)
+End Sub
+' ----------------------------------------------------------
+Sub CTDSAddContentCatalog (ByVal sCatalogName)
+        
+    Dim rsCatalog
+
+    Set rsCatalog = CreateObject ("ADODB.Recordset")
+    rsCatalog.CursorLocation = adUseClient
+    rsCatalog.Fields.Append FIELD_CATALOGNAME, adBSTR, 32, adFldUpdatable
+    rsCatalog.Fields.Append FIELD_CATEGORYUID, adBSTR, 32, adFldUpdatable
+    rsCatalog.Open , , adOpenStatic, adLockPessimistic
+    rsCatalog.AddNew
+    rsCatalog.Fields(FIELD_CATALOGNAME).Value = sCatalogName
+    rsCatalog.Fields(FIELD_CATEGORYUID).Value = "GUID"
+
+    Call g_OCatalog.CreateCatalog (rsCatalog)
+End Sub
+' -----------------------------------------------------------
+Function GetSiteConfigField(strSiteName, strResourceName, strPropertyName)
+	Dim objSite
+	Set objSite = CreateObject("Commerce.SiteConfigReadOnly")
+
+	GetSiteConfigField = ""
+	On Error Resume Next
+	objSite.Initialize strSiteName
+	GetSiteConfigField = objSite.Fields(CStr(strResourceName)).Value.Fields(CStr(strPropertyName)).Value
+	On Error GoTo 0
+
+	Set objSite = Nothing
+End Function
+

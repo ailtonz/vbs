@@ -1,0 +1,180 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Course 2439A VBScript and WSH Essentials
+'
+' Title:		2439A Class Setup Script
+' Description: 	This script will do the following:
+'
+' Create the Following Shares:
+' Labs, Office, Reskit
+'
+' Check the PPT files are in the correct folder
+' Create Shortcuts to each PPT file in the Start Menu
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Require Variants to be declared
+Option Explicit
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Initialization
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Dim oFSO, oShell, sPPTPath, sProgFiles
+Dim sMachineName, sName, oMaster, oPrinter
+Dim sDest, nButVal, oLMServer, oNewShare
+Dim sDesktop, sStartup, x, sShortCutFolder
+Dim oShortcut
+'
+Set oFSO = WScript.CreateObject("Scripting.FileSystemObject")
+Set oShell = WScript.CreateObject("WScript.Shell")
+'
+'Get Program Files path
+sProgFiles = oShell.ExpandEnvironmentStrings("%ProgramFiles%")
+'
+'Check this is the LONDON computer
+sMachineName = oShell.ExpandEnvironmentStrings("%COMPUTERNAME%")
+'
+If sMachineName <> "LONDON" Then
+	' If not LONDON Machine then exit script
+	MsgBox "This Script is only for the LONDON Server.", 64, "2439A Course Setup"
+	WScript.Quit
+End If
+'
+' Display Welcome Message
+nButVal = Msgbox("This Script will setup the MSDN course 2439A," _
+		         & " is that what you want?",vbYesNo ,"2439A Course Setup")
+If nButVal <> 6 Then
+	Msgbox "Quiting Script",vbCritical ,"2439A Course Setup"
+	WScript.Quit
+End If
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Check for presence of Office and Reskit Folders on D:
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Check if Office Setup.exe exists
+sDest = "D:\Office\Setup.ini"
+' Check that D:\Office exists
+If IfExist(sDest) = False Then
+	Msgbox "Office Folder has not been correctly setup" & vbCRLF _
+		 & "Please ensure all files were copied to the folder" & vbCRLF _
+		 & "Including the hidden files" & vbCRLF _
+		 & "Please correct the problem and then restart the script"
+	Wscript.Quit
+End If
+' Check if Reskit Setup.exe exists
+sDest = "D:\Reskit\Setup.exe"
+' Check that D:\Office exists
+If IfExist(sDest) = False Then
+	Msgbox "Reskit Folder has not been correctly setup" & VBCRLF _
+	     & "Please correct the problem and then restart the script"
+	Wscript.Quit
+End If
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Share the following Folders
+	' C:\Setup as Setup
+	' C:\Program Files\MSDNTrain\2439\Labs as Labs
+	' D:\ResKit as Reskit
+	' D:\Office as Office
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+On Error Resume Next
+'Bind to Server service on LONDON machine
+Set oLMServer = GetObject("WinNT://LONDON/LANMANSERVER")
+If Err.Number <> 0 Then
+	Msgbox "Something went wrong with ADSI Binging" & vbCRLF _
+	& "Error No.= " & Err.Number
+	wscript.Quit
+End If
+'Create all the new shares
+Set oNewShare = oLMServer.Create("FileShare", "Setup")
+oNewShare.Path = "C:\Setup"
+oNewShare.Description = "Course Setup Share"
+oNewShare.MaxUserCount = "50"
+oNewShare.SetInfo
+'
+Set oNewShare = oLMServer.Create("FileShare", "Labs")
+oNewShare.Path = "C:\Program Files\MSDNTrain\2439\Labs"
+oNewShare.Description = "Labs Share"
+oNewShare.MaxUserCount = "50"
+oNewShare.SetInfo
+'
+Set oNewShare = oLMServer.Create("FileShare", "Reskit")
+oNewShare.Path = "D:\Reskit"
+oNewShare.Description = "Windows 2000 Server Resource Kit"
+oNewShare.MaxUserCount = "50"
+oNewShare.SetInfo
+'
+Set oNewShare = oLMServer.Create("FileShare", "Office")
+oNewShare.Path = "D:\Office"
+oNewShare.Description = "Microsoft Office 2000"
+oNewShare.MaxUserCount = "50"
+oNewShare.SetInfo
+'
+Set oNewShare = Nothing
+Set oLMServer = Nothing
+'
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Check PPT path
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+sPPTPath = sProgFiles & "\Msdntrain\2439\PowerPnt"
+If IfExist(sPPTPath) = False Then
+		MsgBox "Error: " & sPPTPath & " not found!" _ 
+		& "Please check the PPT file paths are correct and try again" _
+		& "Correct Path is: C:\Program Files\MSDNTrain\2439\PowerPnt"
+		WScript.Quit
+End If
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Create Desktop Shortcuts
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+sStartup = oShell.SpecialFolders("Programs")
+sShortCutFolder = sStartup & "\2439 Slides"
+' Created Folder for shortcuts
+If IfExist(sShortCutFolder) = False Then
+	oFSO.CreateFolder sShortCutFolder
+	If Err.Number <> 0 Then
+		MsgBox "Something went wrong Shortcut Folder creation"
+		WScript.Quit
+	End If
+End If
+For x = 0 to 5
+	Set oShortCut = oShell.CreateShortcut(sShortCutFolder & "\Module " & x & ".lnk")
+	oShortCut.TargetPath = sPPTPath & "\2439A_0" & x & ".ppt"
+	oShortCut.Save
+Next
+Set oShortcut =oShell.CreateShortcut(sShortCutFolder & "\Module 2439A_XA.lnk")
+oShortCut.TargetPath = sPPTPath & "\2439A_XA.ppt"
+oShortCut.Save
+Set oShortcut =oShell.CreateShortcut(sShortCutFolder & "\Module 2439A_XC.lnk")
+oShortCut.TargetPath = sPPTPath & "\2439A_XC.ppt"
+oShortCut.Save
+
+'
+MsgBox "Script Complete", vbInformation,"2439A Course Setup"
+'
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'END OF SCRIPT
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'FUNCTIONS
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Function: Check for existence of file system object
+' Name : IfExist
+' Argument: Name of Object (file or Directory) to check for.
+'''''''''''''''''''''''''''''''''''''''
+Function IfExist(sName)
+	IfExist = False
+	On Error Resume Next
+	If oFSO.FileExists(sName) Then IfExist = True
+	If oFSO.FolderExists(sName) Then IfExist = True
+End Function
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'END OF FUNCTIONS
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+

@@ -1,0 +1,802 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' This program is Copyright (c) 2004 Microsoft Corporation.  
+'
+' All rights reserved.
+'
+' THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+' ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+' THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+' PARTICULAR PURPOSE.
+'
+' IN NO EVENT SHALL MICROSOFT AND/OR ITS RESPECTIVE SUPPLIERS BE
+' LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY
+' DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+' WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS
+' ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+' OF THIS CODE OR INFORMATION.
+'
+' Version 2.3
+
+' This script creates policies to block outbound traffic from win32.Bagle.
+
+' This script will work in an Enterprise or Standalone environment
+
+' Specifically, it:
+'	1. creates custom protocols according to the latest worm profile
+'	2. creates one "deny" rule that uses the new protocol definitions
+'	3. creates a Firewall Client Application setting that "disables" FW client
+'	    access for the defined applications
+
+' The protocols and associated rules are created at the Enterprise level when 
+'	Enterprise policies are used, and at each Array otherwise.
+
+' The Firewall Client Application setting is always applied at the Array level
+
+' Usage: cscript Block_Bagle.vbs
+
+' Disclaimer: 
+'	The intent is to prevent an internal infection from propagating the 
+'	worm to Internet hosts.
+
+' History:
+'  	2.0	5/8/04 - Migrated to ISA 2000 / 2004 combo script
+'  	2.1	5/15/04 - fixed the WScript popup problem
+'  	2.2	7/15/04 - changed the "from" and "to" elements to use "anywhere"
+'				for ISA 2004
+'	2.3 	7/24/04 - updated signatures to AA variant
+'*****************************************************************
+
+Option Explicit
+
+Dim WshShell
+Dim ISA
+Dim Isa2K4: Isa2K4 = False
+Dim TitleMsg
+Dim ArrData
+Dim arrProto
+Dim arrFiles
+Dim ProtoDescription
+Dim RuleDescription
+
+Const fpcArrayPolicyUsed = 0
+Const fpcEnterprisePolicyUsed = 1
+Const fpcArrayAndEnterprisePoliciesUsed = 2
+Const fpcTypeArray = 2
+Const fpcCacheMode = 4	
+Const fpcTCP = 0
+Const fpcUDP = 1
+Const fpcOutbound = 1
+Const fpcSendReceive = 3
+
+Const Version = "2.3"
+Const No_Error = 0
+Const Not_Found = "80070002"
+Const BadBoy = "W32.Bagle"
+
+TitleMsg = WScript.ScriptName & " version " & Version
+
+ProtoDescription = "This is a protocol used by """ & BadBoy & """"
+RuleDescription = "This rule denies all protocols known to be used by """ & BadBoy & """"
+
+'
+' the following definitions are based on data provided by
+' http://www.sophos.com/virusinfo/articles/bagelnetsky.html
+'
+ArrData = Array( fpcTCP, fpcOutbound, 81, 81, _ 
+				fpcTCP, fpcOutbound, 2745, 2745, _ 
+				fpcTCP, fpcOutbound, 4751, 4751, _
+				fpcTCP, fpcOutbound, 6667, 6667, _
+				fpcTCP, fpcOutbound, 8866, 8866 _
+				)
+
+arrFiles = Array( "au", "avguard", "avpguard", "AVprotect", "bbeagle", _
+				"Direct", "directs", "drvddll", "drvsys", "fooding", _
+				"gigabit", "i11r54n4", "i1RU54N", "i1RU74N4", "irun4", _
+				"maja", "readme", "sysinfo", "winlogon", "winsys", _
+				"Winupd" _
+				)
+arrProto = Array( "TCP-", "UDP-" )
+
+'5/15/2004 - avoids WScript popups where we want cmd line output
+Set WshShell = CreateObject( "WScript.Shell" )
+If LCase( Right( WScript.FullName, 11 ) ) = "wscript.exe" Then 
+	WshShell.Run "cscript """ & WScript.ScriptFullName & """", 10, False
+	WScript.Quit
+End If
+
+If GetISA Then Main
+
+'*****************************************************************
+' Organize and control the overall effort in the proper context
+'*****************************************************************
+Sub Main
+
+	On Error Resume Next
+
+	Dim ISAArray
+	Dim State
+	
+	'either standalone or array-only policies
+	If Isa2K4 OR ISA.Type <> fpcTypeArray or ISA.Enterprise.PolicyUsedFlag = fpcArrayPolicyUsed Then 
+		For Each ISAArray In ISA.Arrays
+			If ISAArray.Components = fpcCacheMode Then
+				MsgBox "ISA Array " & ISAArray.Name & " is operating in Cache mode and cannot control non-web protocols." & _
+						vbCrLf & "No changes can be made to this array.", _
+						vbOKOnly + vbCritical + vbApplicationModal, TitleMsg
+			Else
+				If Not DoArray( ISAArray ) Then _
+					Panic  "Failed to create the " & ISAArray.Name & " policies; error 0x" & Hex( Err.Number ) & _
+							"; " & Err.Description
+			End If
+		Next
+		State = True
+	Else
+		State = DoIsa2kEnterprise
+	End If
+
+	If State Then
+
+		MsgBox "Successfully added or updated the blocking policies.", vbOKOnly, TitleMsg
+		
+	Else
+
+		Panic "Failed to create the blocking policies."
+		
+	End If
+
+	On Error Goto 0
+
+End Sub
+
+'*****************************************************************
+' ISA 2000 - specific functions
+'*****************************************************************
+'*****************************************************************
+' operate in the Enterprise context
+'*****************************************************************
+Function DoIsa2kEnterprise
+
+	On Error Resume Next
+
+	DoIsa2kEnterprise = True
+
+	Dim ISAArray
+	Dim Policy
+	Dim PolicyConfig
+	Dim Protocols
+	Dim Rules
+
+	Const fpcArrayScope = 0
+	Const fpcEnterpriseScope = 1
+
+	WScript.Echo "Managing the Enterprise-level policies..."
+
+	If Not ISA.Enterprise.ForcePacketFiltering Then _
+		MsgBox "Packet Filtering is not being forced at the Enterprise level" & _
+					"; this may allow packet filtering to be disabled at the Array..", _
+					vbOKOnly + vbCritical + vbApplicationModal, TitleMsg
+				
+	'need to clean up any old rules
+	For Each Policy In ISA.Enterprise.EnterprisePolicies
+		Set Rules = Policy.ProtocolRules
+		Rules.Remove( BadBoy )
+		If Hex( Err.Number ) = Not_Found Then
+			Err.Clear
+		ElseIf Err.Number = 0 Then
+			Rules.Save
+		Else
+			Panic "Failed to remove the Enterprise """ & BadBoy & """ protocol rule; error 0x" & _
+				Hex( Err.Number ) & "; " & Err.Description
+		End If
+	Next
+	
+	Set Protocols = ISA.Enterprise.PolicyElements.ProtocolDefinitions
+	'need to clean up any old protocol definitions
+	DeleteIsa2kProtocols( Protocols )
+
+	If Not AddIsa2kProtocols( Protocols ) Then _
+		Panic  "Failed to create the Enterprise protocol definitions; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	'handle each Enterprise Policy in turn
+	For Each Policy In ISA.Enterprise.EnterprisePolicies
+		WScript.Echo "Managing Enterprise Policy " & Policy.Name & "..."
+		If Not Policy.ForcePacketFiltering Then _
+			MsgBox "Packet Filtering is not being forced in Policy " & Policy.Name & _
+						"; this may allow packet filtering to be disabled in Array " & _
+						Policy.ArrayName, vbOKOnly + vbCritical + vbApplicationModal, TitleMsg
+
+		Set Rules = Policy.ProtocolRules
+		If Not AddIsa2kRule( Rules, fpcEnterpriseScope ) Then _
+			Panic "Failed to add the protocol rule to " & Policy.Name & "; error 0x" & Hex( Err.Number ) & _
+					"; " & Err.Description
+	Next
+
+	'update the array policy according to the array policy config settings
+	For Each PolicyConfig In ISA.Enterprise.ArrayPolicyConfigs
+		WScript.Echo "Examining Enterprise Array Policy " & PolicyConfig.ArrayName & "..."
+		If PolicyConfig.PolicyUsedFlag = fpcArrayPolicyUsed Then
+			Set ISAArray = ISA.Arrays( PolicyConfig.ArrayName )
+			If ISAArray.Components = fpcCacheMode Then
+				MsgBox "ISA Array " & ISAArray.Name & " is operating in Cache mode and cannot control non-web protocols." & _
+						vbCrLf & "No changes can be made to this array.", _
+						vbOKOnly + vbCritical + vbApplicationModal, TitleMsg
+			Else
+				If Not DoArray( ISAArray ) Then _
+					Panic  "Failed to create the " & ISAArray.Name & " policies; error 0x" & Hex( Err.Number ) & _
+							"; " & Err.Description
+			End If
+		End If
+		WScript.Echo "Done Examining Enterprise Array Policy " & PolicyConfig.ArrayName & "..."
+	Next
+
+	WScript.Echo "Done..." & vbCrLf
+	DoIsa2kEnterprise = True
+
+End Function
+
+'*****************************************************************
+' Create the custom protocols in the proper context
+'*****************************************************************
+Function AddIsa2kProtocols( Protocols )
+
+	On Error Resume Next
+
+	AddIsa2kProtocols = False
+
+	Dim NewProtocol	
+	Dim Protocol
+	Dim ProtoName
+	Dim BaseCounter
+	Dim ProtoCounter
+
+	' data in the protocol definitions is arranged thus: <Protoocol>, <Direction>, <StartingPort>, <EndingPort>
+
+	WScript.Echo "-- Creating Protocol Definitions..."
+
+	For BaseCounter = 0 To UBound( arrData ) Step 4
+
+		For ProtoCounter = arrData( BaseCounter + 2 ) To arrData( BaseCounter + 3 )
+			ProtoName = BadBoy & " (" & arrProto( ArrData( BaseCounter ) ) & CStr( ProtoCounter ) & ")"
+
+			WScript.Echo "--- Creating Protocol Definition """ & ProtoName & """..."
+			If ArrData( BaseCounter ) = fpcTCP Then
+				Set NewProtocol = Protocols.AddTCP( ProtoName, arrData( BaseCounter + 1 ), ProtoCounter )
+				If Err.Number <>  No_Error Then _
+					Panic  "Failed to create the """ & ProtoName & """ protocol definition; error 0x" & Hex( Err.Number ) & _
+							"; " & Err.Description
+			Else
+				Set NewProtocol = Protocols.AddUDP( ProtoName, arrData( BaseCounter + 1 ), ProtoCounter )
+				If Err.Number <>  No_Error Then _
+					Panic  "Failed to create the """ & ProtoName & """ protocol definition; error 0x" & Hex( Err.Number ) & _
+							"; " & Err.Description
+			End If
+		
+			NewProtocol.Description = ProtoDescription
+			If Err.Number <>  No_Error Then _
+				Panic "Failed to add a description to the """ & ProtoName & """ protocol definition; error 0x" & _
+						Hex( Err.Number ) & "; " & Err.Description
+
+			NewProtocol.Save
+			If Err.Number <>  No_Error Then _
+				Panic "Failed to save the """ & ProtoName & """ protocol definition; error 0x" & Hex( Err.Number ) & _
+						"; " & Err.Description
+		Next
+	Next
+
+	WScript.Echo "-- Done..." & vbCrLf
+	AddIsa2kProtocols = True
+
+End Function
+
+'*****************************************************************
+' Delete the custom protocols in the proper context
+'*****************************************************************
+Function DeleteIsa2kProtocols( Protocols )
+
+	'On Error Resume Next
+
+	DeleteIsa2kProtocols = False
+
+	Dim ProtoName
+	Dim BaseCounter
+	Dim ProtoCounter
+	Dim Updated
+
+	WScript.Echo "-- Deleting Protocol Definitions..."
+	For BaseCounter = 0 To UBound( arrData ) Step 4
+		For ProtoCounter = arrData( BaseCounter + 2 ) To arrData( BaseCounter + 3 )
+			ProtoName = BadBoy & " (" & arrProto( ArrData( BaseCounter ) ) & CStr( ProtoCounter ) & ")"
+			WScript.Echo "--- Deleting Protocol Definition """ & ProtoName & """..."
+			Protocols.Remove( ProtoName )
+			If Err.Number = No_Error Then
+				Updated = True
+			ElseIf Hex( Err.Number ) = Not_Found Then
+				Err.Clear
+			Else
+				Panic  "Failed to delete the """ & ProtoName & """ protocol definition; error 0x" & Hex( Err.Number ) & _
+						"; " & Err.Description
+			End If
+
+		Next
+	Next
+
+	If Updated Then
+		Protocols.Save
+		If Err.Number = No_Error Then
+			Protocols.Refresh
+		Else
+			Panic  "Failed to update the protocol definitions; error 0x" & Hex( Err.Number ) & _
+					"; " & Err.Description
+		End If
+	End If
+
+	WScript.Echo "-- Done..." & vbCrLf
+	DeleteIsa2kProtocols = True
+
+End Function
+
+'*****************************************************************
+' Create the protoocol rules using the custom protocols from the proper context
+'*****************************************************************
+Function AddIsa2kRule( Rules, Scope )
+
+	On Error Resume Next
+
+	AddIsa2kRule = False
+
+	Dim NewRule
+	Dim BaseCounter
+	Dim ProtoCounter
+	Dim ProtoName
+
+	Const fpcSpecifiedProtocols = 1
+	Const fpcActionDeny = 1
+
+	WScript.Echo "-- Creating Protocol Rule """ & BadBoy & """..."
+
+	Set NewRule = Rules.Add( BadBoy )
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to create the """ & BadBoy & """ protocol rule; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	NewRule.Action = fpcActionDeny
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to set the ""Action"" state; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+			
+	NewRule.Description = RuleDescription
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to set the ""Description"" state; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	NewRule.Enabled = True
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to enabled the """ & BadBoy & """ protocol rule; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	NewRule.SetAppliesAlways
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to set the ""Applies Always"" state; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	NewRule.ProtocolSelectionMethod = fpcSpecifiedProtocols
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to set the ""Specified Protocols"" state; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	For BaseCounter = 0 To UBound( arrData ) Step 4
+		For ProtoCounter = arrData( BaseCounter + 2 ) To arrData( BaseCounter + 3 )
+			ProtoName = BadBoy & " (" & arrProto( ArrData( BaseCounter ) ) & CStr( ProtoCounter ) & ")"
+			NewRule.SpecifiedProtocols.Add ProtoName, "", Scope
+			If Err.Number <>  No_Error Then _
+				Panic "Failed to add the """ & ProtoName & """ protocol to the protocol rule; error 0x" & _
+						Hex( Err.Number ) & "; " & Err.Description
+		Next
+	Next
+
+	NewRule.Save
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to save the """ & BadBoy & """ protocol rule; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	WScript.Echo "-- Done..." & vbCrLf
+	AddIsa2kRule = True
+
+End Function
+
+'*****************************************************************
+' ISA 2004 - specific functions
+'*****************************************************************
+
+'*****************************************************************
+' Create the custom protocols in the proper context
+'*****************************************************************
+Function AddIsa2k4Protocol( Protocols )
+
+	On Error Resume Next
+
+	AddIsa2k4Protocol = False
+
+	Dim NewProtocol
+	Dim Protocol
+	Dim BaseCounter
+	Dim ProtoCounter
+	Dim Connection
+
+	' data in the protocol definitions is arranged thus: <Protoocol>, <Direction>, <StartingPort>, <EndingPort>
+
+	WScript.Echo "-- Creating Protocol Definition """ & BadBoy & """..."
+	Set NewProtocol = Protocols.Add( BadBoy )
+	If Err.Number <>  No_Error Then _
+		Panic  "Failed to add the """ & BadBoy & """ protocol definition; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	WScript.Echo "-- Adding Description ..."
+	NewProtocol.Description = ProtoDescription
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to add a description to the """ & BadBoy & """ protocol definition; error 0x" & _
+				Hex( Err.Number ) & "; " & Err.Description
+
+	WScript.Echo "-- Defining the protocol profile..."
+	For BaseCounter = 0 To UBound( arrData ) Step 4
+
+		If arrData( BaseCounter ) = fpcTCP Then
+			NewProtocol.PrimaryConnections.AddTCP arrData( BaseCounter + 1 ), arrData( BaseCounter + 2 ), _
+											arrData( BaseCounter + 3 )
+		Else
+			NewProtocol.PrimaryConnections.AddUDP arrData( BaseCounter + 1 ), arrData( BaseCounter + 2 ), _
+											arrData( BaseCounter + 3 )
+		End If
+		
+		If Err.Number <>  No_Error Then _
+			Panic  "Failed to create the """ & BadBoy & """ protocol definition; error 0x" & Hex( Err.Number ) & _
+					"; " & Err.Description
+	Next
+
+	NewProtocol.Save
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to save the """ & BadBoy & """ protocol definition; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	WScript.Echo "-- Done..." & vbCrLf
+	AddIsa2k4Protocol = True
+
+End Function
+
+'*****************************************************************
+' Create the protoocol rules using the custom protocols from the proper context
+'*****************************************************************
+Function AddIsa2k4Rule( Rules, ComputerSets )
+
+	On Error Resume Next
+
+	AddIsa2k4Rule = False
+
+	Dim NewRule
+	Dim ComputerSet
+	Dim Moved: Moved = False
+
+	Const fpcSpecifiedProtocols = 1
+	Const fpcAppliesToAllContent = 0
+	Const fpcActionDeny = 1
+	Const fpcInclude = 0
+	Const AnyWhere = "{BE20F10A-A274-436A-A7AD-63A9FC5ED19D}"
+
+	WScript.Echo "-- Creating Access Rule """ & BadBoy & """..."
+
+	Set NewRule = Rules.AddAccessRule( BadBoy )
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to create the """ & BadBoy & """ access rule; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	NewRule.Action = fpcActionDeny
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to set the ""Action"" state; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+			
+	NewRule.Description = "This rule denies all protocols known to be used by Bagle worm"
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to set the ""Description"" state; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	NewRule.Enabled = True
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to enable the ""Bagle"" access rule; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	NewRule.EnableLogging = True
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to enable logging for the ""Bagle"" access rule; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	NewRule.SetAppliesAlways
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to set the ""Applies Always"" state; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	For Each ComputerSet In ComputerSets 
+		If ComputerSet.PersistentName = AnyWhere Then
+			NewRule.SourceSelectionIPs.ComputerSets.Add ComputerSet.Name, fpcInclude
+			If Err.Number <>  No_Error Then _
+				Panic "Failed to add """ & ComputerSet.Name & " to ""From"" in the access rule; error 0x" & _
+					Hex( Err.Number ) & _
+					"; " & Err.Description
+
+			NewRule.AccessProperties.DestinationSelectionIPs.ComputerSets.Add ComputerSet.Name, fpcInclude
+			If Err.Number <>  No_Error Then _
+				Panic "Failed to add """ & ComputerSet.Name & " to ""To"" in the access rule; error 0x" & _
+					Hex( Err.Number ) & _
+					"; " & Err.Description
+			Exit For
+		End If
+	Next
+
+	NewRule.AccessProperties.AppliesToContentMethod = fpcAppliesToAllContent
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to set ""AppliesToContentMethod""; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	NewRule.AccessProperties.ProtocolSelectionMethod = fpcSpecifiedProtocols
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to set the ""Specified Protocols"" state; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	NewRule.AccessProperties.SpecifiedProtocols.Add BadBoy, fpcInclude
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to add the """ & BadBoy & """ protocol to the access rule; error 0x" & _
+				Hex( Err.Number ) & "; " & Err.Description
+
+	NewRule.Save
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to save the """ & BadBoy & """ access rule; error 0x" & Hex( Err.Number ) & _
+				"; " & Err.Description
+
+	On Error Goto 0
+	WScript.Echo "-- Done..." & vbCrLf
+
+	WScript.Echo "-- Making sure the new rule first in the list... (current order is " & NewRule.Order & ")"
+	While NewRule.Order > 1
+		Rules.MoveUp NewRule.Order
+		If Err.Number <> No_Error Then _
+			Panic "Failed to relocate the """ & BadBoy & """ access rule; error 0x" & Hex( Err.Number ) & _
+					"; " & Err.Description
+		Moved = True
+	Wend
+
+	If Moved Then 
+		Rules.Save
+		If Err.Number <> No_Error Then _
+			Panic "Failed to save the updated rules list; error 0x" & Hex( Err.Number ) & _
+					"; " & Err.Description
+	End If
+
+	WScript.Echo "-- Done..." & vbCrLf
+	AddIsa2k4Rule = True
+
+End Function
+
+'*****************************************************************
+' ISA - generic functions
+'*****************************************************************
+
+'*****************************************************************
+' Perform the work in the array context
+'*****************************************************************
+Function DoArray( ISAArray )
+
+	On Error Resume Next
+
+	DoArray = False
+
+	Dim Protocols
+	Dim Rules
+	Dim ComputerSets
+	Dim Settings
+
+	Const fpcArrayScope = 0
+
+	WScript.Echo "- Managing Array """ & ISAArray.Name & """..."
+	'isa2000 and isa2004 use different locations for just about everything
+	If Isa2K4 Then
+		Set Protocols = ISAArray.RuleElements.ProtocolDefinitions
+		Set Rules = ISAArray.ArrayPolicy.PolicyRules
+		Set Settings = ISAArray.FWClientConfigSettings
+		Set ComputerSets = ISAArray.RuleElements.ComputerSets
+
+		WScript.Echo "-- Deleting Access Rule """ & BadBoy & """..."
+		Rules.Remove( BadBoy )
+		If Hex( Err.Number ) = Not_Found Then
+			Err.Clear
+		ElseIf Err.number <> 0 Then
+			Panic "Failed to remove the """ & BadBoy & """ access rule; error 0x" & _
+				Hex( Err.Number ) & "; " & Err.Description
+		Else
+			Rules.Save
+		End If
+		WScript.Echo "-- Done..." & vbCrLf
+
+		WScript.Echo "-- Deleting Protocol Definition """ & BadBoy & """..."
+		Protocols.Remove( BadBoy )
+		If Hex( Err.Number ) = Not_Found Then
+			Err.Clear
+		ElseIf Err.number <> 0 Then
+			Panic "Failed to remove the """ & BadBoy & """ protocol definition; error 0x" & _
+				Hex( Err.Number ) & "; " & Err.Description
+		Else
+			Protocols.Save
+		End If
+		WScript.Echo "-- Done..." & vbCrLf
+
+		If Not AddIsa2k4Protocol( Protocols ) Then _
+			Panic "Failed to add the protocol definitions; error 0x" & _
+				Hex( Err.Number ) & "; " & Err.Description
+
+		If Not AddIsa2k4Rule( Rules, ComputerSets ) Then _
+			Panic "Failed to add the access rule; error 0x" & _
+				Hex( Err.Number ) & "; " & Err.Description
+	Else
+		Set Protocols = ISAArray.PolicyElements.ProtocolDefinitions
+		Set Rules = ISAArray.ArrayPolicy.ProtocolRules
+		Set Settings = ISAArray.ClientConfig.Firewall.Settings
+
+		WScript.Echo "-- Deleting Protocol Rule """ & BadBoy & """..."
+		Rules.Remove( BadBoy )
+		If Hex( Err.Number ) = Not_Found Then
+			Err.Clear
+		ElseIf Err.number <> 0 Then
+			Panic "Failed to remove the """ & BadBoy & """ protocol rule; error 0x" & _
+				Hex( Err.Number ) & "; " & Err.Description
+		Else
+			Rules.Save
+		End If
+
+		If DeleteIsa2kProtocols(Protocols) Then
+			If Not AddIsa2kProtocols( Protocols ) Then _
+				Panic "Failed to add the protocol definitions; error 0x" & _
+					Hex( Err.Number ) & "; " & Err.Description
+
+			If Not AddIsa2kRule( Rules, fpcArrayScope ) Then _
+				Panic "Failed to add the protocol rule; error 0x" & _
+					Hex( Err.Number ) & "; " & Err.Description
+		End If
+	End If
+
+	'now add in the updated fw client policies
+	DoArray = AddFwClientPolicy( Settings )
+	WScript.Echo "- Done..." & vbCrLf
+
+	On Error Goto 0
+
+End Function
+
+'*****************************************************************
+' Create the Firewall Client blocking policy
+'*****************************************************************
+Function AddFwClientPolicy( Settings )
+
+	On Error Resume Next
+
+	AddFwClientPolicy = False
+
+	Dim Item
+	Dim Sec
+
+	Const Disabled = 1
+
+	' first, check for and delete any existing FW client app settings
+	WScript.Echo "-- Deleting FW Client Settings..."
+	For Each Item In arrFiles
+		WScript.Echo "--- Deleting FW Client Setting for """ & Item & """..."
+		Settings.Remove( Item )
+		If Hex( Err.Number ) = Not_Found Then
+			Err.Clear
+		ElseIf Err.Number <> No_Error Then
+			Panic  "Failed to delete """ & Item & """ FWClient application setting; error 0x" & Hex( Err.Number ) & _
+					"; " & Err.Description
+		End If
+	Next
+	WScript.Echo "-- Done..." & vbCrLf
+
+	WScript.Echo "-- AddingFW Client Settings..."
+	For Each Item In arrFiles
+		WScript.Echo "--- Adding FW Client Setting for """ & Item & """..."
+		Set Sec = Settings.AddSection( Item )
+		If Err.Number <>  No_Error Then _
+			Panic "Failed to add the """ & Item & """ section to the FW Client Application Settings; error 0x" & Hex( Err.Number ) & _
+					"; " & Err.Description
+
+		Sec.Value( "Disable" ) = Disabled
+		If Err.Number <>  No_Error Then _
+			Panic "Failed to set the ""Disable"" state in the """ & Item & """ FW Client Application Settings section; error 0x" & _
+				Hex( Err.Number ) & "; " & Err.Description
+
+		If Isa2K4 Then
+			Sec.Value( "DisableEx" ) = Disabled
+			If Err.Number <>  No_Error Then _
+				Panic "Failed to set the ""DisableEx"" state in the """ & Item & """ FW Client Application Settings section; error 0x" & _
+					Hex( Err.Number ) & "; " & Err.Description
+		End If
+	Next
+	
+	Settings.Save
+	If Err.Number <>  No_Error Then _
+		Panic "Failed to save the """ & Item & """ the FW Client Application Settings; error 0x" & Hex( Err.Number ) & _
+			"; " & Err.Description
+
+	WScript.Echo "-- Done..." & vbCrLf
+	AddFwClientPolicy = True
+
+End Function
+
+'*****************************************************************
+' Get the proper context of the ISA object and report any errors
+'*****************************************************************
+Function GetISA
+
+	On Error Resume Next
+
+	GetISA = False
+
+	Const Standalone = "FPC.Root" 
+	Const Enterprise = "FPCDS.Root"
+
+	Set ISA = CreateObject ( Standalone )
+
+	ISA.Refresh
+	If Err.Number = 0 Then 
+		'must be ISA 2000
+		If ISA.Type = fpcTypeArray Then
+			'the old object is useless to us
+			Set ISA = Nothing
+			Set ISA = CreateObject( Enterprise )
+			ISA.Refresh
+			If Err.Number = 0 Then 
+				GetISA = True
+			Else
+				Panic "Failed to access the ISA objects in AD." & _
+						"Err.Description = " & Err.Description & " using object 'FPCDS.Root'" & _
+						vbCrLf & "Err.Number = 0x" & Hex( Err.Number )
+			End If
+		Else
+			GetISA = True
+		End If
+	Else
+		'might be ISA 2004
+		Err.Clear
+		ISA.GetContainingArray
+		If Err.Number = No_Error Then
+			Isa2K4 = True
+			GetISA = True
+		Else
+			'possibly a remote mgmt server
+			Panic "This script must be run on an ISA Server."
+		End If			
+	End If
+
+	On Error Goto 0
+
+End Function
+
+'*****************************************************************
+' Time to call it quits
+'*****************************************************************
+Sub Panic( Msg )
+
+	Dim CopyMsg: CopyMsg = vbCrLf & vbCrLf & "Hit <CTRL> C to copy this error message to the clipboard."
+
+	MsgBox Msg & CopyMsg, vbOKOnly + vbCritical + vbApplicationModal, TitleMsg
+	WScript.Quit 1
+
+End Sub
+
+

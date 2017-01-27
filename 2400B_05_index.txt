@@ -1,0 +1,25 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set Msg = CreateObject("CDO.Message")
+
+With Msg
+
+       .To = "LondonAdmin@nwtraders.msft"
+       .From = "jberry@nwtraders.msft"
+       .Subject = "Recipient management"
+       .TextBody = "Hello -  I have several tasks that Sam requested we accomplish today. Can you take care of the following items today?" & chr(10) & "* Create an account and mailbox for Sharon S. Salavaria by using all the default settings." & chr(10) & "* Create an e-mail address of JBarnhill@contoso.msft for Josh Barnhill's vendor account." & chr(10) & "* Change the e-mail address of the Lori Oviatt account to reflect her new name of Lori Kane." & chr(10) & "* Use the attached script (addmbx.txt) to add mailboxes to a group of newly hired contractors. You will have to save the script to your hard disk and rename it to addmbx.vbs in order for it to run." & chr(10) & "* Hide the Customer Satisfaction mailbox so that it does not show up in the global address list." & chr(10) & "* Reconnect Sharon S. Salavaria's existing Active Directory account to her old mailbox." & chr(10) & "* Configure the Lori Kane account so that she is not subject to our storage limits policies." & chr(10) & "* Grant Jenny Gottfried send on behalf permissions on Zainal Arifin's mailbox." & chr(10) & "* Move the executives off the regular mailbox store and onto the Executive Mailbox Store." & chr(10) & "* Set up a forwarding address for Amy Rusko to forward to Andrew Cencini." & chr(10) & "* Create a distribution group for the lawyers and name it Lawyers. They will also use this group for network permissions." & chr(10) & "* Create a query-based distribution group for all users in Building 1." & chr(10) & "* Configure the Lawyers group so that only members can send e-mail to it." & chr(10) & chr(10) & "Thanks!"
+       .AddAttachment "C:\moc\2400\practices\Mod04\AddMBX.txt"
+       .Send
+
+End With
+
+MsgBox "Script Complete"
+

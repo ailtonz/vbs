@@ -1,0 +1,53 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' Windows Script Host Sample Script
+' This script will use echo to output text
+' This sample will list all environment variables defined on this machine.
+
+Welcome_MsgBox_Message_Text    = "This script will list all environment variables defined on this machine."
+Welcome_MsgBox_Title_Text      = "Environment variables"
+CRLF = Chr(13) & Chr(10)
+
+' Print an introduction message box
+'
+intDoIt =  MsgBox(Welcome_MsgBox_Message_Text, _
+            vbOKCancel + vbInformation,    _
+            Welcome_MsgBox_Title_Text )
+If intDoIt = vbCancel Then
+      WScript.Quit
+End If
+
+
+' Create the object we need
+'
+Set WSHShell = WScript.CreateObject("WScript.Shell")
+
+' now get ten environment strings and add them to a buffer, then print them
+'
+intIndex = 0
+strText = ""
+intNumEnv = 0
+MAX_ENV = 10
+For Each strEnv In WshShell.Environment("PROCESS")
+    intIndex = intIndex + 1
+    strText = strText & CRLF & Right( " " & intIndex, 2) & "    " & strEnv
+    intNumEnv = intNumEnv + 1
+    If intNumEnv >= MAX_ENV Then
+        wscript.echo strText
+        strText = ""
+        intNumEnv = 0
+    End If
+Next
+
+If intNumEnv >= 1 Then wscript.echo strText
+
+wscript.sleep 5000
+

@@ -1,0 +1,229 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'***************************************'
+' Declare script-level variables
+'***************************************'
+Dim strSDOFolder		'String: Path to staging folder
+Dim strPackage			'String: Deployment package name
+Dim fsoObj 				'Object: FileScriptingObject
+Dim fldSDO 				'Object: FileScripting Folder object
+Dim strBackupReport		'String: URL to Backup Report
+Dim strRestoreReport	'String: URL to Restore Report
+Dim intShowReports		'Integer: Response to MsgBox
+Dim intErr				'Integer: Indicates whether error has occurred
+Dim intContinue			'Integer: Response to MsgBox
+
+'***************************************'
+' Initialize variables
+'***************************************'
+intErr = 0
+strSDOFolder= "C:\SDO Files\"
+strRestoreReport = ""
+strBackupReport = ""
+
+'***************************************'
+' Prompt user
+'***************************************'
+intContinue = Msgbox("Do you want to start the backup/restore script?" & vbcrlf & "The script may take a few seconds, so please be patient...", vbYesNo, "Start Backup and Restore Script?")
+
+If intContinue = vbNo Then
+	WScript.Quit
+End If
+
+'***************************************'
+' Instantiate File Scripting Objects
+'***************************************'
+Set fsoObj = CreateObject("Scripting.FileSystemObject")
+Set fldSDO = fsoObj.GetFolder(strSDOFolder)
+
+'*******************************************************************'
+' Main body of deployment script
+' 
+' NOTES:
+' The following functions return 1 for success and 0 for failure:
+' 	ClearSDOFiles()
+'	SimulateProduction()
+' The following functions return a string for success and "" for failure
+'	BackupUserGroups()
+'	RestoreUserGroups()
+
+If ClearSDOFiles() = 1 Then													'Removes previously SDO files
+	strBackupReport = BackupUserGroups()									'Uses the SD API to backup user groups
+    
+	If strBackupReport <> ""  Then	
+		strBackupReport = "http://localhost" & strBackupReport				'Stores the URL to the backup report
+    
+		If SimulateProduction() = 1 Then									'Prompts the user to simulate the production environment
+			strRestoreReport = RestoreUserGroups()							'Uses the SD API to restore user groups
+				
+			If strRestoreReport <> "" Then
+				strRestoreReport = "http://localhost" & strRestoreReport	'Stores the URL to the restore report
+			Else
+				Msgbox "Error restoring user groups"
+				intErr = 1 
+			End If
+		Else
+			Msgbox "Process cancelled by user"
+			intErr = 1 
+		End If
+	Else
+		Msgbox "Error backing up user groups" 
+		intErr = 1
+	End If
+Else
+	Msgbox "Error clearing the staging area"
+	intErr = 1
+End If
+
+If intErr = 0 Then
+	intShowReports = Msgbox("Backup and restore completed! Do you want to view the backup and restore reports?", vbYesNo, "Reports")
+
+	If intShowReports = vbYes Then
+		RunReport(strRestoreReport)	'Show Backup Report
+		RunReport(strBackupReport)	'Show Restore Report
+	End If
+Else
+	MsgBox "The deployment script was interrupted..."
+End If
+
+'*******************************************************************'
+
+'***********************************************************'
+' Uses Scripting Objects to remove previously SDO files
+'
+' Returns 1 for success and 0 for failure
+'
+Function ClearSDOFiles()
+
+	On Error Resume Next
+
+	For Each sdoFile In fldSDO.Files
+		sdoFile.Delete(True)
+	Next
+
+	If Err.Number <> 0 Then
+		ClearSDOFiles = 0
+		Exit Function
+	End If
+
+	ClearSDOFiles = 1
+End Function
+
+'************************************************************'
+' Uses the Site Deployment API to backup user groups
+'
+' Returns URL of Report for success and "" for failure
+'
+Function BackupUserGroups()
+	Dim cmsBackupUserGroups
+	Dim strPackageFileName 
+	Dim strReportUrl 
+
+	On Error Resume Next
+
+	Set cmsBackupUserGroups = CreateObject("CmsDeployServer.CmsUserGroupBackupRestore.1")
+
+	If Err.Number = 0 Then
+		cmsBackupUserGroups.AuthenticateAsCurrentUser()
+  
+		If Err.Number = 0 Then 
+			strPackageFileName = "C:\SDO Files\DeployWoodgrove.sdo"
+			strReportUrl = cmsBackupUserGroups.Backup(strPackageFileName)
+    
+			If Err.Number = 0 Then
+				BackupUserGroups = strReportUrl
+				Exit Function
+			Else
+				BackupUserGroups = ""
+				Exit Function
+			End If
+		Else
+			BackupUserGroups = ""
+			Exit Function
+		End If
+	Else
+		BackupUserGroups = ""
+	End If
+End Function
+
+'************************************************************'
+' Simple prompt to allow user to delete some user groups to
+' simulate a new site or lost user groups
+' You should follow the practice instructions BEFORE clicking OK
+'
+' Returns 1 for OK and 0 for Cancel
+'
+Function SimulateProduction()
+	Dim intResponse
+
+	intResponse = MsgBox ("Before clicking OK:" & vbCrLf _
+				& "Delete the rights groups from the resource managers role in Site Manager", vbOKCancel, "Simulate Production")
+	
+	If intResponse = vbOK Then
+		SimulateProduction = 1
+		Exit Function
+	End If
+	
+	SimulateProduction = 0
+End Function
+
+'***********************************************************'
+' Uses Site Deployment API to restore user groups into the
+' simulated environment
+'
+' Returns URL of Report for success and "" for failure
+'
+Function RestoreUserGroups()
+	Dim cmsRestoreUserGroups
+	Dim strPackageFileName 
+	Dim strReportUrl 
+	
+	On Error Resume Next
+
+	Set cmsRestoreUserGroups = CreateObject("CmsDeployServer.CmsUserGroupBackupRestore.1")
+
+	If Err.Number = 0 Then
+	cmsRestoreUserGroups.AuthenticateAsCurrentUser()
+
+		If Err.Number = 0 Then 
+			strPackageFileName = "C:\SDO Files\DeployWoodgrove.sdo"
+			strReportUrl = cmsRestoreUserGroups.Restore(strPackageFileName, False)
+
+			If Err.Number = 0 Then
+				RestoreUserGroups = strReportUrl
+				Exit Function
+			Else
+				RestoreUserGroups = ""
+				Exit Function
+			End If
+		Else
+			RestoreUserGroups = ""
+			Exit Function
+		End If
+	Else
+		RestoreUserGroups = ""
+	End If
+End Function
+
+'*************************************************************'
+' Automates Internet Explorer to allow user to view deployment
+' reports. Accepts the URL of the report as am input parameter
+'
+Sub RunReport(strURL)
+	Dim ie
+	
+	Set ie = CreateObject("InternetExplorer.Application")
+	
+	ie.Visible = True
+	ie.Navigate strUrl 
+End Sub
+
+

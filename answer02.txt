@@ -1,0 +1,82 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' adsizer.vbs
+'
+' This script installs ADSIZER
+
+set wshshell = wscript.CreateObject("wscript.shell")
+set fso = CreateObject("Scripting.FileSystemObject")
+Const TemporaryFolder = 2
+set onet = CreateObject("wscript.network")
+
+cname = ucase(onet.ComputerName)
+lcname  = LCase(cname)
+
+tempdir = fso.GetSpecialFolder(TemporaryFolder)
+
+if (lcname = "london") then
+	wshshell.run "C:\Setup\adsizer\adsizer.exe", 0, false
+else
+	wshshell.run "C:\moc\Setup\adsizer\adsizer.exe", 0, false
+end if
+
+
+'check to see that the setup files have been extracted
+nxt = 0
+while nxt = 0
+
+	if (lcname = "london") then		
+		wshshell.run "C:\Setup\adsizer.cmd", 6, true 'adsizer.cmd uses attrib to find the .msi and write the path to a text file
+	else
+		wshshell.run "C:\moc\Setup\adsizer.cmd", 6, true 'adsizer.cmd uses attrib to find the .msi and write the path to a text file
+	end if
+
+	set fl = fso.OpenTextFile ("C:\adspath.txt")
+	txt = fl.readline
+	fl.close
+	if left(txt,14)="File not found" then 'file not found indicates that the files haven't been extracted yet
+		nxt = 0
+	else
+		nxt = 1
+	end if
+	wscript.sleep 10000
+wend
+
+'parse the text string to get the path
+txt = rtrim(txt)
+txt = ltrim(txt)
+lgn = len(txt)
+txt = left(txt,lgn-27)
+lgn = len(txt)
+txt = right(txt,lgn-11)
+
+
+'create adsizer folder if it doesn't already exist
+if not fso.folderexists("c:\adsizer") then
+	fso.CreateFolder "c:\adsizer"
+end if
+
+'copy files from temp folder to adsizer
+fso.CopyFile txt & "\*.*","c:\adsizer",1
+
+'kill msi file portion of setup
+if (lcname = "london") then		
+	wshshell.run "C:\Setup\kill msiexec.exe", 6, true
+else
+	wshshell.run "C:\moc\Setup\kill msiexec.exe", 6, true
+end if
+
+wscript.sleep 10000
+
+'run msi in silent mode
+szPath = chr(34) & "c:\adsizer\Active Directory Sizer.msi" & chr(34) & " -q"
+wshshell.run szPath, 1, true
+

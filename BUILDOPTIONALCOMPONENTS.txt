@@ -1,0 +1,28 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' Set Bryan Walton' user properties to not update based on recipient policies
+
+CONST ADS_PROPERTY_UPDATE = 2
+Set obj = getobject("LDAP://cn=Bryan Walton,ou=users,ou=managed objects,dc=nwtraders,dc=msft")
+obj.PutEx ADS_PROPERTY_UPDATE, "proxyAddresses", Array(" ")
+obj.PutEx ADS_PROPERTY_UPDATE, "msExchPoliciesExcluded", Array("{26491CFC-9E50-4857-861B-0CB8DF22B5D7}")
+
+obj.SetInfo
+
+'change Andy Teal's email addresses
+
+Set obj = getobject("LDAP://cn=Andy Teal,ou=users,ou=managed objects,dc=nwtraders,dc=msft")
+obj.PutEx ADS_PROPERTY_UPDATE, "proxyAddresses", Array("SMTP:TealA@Internal.local", "X400:c=US;a= ;p=NWTraders;o=Exchange;s=Teal;g=Andy;")
+obj.PutEx ADS_PROPERTY_UPDATE, "msExchPoliciesExcluded", Array("{26491CFC-9E50-4857-861B-0CB8DF22B5D7}")
+
+obj.SetInfo
+
+

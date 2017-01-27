@@ -1,0 +1,144 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Course 2433A VBScript and WSH Essentials
+'
+' Title:	2433A User Setup Script
+' Copyright: 	Microsoft
+' Description: 	This script will do the following:
+'
+' Create an OU called WST
+' Create the Sales and Tech Groups
+' Create StudentX accounts in WST OU (1-25)
+' Create the AdminX accounts in WST OU (1-25)
+'
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Require Variants to be declared
+Option Explicit
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Sets the constants for ADSI
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Const ADS_GROUP_TYPE_GLOBAL_GROUP = &H2
+Const ADS_GROUP_TYPE_DOMAIN_LOCAL_GROUP = &H4
+Const ADS_GROUP_TYPE_UNIVERSAL_GROUP = &H8
+Const ADS_GROUP_TYPE_SECURITY_ENABLED = &H80000000
+''''''''''''''''''''''''`'''''''''''''''''''''''''''''''''''''
+' Create an OU called WST and
+' Create Student accounts in WST OU (1-25)
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Dim oDom, oOU, X, oUSR, oGroup, sStudentName, sStudentPath
+Dim nButVal
+'
+' Display Welcome Message
+nButVal = Msgbox("This Script will setup the Active Directory Accounts for MSDN course 2433A," _
+		         & " is that what you want?",vbYesNo ,"2433A Course Setup")
+If nButVal <> 6 Then
+	Msgbox "Quiting Script",vbCritical ,"2433A Course Setup"
+	WScript.Quit
+End If
+'
+Set oDom = GetObject("LDAP://DC=nwtraders, DC=msft")
+'Create WST OU
+Set oOU = oDom.Create("organizationalUnit","OU=WST")
+oOU.Description = "Windows Script Tecnologies Demo OU"
+oOU.SetInfo
+'Bind to WST OU
+Set oOU = GetObject ("LDAP://OU=WST,DC=nwtraders,DC=msft")
+' Create Student Accounts
+For X = 1 to 25
+	sStudentName = "Student" & x
+	Set oUSR = oOU.Create("user","CN=" & sStudentName) 
+	With oUSR
+		.Put"samAccountName", sStudentName
+		.Put"givenName", "Stu"
+		.Put"sn", x
+		.Put"Description", "A Student Account from the Script Course"
+		.Put"telephoneNumber", "0123456789" & x
+		.Put"mail", "Student" & x & "@nwtraders.msft"
+		.SetInfo
+		.SetPassword "password"
+		.AccountDisabled = False
+		.SetInfo
+	End With
+Next
+' Create AdminX Accounts
+For X = 1 to 25
+	sStudentName = "Admin" & x
+	Set oUSR = oOU.Create("user","CN=" & sStudentName) 
+	With oUSR
+		.Put"samAccountName", sStudentName
+		.Put"Givenname", "Ad"
+		.Put"Description", "An Admin Account from the Script Course"
+		.Put"sn", "Min" & x
+		.Put"telephoneNumber", "0123456789" & x
+		.Put"mail", "Admin" & x & "@nwtraders.msft"
+		.SetInfo
+		.SetPassword "password"
+		.AccountDisabled = False
+		.SetInfo
+	End With
+Next
+' Create Group Accounts
+' Create Tech group
+Set oGroup = oOU.Create("group", "CN=Tech")
+' Set the group type
+oGroup.Put "groupType", ADS_GROUP_TYPE_SECURITY_ENABLED Or ADS_GROUP_TYPE_DOMAIN_LOCAL_GROUP
+' Set the group properties
+oGroup.Put "sAMAccountName", "Tech"
+oGroup.Put "name", "Tech"
+oGroup.Put "displayName", "Technical Staff"
+oGroup.Put "description", "Technical Staff Security Group"
+oGroup.SetInfo
+' Add Odd Students to Tech
+For x = 1 to 25 Step 2
+	sStudentPath = "LDAP://CN=Student" & x & ",OU=WST,DC=nwtraders,DC=msft"
+	oGroup.Add (sStudentPath)
+Next
+' Save back to the AD
+oGroup.SetInfo
+' Create Sales Group
+Set oGroup = oOU.Create("group", "CN=Sales")
+' Set the group type
+oGroup.Put "groupType", ADS_GROUP_TYPE_DOMAIN_LOCAL_GROUP Or ADS_GROUP_TYPE_SECURITY_ENABLED
+' Set the group properties
+oGroup.Put "sAMAccountName", "Sales"
+oGroup.Put "name", "Sales"
+oGroup.Put "displayName", "Sales Staff"
+oGroup.Put "description", "Sales Staff Security Group"
+oGroup.SetInfo
+'Add Even Students to Sales
+For x = 2 to 24 Step 2
+	sStudentPath = "LDAP://CN=Student" & x & ",OU=WST,DC=nwtraders,DC=msft"
+	oGroup.Add (sStudentPath)
+Next
+' Save back to the AD
+oGroup.SetInfo
+Dim oAdminsGrp, sAdminsPath
+Set oAdminsGrp = GetObject ("LDAP://CN=Domain Admins,CN=Users,DC=nwtraders,DC=msft")
+For x = 1 to 25
+' Add Students to Domain Administrators Group
+	sStudentPath = "LDAP://CN=Student" & x & ",OU=WST,DC=nwtraders,DC=msft"
+	oAdminsGrp.Add (sStudentPath)
+' Add AdminX to Domain Administrators Group
+	sAdminsPath = "LDAP://CN=Admin" & x & ",OU=WST,DC=nwtraders,DC=msft"
+	oAdminsGrp.Add (sAdminsPath)
+Next
+' Save back to the AD
+oAdminsGrp.SetInfo
+'
+MsgBox "Group and User Accounts successfully created", vbInformation, "2433A Course Setup"
+'
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'END OF SCRIPT
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+

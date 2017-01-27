@@ -1,0 +1,47 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Sub ModifyUsers(oObject)
+  Dim oUser
+  Dim iCount
+  Dim bExists
+  iCount = 0
+  For Each oUser in oObject
+    Select Case oUser.Class
+      Case "user"
+        On Error Resume Next
+        oUser.Get "department"
+        If Err.number Then
+          bExists = 0
+        Else 
+          bExists = 1
+        End If
+        On Error Goto 0
+
+        If bExists = 0 Then
+          oUser.Put "department","Shipping"
+          oUser.SetInfo
+          iCount = iCount + 1
+        End If
+    End select
+  Next
+  Msgbox iCount & " objects updated in " & oObject.Get("Name")
+End Sub
+
+Dim rootDSE
+Dim oDomain
+Set rootDSE = GetObject("LDAP://RootDSE")
+set oDomain = GetObject("LDAP://OU=Package Handling," & rootDSE.Get("DefaultNamingContext"))
+ModifyUsers(oDomain)
+Set rootDSE = Nothing
+Set oDomain = Nothing
+MsgBox "Finished"
+WScript.Quit
+

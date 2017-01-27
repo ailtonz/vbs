@@ -1,0 +1,156 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set objNet = WScript.CreateObject("WScript.Network")
+
+
+if objNet.ComputerName="ALAN" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+myvar = msgbox("Configurando o Curso 2557")
+WshShell.Run "%systemdrive%\setup\images\ALAN.bat"
+end if
+
+
+if objNet.ComputerName="LONDON" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\lon.bat"
+end if
+
+if objNet.ComputerName="GLASGOW" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\gla.bat"
+end if
+
+if objNet.ComputerName="MELBOURNE" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\mel.bat"
+end if
+
+if objNet.ComputerName="VANCOUVER" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\van.bat"
+end if
+
+if objNet.ComputerName="DENVER" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\den.bat"
+end if
+
+if objNet.ComputerName="ACAPULCO" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\aca.bat"
+end if
+
+if objNet.ComputerName="MIAMI" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\mia.bat"
+end if
+
+if objNet.ComputerName="LISBON" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\lis.bat"
+end if
+
+if objNet.ComputerName="BONN" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\bon.bat"
+end if
+
+if objNet.ComputerName="STOCKHOLM" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\sto.bat"
+end if
+
+if objNet.ComputerName="MOSCOW" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\mos.bat"
+end if
+
+if objNet.ComputerName="BANGALORE" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\ban.bat"
+end if
+
+if objNet.ComputerName="SINGAPORE" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\sin.bat"
+end if
+
+if objNet.ComputerName="MANILA" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\man.bat"
+end if
+
+if objNet.ComputerName="TOKYO" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\tok.bat"
+end if
+
+if objNet.ComputerName="PERTH" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\per.bat"
+end if
+
+if objNet.ComputerName="BRISBANE" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\bri.bat"
+end if
+
+if objNet.ComputerName="AUCKLAND" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\auc.bat"
+end if
+
+if objNet.ComputerName="SUVA" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\suv.bat"
+end if
+
+if objNet.ComputerName="LIMA" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\lim.bat"
+end if
+
+if objNet.ComputerName="SANTIAGO" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\san.bat"
+end if
+
+if objNet.ComputerName="CARACAS" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\car.bat"
+end if
+
+if objNet.ComputerName="MONTEVIDEO" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\mon.bat"
+end if
+
+if objNet.ComputerName="CASABLANCA" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\cas.bat"
+end if
+
+if objNet.ComputerName="TUNIS" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\tun.bat"
+end if
+
+if objNet.ComputerName="KHARTOUM" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\kha.bat"
+end if
+
+if objNet.ComputerName="NAIROBI" then
+Set WshShell = WScript.CreateObject("WScript.Shell")
+WshShell.Run"%systemdrive%\setup\images\nai.bat"
+end if
+
+

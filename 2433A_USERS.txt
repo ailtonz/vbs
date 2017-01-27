@@ -1,0 +1,90 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+' Course 2433A VBScript and WSH Essentials
+'
+' Title:		2433A Class Setup Script
+' Author: 		Richard Harrison	
+' Copyright: 	Content Master 2000
+' Description: 	This script will do the following:
+'
+' Copy the PPT files to \Program Files\2433A Slides Folder
+' Create Shortcuts to each file in the Start Menu
+'
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Require Variants to be declared
+Option Explicit
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Set Your User Defined System Constants
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Sets the Users Domain
+Const DomainName = "nwtraders.msft"
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'Initialization
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Dim oFSO, oShell, sPPTPath, sProgFiles
+Dim sDesktop, sStartup, x, sShortCutFolder
+Dim oShortcut
+Set oFSO = WScript.CreateObject("Scripting.FileSystemObject")
+Set oShell = WScript.CreateObject("WScript.Shell")
+sProgFiles = oShell.ExpandEnvironmentStrings("%ProgramFiles%")
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Copy DemoLogon.vbs to sysvol\contentm.local\scripts
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+sPPTPath = sProgFiles & "\2433A Slides"
+If IfExist(sPPTPath) = False Then
+	oFSO.CopyFolder "C:\MOC\2433A\POWERPNT", sPPTPath
+	If Err.Number <> 0 Then
+		MsgBox "Something went wrong with PPT Files copy"
+		WScript.Quit
+	End If
+End If
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Create Desktop Shortcuts
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+sStartup = oShell.SpecialFolders("Programs")
+sShortCutFolder = sStartup & "\2433A Slides"
+' Created Folder for shortcuts
+If IfExist(sShortCutFolder) = False Then
+	oFSO.CreateFolder sShortCutFolder
+	If Err.Number <> 0 Then
+		MsgBox "Something went wrong Shortcut Folder creation"
+		WScript.Quit
+	End If
+End If
+For x = 0 to 8
+	Set oShortCut = oShell.CreateShortcut(sShortCutFolder & "\Module " & x & ".lnk")
+	oShortCut.TargetPath = sPPTPath & "\2433A_0" & x & ".ppt"
+	oShortCut.Save
+Next
+'
+MsgBox "Script Complete", vbInformation,"2433A Course Setup"
+'
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' ***** END OF SCRIPT *****
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'FUNCTIONS
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' Function: Check for existence of file system object
+' Name : IfExist
+' Argument: Name of Object (file or Directory) to check for.
+'''''''''''''''''''''''''''''''''''''''
+Function IfExist(sName)
+	IfExist = False
+	On Error Resume Next
+	If oFSO.FileExists(sName) Then IfExist = True
+	If oFSO.FolderExists(sName) Then IfExist = True
+End Function
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'END OF FUNCTIONS
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+

@@ -1,0 +1,93 @@
+###
+###
+###
+### Category1 : 
+### Category2 : 
+### Category3 : 
+### Description : 
+###
+###
+###
+Set objNet = WScript.CreateObject("WScript.Network")
+savename = objNet.ComputerName
+
+set IPConfigSet = GetObject("winmgmts:").ExecQuery _
+		("select IPAddress from Win32_NetworkAdapterConfiguration where IPEnabled=TRUE")
+
+for each IPConfig in IPConfigSet
+	if Not IsNull(IPConfig.IPAddress) then 
+		for i=LBound(IPConfig.IPAddress) to UBound(IPConfig.IPAddress)
+						
+	if left(IPConfig.IPAddress(i),3) = "192" then
+bob = IPConfig.IPAddress(i)
+		end if
+next
+	end if
+next
+
+
+
+mantis = left(bob,9)
+mantis= right(mantis,1)
+
+
+Set objNet = WScript.CreateObject("WScript.Network")
+
+
+bob = "250"
+fred = "1"
+
+
+
+set WshShell = CreateObject("WScript.Shell")
+WshShell.Run "control ncpa.cpl"
+wscript.sleep 1000
+WshShell.AppActivate "Network"
+wscript.sleep 1000
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{RIGHT}"
+WshShell.SendKeys "{RIGHT}"
+WshShell.SendKeys "+{F10}"
+WshShell.SendKeys "r"
+wscript.sleep 1000
+WshShell.AppActivate "External"
+WshShell.SendKeys "{DOWN}"
+WshShell.SendKeys "{DOWN}"
+WshShell.SendKeys "%r"
+wscript.sleep 1000
+WshShell.AppActivate "Internet"
+WshShell.SendKeys "{DOWN}"
+WshShell.SendKeys "192168"
+WshShell.SendKeys bob
+WshShell.SendKeys fred
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+wshShell.SendKeys "192168"
+WshShell.SendKeys mantis
+WshShell.SendKeys "{RIGHT}"
+WshShell.sendKeys "200"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+
+WshShell.SendKeys "{ENTER}"
+wscript.sleep 1000
+WshShell.AppActivate "External"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+WshShell.SendKeys "{TAB}"
+
+WshShell.SendKeys "{ENTER}"
+wscript.sleep 120000
+WshShell.AppActivate "Network"
+WshShell.SendKeys "%{F4}"
+
+
+
+
